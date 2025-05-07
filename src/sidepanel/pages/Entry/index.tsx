@@ -1,5 +1,5 @@
-import { ClearOutlined, HistoryOutlined } from "@ant-design/icons";
-import { Drawer, Modal, Steps, Tag, Tooltip, message } from "antd";
+import { ClearOutlined } from "@ant-design/icons";
+import { App, Descriptions, DescriptionsProps, Drawer, Modal, Steps, Tag, Tooltip, message } from "antd";
 import md5 from "blueimp-md5";
 import classnames from "classnames";
 import dayjs from "dayjs";
@@ -16,13 +16,14 @@ import { useInterval } from "@/common/kits/hooks/useInterval";
 import appInfoActions from "@/sidepanel/redux/actions/appInfo";
 import { IRootStateType } from "@/sidepanel/redux/types";
 import { ActionResultType, IActionItemType, IStepItemType, StatusEnum } from "./config";
+import { actionListMock, profileMock } from "./config/mock";
 import "./index.less";
 
+const TITLE_PAGE = "Ginkgoo AI Form Assistant";
+const DELAY_MOCK_ANALYSIS = 0;
 const DELAY_STEP = 2000;
-const DELAY_ACTION = 100;
+const DELAY_ACTION = 500;
 const REPEAT_MAX = 5;
-
-const { confirm } = Modal;
 
 export default function Entry() {
   const refLockSteping = useRef<boolean>(false);
@@ -34,12 +35,15 @@ export default function Entry() {
   const [stepListCurrent, setStepListCurrent] = useState<number>(-1);
   const [stepListItems, setStepListItems] = useState<IStepItemType[]>([]);
   const [htmlInfo, setHtmlInfo] = useState<string>("");
-  const [isDrawerHistoryOpen, setDrawerHistoryOpen] = useState<boolean>(false);
-  const [historyList, setHistoryList] = useState<{ title: JSX.Element; description: JSX.Element }[]>([]);
+  const [isDrawerProfileOpen, setDrawerProfileOpen] = useState<boolean>(false);
+  const [profileName, setProfileName] = useState<string>("");
+  const [profileItems, setProfileItems] = useState<DescriptionsProps["items"]>([]);
 
   const { x_tabActivated } = useSelector((state: IRootStateType) => state.appInfo);
 
   const { updateTabActivated } = useActions(appInfoActions);
+
+  const { modal } = App.useApp();
 
   const { clear: clearInterval } = useInterval(
     async () => {
@@ -48,7 +52,10 @@ export default function Entry() {
       }
 
       refLockSteping.current = true;
-      await main();
+      const resMain = await main();
+      if (!resMain?.result) {
+        setStatus(StatusEnum.STOP);
+      }
       refLockSteping.current = false;
     },
     {
@@ -61,15 +68,20 @@ export default function Entry() {
   const init = async () => {
     const resTabInfo = await ChromeManager.queryTabInfo({});
     updateTabActivated(resTabInfo);
+    setProfileName(profileMock.firstname.value.charAt(0).toUpperCase());
+    setProfileItems(
+      Object.entries(profileMock).map(([key, value]) => ({
+        key,
+        label: value.label,
+        children: value.value,
+      }))
+    );
   };
 
   useEffect(() => {
+    window.document.title = TITLE_PAGE;
     init();
   }, []);
-
-  useEffect(() => {
-    setHtmlInfo("");
-  }, [x_tabActivated]);
 
   useEffect(() => {
     if (status === StatusEnum.STOP) {
@@ -112,10 +124,8 @@ export default function Entry() {
   const updateStepListItemsForAddStep = (params: { title: string; descriptionText: string }) => {
     const { title, descriptionText = "Analyzing..." } = params || {};
 
-    const indexStep = stepListCurrent + 1;
-
     setStepListItems((prev) => {
-      return [
+      const result = [
         ...prev,
         {
           title: title,
@@ -128,8 +138,10 @@ export default function Entry() {
           actionlist: [],
         },
       ];
+
+      setStepListCurrent(result.length - 1);
+      return result;
     });
-    setStepListCurrent(indexStep);
   };
 
   const updateStepListItemsForUpdateStep = (params: { stepcurrent?: number; actionlist: IActionItemType[] }) => {
@@ -179,34 +191,6 @@ export default function Entry() {
     setStepListItems((prev) => {
       const stepcurrent = stepcurrentParams === undefined ? prev.length - 1 : stepcurrentParams;
 
-      // Add History
-      if (stepcurrent >= 0 && actioncurrent >= 0) {
-        const actionItem = prev?.[stepcurrent]?.actionlist?.[actioncurrent];
-        if (actionItem) {
-          setHistoryList((prev) => {
-            return [
-              ...prev,
-              calcActionItem(
-                {
-                  type: actionItem.type,
-                  selector: actionItem.selector,
-                  actionresult,
-                  actiontimestamp,
-                },
-                prev.length,
-                actioncurrent
-              ),
-            ];
-          });
-        }
-        setTimeout(() => {
-          const element = document.getElementById(`action-item-${stepcurrent}-${actioncurrent}`);
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "center" }); // auto nearest‌
-          }
-        }, 20);
-      }
-
       return prev.map((itemStep, indexStep) => {
         let actioncurrentReal = itemStep.actioncurrent;
         let actionlistReal = itemStep.actionlist;
@@ -243,11 +227,9 @@ export default function Entry() {
     });
   };
 
-  const main = async () => {
+  const queryHtmlInfo = async () => {
     if (!refTabActivated.current) {
-      message.open({ type: "error", content: MESSAGE.NOT_FOUND_TAB });
-      setStatus(StatusEnum.STOP);
-      return;
+      return { result: false };
     }
 
     setStatus(StatusEnum.QUERY);
@@ -260,88 +242,83 @@ export default function Entry() {
 
     if (!html) {
       message.open({ type: "error", content: MESSAGE.NOT_SUPPORT_PAGE });
-      setStatus(StatusEnum.STOP);
-      return;
+      return { result: false };
     }
 
-    const { rootHtml, mainHtml } = HTMLManager.cleansingHtml({ html });
+    const { rootHtml, mainHtml, h1Text } = HTMLManager.cleansingHtml({ html });
     const htmlCleansing = mainHtml || rootHtml;
 
     setHtmlInfo(JSON.stringify(htmlCleansing, null, 2));
 
-    const resQuerySelector = await ChromeManager.executeScript(refTabActivated.current, {
-      cbName: "querySelector",
-      cbParams: {
-        selector: "h1",
-        attr: [
-          {
-            key: "innerText",
-          },
-        ],
-      },
-    });
-    const title =
-      (resQuerySelector?.[0]?.result?.innerText || "Unknown Page") +
-      (refRepeatCurrent.current > 1 ? `(Repeat: ${refRepeatCurrent.current})` : "");
+    const title = h1Text || "Unknown Page";
 
-    if (refRepeatCurrent.current < REPEAT_MAX) {
-      updateStepListItemsForAddStep({
-        title,
-        descriptionText: "Analyzing...",
-      });
-    } else {
-      message.open({ type: "error", content: MESSAGE.REPEAT_MAX });
-      setStatus(StatusEnum.STOP);
-      updateStepListItemsForAddStep({
-        title,
-        descriptionText: "Repeat max. Please manually operate and then try start again.",
-      });
-      return;
-    }
+    const hash = md5(title + htmlCleansing);
 
-    // Fetch Assistant API
-    setStatus(StatusEnum.ANALYSIS);
-    const resAssistent = await Api.Ginkgo.getAssistent({
-      body: {
-        message: htmlCleansing,
-      },
-    });
-    // await UtilsManager.sleep(2000);
-    // const resAssistent = {
-    //   "result": {
-    //     "actions": [
-    //       {
-    //         "selector": 'input[id="password"][type="password"][name="password"]',
-    //         "type": "input",
-    //         "value": "qqqqqqqqqqqq",
-    //       },
-    //       {
-    //         "selector": 'input[id="submit"][type="submit"][name="submit"]',
-    //         "type": "click",
-    //       },
-    //     ],
-    //   },
-    // };
-
-    const actionlist = resAssistent?.result?.actions || [];
-
-    const hash = md5(JSON.stringify(actionlist)); // htmlCleansing
     if (hash === refRepeatHash.current) {
       refRepeatCurrent.current++;
     } else {
-      refRepeatCurrent.current = 2;
+      refRepeatCurrent.current = 1;
       refRepeatHash.current = hash;
+    }
+
+    if (refRepeatCurrent.current > REPEAT_MAX) {
+      message.open({ type: "error", content: MESSAGE.REPEAT_MAX });
+      updateStepListItemsForAddStep({
+        title: title + `(Repeat: max)`,
+        descriptionText: "Repeat max. Please manually operate and then try start again.",
+      });
+      return { result: false };
+    }
+
+    updateStepListItemsForAddStep({
+      title: title + (refRepeatCurrent.current > 1 ? `(Repeat: ${refRepeatCurrent.current})` : ""),
+      descriptionText: "Analyzing...",
+    });
+
+    return { result: true, title, htmlCleansing };
+  };
+
+  const queryActionList = async (params: { title?: string; htmlCleansing?: string }) => {
+    const isMock = true;
+    const { title = "", htmlCleansing = "" } = params || {};
+    let actionlist: IActionItemType[] = [];
+
+    if (!refTabActivated.current) {
+      return { result: false };
+    }
+
+    setStatus(StatusEnum.ANALYSIS);
+
+    if (isMock) {
+      await UtilsManager.sleep(Math.floor(Math.random() * DELAY_MOCK_ANALYSIS + 1000));
+      actionlist = actionListMock[title]?.actions || [];
+    } else {
+      const resAssistent = await Api.Ginkgo.getAssistent({
+        body: {
+          message: htmlCleansing,
+        },
+      });
+
+      actionlist = resAssistent?.result?.actions || [];
     }
 
     updateStepListItemsForUpdateStep({
       actionlist,
     });
 
-    // Execute Action
+    return { result: true, actionlist };
+  };
+
+  const executeActionList = async (params: { actionlist: IActionItemType[] }) => {
+    const { actionlist } = params || {};
+
     setStatus(StatusEnum.ACTION);
     for (let i = 0; i < actionlist.length; i++) {
       if (i !== 0) {
         await UtilsManager.sleep(DELAY_ACTION);
+      }
+      if (!refTabActivated.current) {
+        return { result: false };
       }
 
       const action = actionlist[i];
@@ -358,9 +335,38 @@ export default function Entry() {
         actionresult: type,
         actiontimestamp: dayjs().format("YYYY-MM-DD HH:mm:ss:SSS"),
       });
+
+      setTimeout(() => {
+        document.getElementById(`action-item-${stepListCurrent}-${i}`)?.scrollIntoView({ behavior: "smooth" });
+      }, 40);
+    }
+
+    return { result: true };
+  };
+
+  const main = async () => {
+    if (!refTabActivated.current) {
+      message.open({ type: "error", content: MESSAGE.NOT_FOUND_TAB });
+      return { result: false };
+    }
+
+    const resQueryHtmlInfo = await queryHtmlInfo();
+    if (!resQueryHtmlInfo.result) {
+      return { result: false };
+    }
+
+    const resQueryActionList = await queryActionList({ title: resQueryHtmlInfo.title, htmlCleansing: resQueryHtmlInfo.htmlCleansing });
+    if (!resQueryActionList.result) {
+      return { result: false };
+    }
+
+    const resExecuteActionList = await executeActionList({ actionlist: resQueryActionList.actionlist || [] });
+    if (!resExecuteActionList.result) {
+      return { result: false };
     }
 
     setStatus(StatusEnum.WAIT);
+    return { result: true };
   };
 
   const handleBtnStartClick = () => {
@@ -373,18 +379,17 @@ export default function Entry() {
     refTabActivated.current = null;
   };
 
-  const handleBtnHistoryClick = () => {
-    setDrawerHistoryOpen(true);
+  const handleBtnProfileClick = () => {
+    setDrawerProfileOpen(true);
   };
 
   const handleBtnCleanClick = () => {
-    confirm({
+    modal.confirm({
       title: "Are you sure you want to clean the history?",
       onOk: () => {
         setStepListCurrent(-1);
         setStepListItems([]);
         setHtmlInfo("");
-        setHistoryList([]);
       },
     });
   };
@@ -394,14 +399,18 @@ export default function Entry() {
       {/* Header */}
       <div className="flex-0 flex h-10 flex-row items-center justify-between p-4">
         <div className="flex-0 w-5"></div>
-        <div className="flex-1 whitespace-nowrap text-center font-bold">AI Form Assistant</div>
-        <div className="flex-0 w-5"></div>
+        <div className="flex-1 whitespace-nowrap text-center font-bold">{TITLE_PAGE}</div>
+        <div className="flex-0 w-5">
+          <MKButton type="primary" shape="circle" onClick={handleBtnProfileClick}>
+            {profileName}
+          </MKButton>
+        </div>
       </div>
       <div className="flex-0 flex flex-col gap-2 border-b border-solid border-gray-200 p-4">
-        <div className="flex flex-row gap-2">
+        {/* <div className="flex flex-row gap-2">
           <span className="whitespace-nowrap font-bold">Tab Id:</span>
           <span className="whitespace-pre-wrap">{x_tabActivated?.id}</span>
-        </div>
+        </div> */}
         <div className="flex flex-row gap-2">
           <span className="whitespace-nowrap font-bold">Tab Url:</span>
           <span className="whitespace-pre-wrap break-words break-all">{x_tabActivated?.url}</span>
@@ -453,10 +462,8 @@ export default function Entry() {
         </div>
       )}
       {/* Layout History */}
-      <Drawer open={isDrawerHistoryOpen} title="History" onClose={() => setDrawerHistoryOpen(false)}>
-        <div className="box-border flex w-full">
-          <Steps progressDot direction="vertical" current={historyList.length - 1} items={historyList} />
-        </div>
+      <Drawer open={isDrawerProfileOpen} title="Profile Info" onClose={() => setDrawerProfileOpen(false)}>
+        <Descriptions items={profileItems} column={1} />
       </Drawer>
     </div>
   );

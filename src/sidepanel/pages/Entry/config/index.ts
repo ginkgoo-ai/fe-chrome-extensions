@@ -13,7 +13,7 @@ export type ActionResultType = "success" | "notFound" | "";
 
 export interface IActionItemType {
   selector: string;
-  type: "input" | "click" | "select";
+  type: "input" | "click";
   value?: string;
   actionresult?: ActionResultType;
   actiontimestamp?: string;
@@ -114,7 +114,7 @@ export const stepListMap: {
     actions: [
       {
         selector: `#citizenshipCeremony select[id="ceremonyCouncil"]`,
-        type: "select",
+        type: "input",
         value: "CORP_CITY_OF_LONDON",
       },
       {
@@ -133,7 +133,7 @@ export const stepListMap: {
       },
       {
         selector: `#standardGenderRelationship select[id="relationshipStatus"]`,
-        type: "select",
+        type: "input",
         value: "S",
       },
       {
