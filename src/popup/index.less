@@ -1,0 +1,53 @@
+/* ./src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// @import url(//at.alicdn.com/t/c/font_4425638_2uctcvgm8hs.css);
+
+html {
+  --size-mini: 0.2rem;
+  --size-block: 0.5rem;
+  --color-transparent: rgba(0, 0, 0, 0);
+  font-size: 16px;
+  .popupWrap {
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
+    width: 300px;
+    height: 600px;
+  }
+
+  .animation-all-slide-in {
+    animation: slide-in 0.5s;
+  }
+
+  @keyframes slide-in {
+    0% {
+      transform: translateY(24px);
+      opacity: 0;
+    }
+
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+.ant-btn.ant-btn-sm {
+  padding: 0;
+}
+
+.ant-badge .ant-badge-count {
+  font-size: 0.6rem;
+  padding: 0 0.2rem;
+}
+
+.ant-tooltip-inner {
+  font-size: 0.8rem;
+}
+
+.ant-switch {
+  background-color: #a0a0a0;
+}

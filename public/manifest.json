@@ -1,0 +1,49 @@
+{
+  "name": "fe-chrome-extensions",
+  "version": "${script replace version}",
+  "description": "AI-powered automated form filling extension",
+  "manifest_version": 3,
+  "permissions": ["sidePanel", "storage", "scripting", "tabs"],
+  "commands": {},
+  "host_permissions": ["*://*/*"],
+  "web_accessible_resources": [
+    {
+      "resources": ["/assets/app.png"],
+      "matches": ["<all_urls>"]
+    },
+    {
+      "resources": ["insert.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "action": {
+    "default_icon": {
+      "16": "/assets/app.png",
+      "32": "/assets/app.png",
+      "48": "/assets/app.png",
+      "128": "/assets/app.png"
+    },
+    "default_title": "Click to open panel"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["content.css"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "side_panel": {
+    "default_path": "sidepanel/index.html"
+  },
+  "icons": {
+    "16": "/assets/app.png",
+    "32": "/assets/app.png",
+    "48": "/assets/app.png",
+    "128": "/assets/app.png"
+  }
+}

@@ -1,0 +1,19 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+root = true
+
+[*]
+charset = utf-8
+indent_size = 2
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+quote_type = single
+indent_brace_style = 1tbs
+spaces_around_brackets = true
+
+[*.{html,less,css,json}]            # 对所有 html, less, css, json 文件生效
+quote_type = double                 # 字符串使用双引号
+
+[*.md]
+trim_trailing_whitespace = false

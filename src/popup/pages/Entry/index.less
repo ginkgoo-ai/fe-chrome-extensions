@@ -1,0 +1,44 @@
+.p-entry-wrap {
+  position: relative;
+  box-sizing: border-box;
+  padding-top: 18px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 18px;
+
+  .entry-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    background-size: cover;
+    background-repeat: no-repeat;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .entry-content {
+    position: relative;
+    opacity: 1;
+    z-index: 1;
+
+    .entry-outlet {
+      transition: transform 1s linear;
+    }
+  }
+
+  .entry-phone {
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    background-image: url("@/resource/oss/assets/bgPhone.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+}

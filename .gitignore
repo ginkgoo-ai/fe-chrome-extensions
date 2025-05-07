@@ -1,0 +1,11 @@
+# system files
+.DS_Store
+
+# 
+node_modules
+build
+yarn.lock
+
+# build
+_build_*
+fe-chrome-extensions-v*

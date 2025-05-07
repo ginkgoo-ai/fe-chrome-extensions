@@ -1,0 +1,21 @@
+{
+  "isDebug": false,
+  "versionInfo": {
+    "version": "1.0.0",
+    "tag": {
+      "bk": "#ff0000",
+      "color": "#ffffff",
+      "text": "喜迎新春"
+    },
+    "content": {
+      "bk": "#e0e0e0",
+      "color": "#333333",
+      "text": "发现新版本 1.8.0"
+    },
+    "jump": {
+      "text": "前往下载",
+      "color": "#333333",
+      "url": "https://www.baidu.com"
+    }
+  }
+}
