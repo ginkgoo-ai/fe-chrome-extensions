@@ -16,13 +16,13 @@ import { useInterval } from "@/common/kits/hooks/useInterval";
 import appInfoActions from "@/sidepanel/redux/actions/appInfo";
 import { IRootStateType } from "@/sidepanel/redux/types";
 import { ActionResultType, IActionItemType, IStepItemType, StatusEnum } from "./config";
-import { actionListMock, profileMock } from "./config/mock";
+import { IProfileType, actionListMock, profileMock } from "./config/mock";
 import "./index.less";
 
 const TITLE_PAGE = "Ginkgoo AI Form Assistant";
-const DELAY_MOCK_ANALYSIS = 0;
+const DELAY_MOCK_ANALYSIS = 1000;
 const DELAY_STEP = 2000;
-const DELAY_ACTION = 500;
+const DELAY_ACTION = 300;
 const REPEAT_MAX = 5;
 
 export default function Entry() {
@@ -68,13 +68,22 @@ export default function Entry() {
   const init = async () => {
     const resTabInfo = await ChromeManager.queryTabInfo({});
     updateTabActivated(resTabInfo);
-    setProfileName(profileMock.firstname.value.charAt(0).toUpperCase());
+    setProfileName(profileMock.firstname.value.toString().charAt(0).toUpperCase());
     setProfileItems(
-      Object.entries(profileMock).map(([key, value]) => ({
-        key,
-        label: value.label,
-        children: value.value,
-      }))
+      Object.keys(profileMock).map((key, index) => {
+        const item = profileMock[key as keyof IProfileType];
+        return {
+          key: index,
+          label: item.label,
+          children: Array.isArray(item.value)
+            ? item.value
+                .map((itemValue) => {
+                  return itemValue.value;
+                })
+                .join(", ")
+            : item.value,
+        };
+      })
     );
   };
 
@@ -156,10 +165,14 @@ export default function Entry() {
     setStepListItems((prev) => {
       const stepcurrent = stepcurrentParams === undefined ? prev.length - 1 : stepcurrentParams;
 
+      setTimeout(() => {
+        document.getElementById(`step-item-${stepcurrent}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 40);
+
       return prev.map((itemStep, indexStep) => {
         if (stepcurrent === indexStep) {
           return {
-            title: itemStep.title,
+            title: <div id={`step-item-${indexStep}`}>{itemStep.title}</div>,
             description: (
               <div className="box-border pl-2">
                 <Steps progressDot direction="vertical" current={0} items={actionItems} />
@@ -190,6 +203,10 @@ export default function Entry() {
 
     setStepListItems((prev) => {
       const stepcurrent = stepcurrentParams === undefined ? prev.length - 1 : stepcurrentParams;
+
+      setTimeout(() => {
+        document.getElementById(`action-item-${stepcurrent}-${actioncurrent}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 40);
 
       return prev.map((itemStep, indexStep) => {
         let actioncurrentReal = itemStep.actioncurrent;
@@ -335,10 +352,6 @@ export default function Entry() {
         actionresult: type,
         actiontimestamp: dayjs().format("YYYY-MM-DD HH:mm:ss:SSS"),
       });
-
-      setTimeout(() => {
-        document.getElementById(`action-item-${stepListCurrent}-${i}`)?.scrollIntoView({ behavior: "smooth" });
-      }, 40);
     }
 
     return { result: true };

@@ -1,8 +1,14 @@
 import { IActionItemType } from ".";
 
-export interface IProfileItemType {
+export interface IAddressItemType {
+  type: string;
   label: string;
   value: string;
+}
+
+export interface IProfileItemType {
+  label: string;
+  value: string | IAddressItemType[];
 }
 
 export interface IProfileType {
@@ -12,6 +18,7 @@ export interface IProfileType {
   email: IProfileItemType;
   dob: IProfileItemType;
   gender: IProfileItemType;
+  relationshipStatus: IProfileItemType;
   mobiletelephone: IProfileItemType;
   address: IProfileItemType;
 }
@@ -41,13 +48,53 @@ export const profileMock: IProfileType = {
     label: "Gender",
     value: "male",
   },
+  relationshipStatus: {
+    label: "Relationship status",
+    value: "Single",
+  },
   mobiletelephone: {
     label: "Mobile telephone",
     value: "14155552671", //     value: "+1 (415) 555-2671",
   },
   address: {
     label: "Address",
-    value: "123 Main St, Anytown, USA",
+    value: [
+      {
+        type: "country",
+        label: "Country",
+        value: "United States of America",
+      },
+      // {
+      //   type: "postalCode",
+      //   label: "Postal code",
+      //   value: "12345",
+      // },
+      {
+        type: "province",
+        label: "Province/State",
+        value: "California",
+      },
+      {
+        type: "city",
+        label: "City",
+        value: "San Francisco",
+      },
+      {
+        type: "addressLine1",
+        label: "Address line 1",
+        value: "123 Main St",
+      },
+      {
+        type: "addressLine2",
+        label: "Address line 2",
+        value: "Apt 4B",
+      },
+      // {
+      //   type: "addressLine3",
+      //   label: "Address line 3",
+      //   value: "Floor 2",
+      // },
+    ],
   },
 };
 
@@ -81,7 +128,7 @@ export const actionListMock: Record<string, { actions: IActionItemType[] }> = {
       {
         selector: "input[id='telephoneNumber']",
         type: "input",
-        value: profileMock.mobiletelephone.value,
+        value: profileMock.mobiletelephone.value.toString(),
       },
       {
         selector: "input[id='telephoneNumberPurpose_useInUK']",
@@ -126,12 +173,100 @@ export const actionListMock: Record<string, { actions: IActionItemType[] }> = {
       {
         selector: "input[id='givenName']",
         type: "input",
-        value: profileMock.firstname.value,
+        value: profileMock.firstname.value.toString(),
       },
       {
         selector: "input[id='familyName']",
         type: "input",
-        value: profileMock.lastname.value,
+        value: profileMock.lastname.value.toString(),
+      },
+      {
+        selector: "input[id='submit']",
+        type: "click",
+      },
+    ],
+  },
+  "Any other names": {
+    actions: [
+      {
+        selector: "input[id='addAnother_false']",
+        type: "click",
+      },
+      {
+        selector: "input[id='submit']",
+        type: "click",
+      },
+    ],
+  },
+  "Your sex and relationship status": {
+    actions: [
+      {
+        selector: "input[id='gender_1']",
+        type: "click",
+      },
+      {
+        selector: "select[id='relationshipStatus']",
+        type: "input",
+        value: "S",
+      },
+      {
+        selector: "input[id='submit']",
+        type: "click",
+      },
+    ],
+  },
+  "Your address": {
+    actions: [
+      {
+        selector: "input[id='outOfCountryAddress_line1']",
+        type: "input",
+        value: Array.isArray(profileMock.address.value)
+          ? profileMock.address.value.find((item) => item.type === "addressLine1")?.value || ""
+          : "",
+      },
+      {
+        selector: "input[id='outOfCountryAddress_line2']",
+        type: "input",
+        value: Array.isArray(profileMock.address.value)
+          ? profileMock.address.value.find((item) => item.type === "addressLine2")?.value || ""
+          : "",
+      },
+      {
+        selector: "input[id='outOfCountryAddress_line3']",
+        type: "input",
+        value: Array.isArray(profileMock.address.value)
+          ? profileMock.address.value.find((item) => item.type === "addressLine3")?.value || ""
+          : "",
+      },
+      {
+        selector: "input[id='outOfCountryAddress_townCity']",
+        type: "input",
+        value: Array.isArray(profileMock.address.value) ? profileMock.address.value.find((item) => item.type === "city")?.value || "" : "",
+      },
+      {
+        selector: "input[id='outOfCountryAddress_province']",
+        type: "input",
+        value: Array.isArray(profileMock.address.value)
+          ? profileMock.address.value.find((item) => item.type === "province")?.value || ""
+          : "",
+      },
+      {
+        selector: "input[id='outOfCountryAddress_postCode']",
+        type: "input",
+        value: Array.isArray(profileMock.address.value)
+          ? profileMock.address.value.find((item) => item.type === "postalCode")?.value || ""
+          : "",
+      },
+      {
+        selector: "input[id='outOfCountryAddress_countryRef_ui']",
+        type: "input",
+        value: Array.isArray(profileMock.address.value)
+          ? profileMock.address.value.find((item) => item.type === "country")?.value || ""
+          : "",
+      },
+      {
+        selector: "input[id='isCorrespondenceAddress_true']",
+        type: "click",
       },
       {
         selector: "input[id='submit']",
