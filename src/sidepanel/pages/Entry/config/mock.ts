@@ -61,6 +61,10 @@ export const profileMock: IProfileType = {
       },
     ],
   },
+  visaType: {
+    label: "Visa type",
+    value: "Visit or transit visa",
+  },
   address: {
     label: "Address",
     value: [
@@ -107,9 +111,24 @@ export const profileMock: IProfileType = {
       // },
     ],
   },
-  visaType: {
-    label: "Visa type",
-    value: "Visit or transit visa",
+  liveTime: {
+    label: "Lived at this address",
+    value: [
+      {
+        type: "timeLived",
+        label: "Time Lived",
+        value: "3",
+      },
+      {
+        type: "timeLivedUnit",
+        label: "Time Lived Unit",
+        value: "years",
+      },
+    ],
+  },
+  liveOwnershipStatus: {
+    label: "Ownership status",
+    value: "Rent",
   },
 };
 
@@ -181,6 +200,14 @@ export const actionListMock: Record<string, { actions: IActionItemType[] }> = {
     actions: [
       {
         selector: "input[id='submit']",
+        type: "click",
+      },
+    ],
+  },
+  "Do you want to start a new application?": {
+    actions: [
+      {
+        selector: "a[id='forceStart']",
         type: "click",
       },
     ],
@@ -379,6 +406,32 @@ export const actionListMock: Record<string, { actions: IActionItemType[] }> = {
       },
       {
         selector: "input[id='isCorrespondenceAddress_true']",
+        type: "click",
+      },
+      {
+        selector: "input[id='submit']",
+        type: "click",
+      },
+    ],
+  },
+  "About this property": {
+    actions: [
+      {
+        selector: "select[id='timeLivedUnit']",
+        type: "input",
+        value: Array.isArray(profileMock.liveTime.value)
+          ? profileMock.liveTime.value.find((item) => item.type === "timeLivedUnit")?.value || ""
+          : "",
+      },
+      {
+        selector: "input[id='timeLived']",
+        type: "input",
+        value: Array.isArray(profileMock.liveTime.value)
+          ? profileMock.liveTime.value.find((item) => item.type === "timeLived")?.value || ""
+          : "",
+      },
+      {
+        selector: "input[id='ownershipCategory_rent']",
         type: "click",
       },
       {
