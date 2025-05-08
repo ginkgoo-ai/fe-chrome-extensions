@@ -22,9 +22,9 @@ import { IProfileType, actionListMock, profileMock } from "./config/mock";
 import "./index.less";
 
 const TITLE_PAGE = "Ginkgoo AI Form Assistant";
-const DELAY_MOCK_ANALYSIS = 4000;
+const DELAY_MOCK_ANALYSIS = 2000;
 const DELAY_STEP = 2000;
-const DELAY_ACTION = 300;
+const DELAY_ACTION = 200;
 const REPEAT_MAX = 5;
 
 export default function Entry() {
