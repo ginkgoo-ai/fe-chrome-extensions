@@ -31,13 +31,25 @@ class HTMLManager {
     return html;
   }
 
-  cleansingHtml(params: { html: string }): { root: Parse5Node; rootHtml: string; main: Parse5Node | null; mainHtml: string } {
+  cleansingHtml(params: { html: string }): {
+    root: Parse5Node;
+    rootHtml: string;
+    main: Parse5Node | null;
+    mainHtml: string;
+    h1: Parse5Node | null;
+    h1Text: string;
+  } {
     const root = parse(params?.html);
     let main: Parse5Node | null = null;
+    let h1: Parse5Node | null = null;
 
     const processNode = (node: Parse5Node) => {
       if (node.nodeName.toLowerCase() === "main") {
         main = node;
+      }
+
+      if (node.nodeName.toLowerCase() === "h1") {
+        h1 = node;
       }
 
       if (node.childNodes) {
@@ -67,8 +79,11 @@ class HTMLManager {
 
     const rootHtml = UtilsManager.formatStr(serialize(root));
     const mainHtml = main ? UtilsManager.formatStr(serialize(main)) : "";
-
-    return { root, rootHtml, main, mainHtml };
+    const h1Text =
+      (h1 as unknown as Parse5Node)?.childNodes?.find((child: Parse5Node) => {
+        return child.nodeName.toLowerCase() === "#text";
+      })?.value || "";
+    return { root, rootHtml, main, mainHtml, h1, h1Text };
   }
 
   findElementBySelector(root: Parse5Node, selector: string): boolean {

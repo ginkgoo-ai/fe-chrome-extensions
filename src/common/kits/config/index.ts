@@ -3,7 +3,7 @@ import { Config, EntryList, ThemeInfo, ThemeInfoDefault } from "@/types/types";
 const themeInfoDefault: ThemeInfoDefault = {
   DEFAULT: {
     customStyle: {
-      "--color-primary": "#1890ff",
+      "--color-primary": "#ee8c49",
     },
   },
 };

@@ -11,17 +11,24 @@ import "./styles/iconfont.css";
 export default function SidePanel(): JSX.Element {
   const { x_themeValue } = useSelector((state: IRootStateType) => state.appInfo);
 
+  const colorPrimary = Config?.themeInfoDefault?.[x_themeValue]?.customStyle?.["--color-primary"] || "#1890ff";
+
   return (
     <ConfigProvider
       locale={en_US}
       componentSize="middle"
       theme={{
         token: {
-          colorPrimary: Config?.themeInfoDefault?.[x_themeValue]?.customStyle?.["--color-primary"] || "#1890ff",
+          colorPrimary,
         },
       }}
     >
-      <App className="h-screen w-screen">
+      <App
+        className="h-screen w-screen"
+        style={{
+          ["--color-primary" as string]: colorPrimary,
+        }}
+      >
         <RouterProvider router={globalRouters} />
       </App>
     </ConfigProvider>

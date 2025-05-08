@@ -378,6 +378,12 @@ class ChromeManager {
 
                   element.scrollIntoView({ behavior: "smooth", block: "center" }); // auto nearest‌
 
+                  if (action.type === "manual") {
+                    return {
+                      type: "manual",
+                    };
+                  }
+
                   if (action.type === "click") {
                     element.click();
                   } else if (action.type === "input") {
