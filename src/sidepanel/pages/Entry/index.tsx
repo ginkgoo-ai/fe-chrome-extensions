@@ -1,11 +1,12 @@
 import { ClearOutlined } from "@ant-design/icons";
-import { App, Descriptions, DescriptionsProps, Drawer, Modal, Steps, Tag, Tooltip, message } from "antd";
+import { App, Descriptions, DescriptionsProps, Drawer, Steps, Tag, Tooltip, message } from "antd";
 import md5 from "blueimp-md5";
 import classnames from "classnames";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import { useEffect, useRef, useState } from "react";
 import MKButton from "@/common/components/MKButton";
+import MKModuleSupport from "@/common/components/MKModuleSupport";
 import { MESSAGE } from "@/common/config/message";
 import ChromeManager from "@/common/kits/ChromeManager";
 import HTMLManager from "@/common/kits/HTMLManager";
@@ -137,10 +138,18 @@ export default function Entry() {
     const { title, descriptionText = "Analyzing..." } = params || {};
 
     setStepListItems((prev) => {
-      const result = [
+      const prevLength = prev.length;
+
+      setTimeout(() => {
+        document.getElementById(`step-item-${prevLength}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 40);
+
+      setStepListCurrent(prevLength);
+
+      return [
         ...prev,
         {
-          title: title,
+          title: <div id={`step-item-${prevLength}`}>{title}</div>,
           description: (
             <div className="box-border pl-2">
               <span>{descriptionText}</span>
@@ -150,9 +159,6 @@ export default function Entry() {
           actionlist: [],
         },
       ];
-
-      setStepListCurrent(result.length - 1);
-      return result;
     });
   };
 
@@ -312,6 +318,17 @@ export default function Entry() {
     if (isMock) {
       await UtilsManager.sleep(Math.floor(Math.random() * DELAY_MOCK_ANALYSIS + 1000));
       actionlist = actionListMock[title]?.actions || [];
+      if (actionlist.length === 0) {
+        message.open({
+          type: "success",
+          content: "Feature coming Soon",
+        });
+        updateStepListItemsForAddStep({
+          title: "Feature coming soon",
+          descriptionText: "We're crafting something extraordinary for you. Stay tuned for this remarkable enhancement.🎉",
+        });
+        return { result: false };
+      }
     } else {
       const resAssistent = await Api.Ginkgo.getAssistent({
         body: {
@@ -465,15 +482,18 @@ export default function Entry() {
       {/* Content */}
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden p-4">
         {/* Steps */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-1 flex-col gap-2">
           <div className="whitespace-nowrap font-bold">Steps:</div>
           <Steps direction="vertical" current={stepListCurrent} items={stepListItems} />
         </div>
         {/* HTML Info */}
-        <div className="flex flex-row gap-2">
-          <span className="whitespace-nowrap font-bold">HTML Info:</span>
-          <div className="whitespace-pre-wrap">{htmlInfo}</div>
-        </div>
+        {false && (
+          <div className="flex flex-row gap-2">
+            <span className="whitespace-nowrap font-bold">HTML Info:</span>
+            <div className="whitespace-pre-wrap">{htmlInfo}</div>
+          </div>
+        )}
+        <MKModuleSupport />
       </div>
       {/* Footer */}
       <div className="flex-0 flex flex-row items-center justify-between border-t border-solid border-gray-200 px-4 py-2">

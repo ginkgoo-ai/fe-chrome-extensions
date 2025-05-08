@@ -39,7 +39,7 @@ export const profileMock: IProfileType = {
   },
   gender: {
     label: "Gender",
-    value: "male",
+    value: "Male",
   },
   relationshipStatus: {
     label: "Relationship status",
@@ -153,10 +153,10 @@ export const actionListMock: Record<string, { actions: IActionItemType[] }> = {
   "Select a country to provide your biometrics": {
     actions: [
       {
-        selector: "select[id='countryCode']",
+        selector: "input[id='countryCode_ui']",
         type: "input",
         value: Array.isArray(profileMock.address.value)
-          ? profileMock.address.value.find((item) => item.type === "countryCode")?.value || ""
+          ? profileMock.address.value.find((item) => item.type === "country")?.value || ""
           : "",
       },
       {
