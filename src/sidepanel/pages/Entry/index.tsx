@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import { useEffect, useRef, useState } from "react";
 import MKButton from "@/common/components/MKButton";
+import MKModuleLoading from "@/common/components/MKModuleLoading";
 import MKModuleSupport from "@/common/components/MKModuleSupport";
 import { MESSAGE } from "@/common/config/message";
 import ChromeManager from "@/common/kits/ChromeManager";
@@ -135,7 +136,7 @@ export default function Entry() {
   };
 
   const updateStepListItemsForAddStep = (params: { title: string; descriptionText: string }) => {
-    const { title, descriptionText = "Analyzing..." } = params || {};
+    const { title, descriptionText = "Analyzing" } = params || {};
 
     setStepListItems((prev) => {
       const prevLength = prev.length;
@@ -149,10 +150,14 @@ export default function Entry() {
       return [
         ...prev,
         {
-          title: <div id={`step-item-${prevLength}`}>{title}</div>,
+          title: (
+            <div id={`step-item-${prevLength}`} className="font-bold">
+              {title}
+            </div>
+          ),
           description: (
             <div className="box-border pl-2">
-              <span>{descriptionText}</span>
+              {["Analyzing"].includes(descriptionText) ? <MKModuleLoading label={descriptionText} /> : <span>{descriptionText}</span>}
             </div>
           ),
           actioncurrent: 0,
@@ -181,7 +186,11 @@ export default function Entry() {
       return prev.map((itemStep, indexStep) => {
         if (stepcurrent === indexStep) {
           return {
-            title: <div id={`step-item-${indexStep}`}>{itemStep.title}</div>,
+            title: (
+              <div id={`step-item-${indexStep}`} className="font-bold">
+                {itemStep.title}
+              </div>
+            ),
             description: (
               <div className="box-border pl-2">
                 <Steps progressDot direction="vertical" current={0} items={actionItems} />
@@ -240,7 +249,11 @@ export default function Entry() {
         });
 
         return {
-          title: itemStep.title,
+          title: (
+            <div id={`step-item-${indexStep}`} className="font-bold">
+              {itemStep.title}
+            </div>
+          ),
           description: (
             <div className="box-border pl-2">
               <Steps progressDot direction="vertical" current={actioncurrentReal} items={actionItems} />
@@ -298,7 +311,7 @@ export default function Entry() {
 
     updateStepListItemsForAddStep({
       title: title + (refRepeatCurrent.current > 1 ? `(Repeat: ${refRepeatCurrent.current})` : ""),
-      descriptionText: "Analyzing...",
+      descriptionText: "Analyzing",
     });
 
     return { result: true, title, htmlCleansing };
@@ -367,15 +380,6 @@ export default function Entry() {
         },
       });
 
-      if (action.type === "manual") {
-        message.open({ type: "warning", content: "Please complete manually and try to continue" });
-        updateStepListItemsForAddStep({
-          title: title,
-          descriptionText: "Please complete manually and try to continue",
-        });
-        return { result: false };
-      }
-
       const { type } = resActionDom?.[0]?.result || {};
 
       updateStepListItemsForUpdateAction({
@@ -383,6 +387,11 @@ export default function Entry() {
         actionresult: type,
         actiontimestamp: dayjs().format("YYYY-MM-DD HH:mm:ss:SSS"),
       });
+
+      if (action.type === "manual") {
+        message.open({ type: "warning", content: "Please complete manually and try to continue" });
+        return { result: false };
+      }
     }
 
     return { result: true };
