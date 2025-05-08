@@ -1,6 +1,7 @@
 import { IActionItemType } from ".";
 
 export interface IAddressItemType {
+  hidden?: boolean;
   type: string;
   label: string;
   value: string;
@@ -12,15 +13,7 @@ export interface IProfileItemType {
 }
 
 export interface IProfileType {
-  id: IProfileItemType;
-  firstname: IProfileItemType;
-  lastname: IProfileItemType;
-  email: IProfileItemType;
-  dob: IProfileItemType;
-  gender: IProfileItemType;
-  relationshipStatus: IProfileItemType;
-  mobiletelephone: IProfileItemType;
-  address: IProfileItemType;
+  [key: string]: IProfileItemType;
 }
 
 export const profileMock: IProfileType = {
@@ -38,11 +31,11 @@ export const profileMock: IProfileType = {
   },
   email: {
     label: "Email",
-    value: "stale581@chefalicious.com",
+    value: "ginkgo20250002@chefalicious.com",
   },
   dob: {
     label: "Date of birth",
-    value: "1990-01-01",
+    value: "1992-12-08",
   },
   gender: {
     label: "Gender",
@@ -54,7 +47,19 @@ export const profileMock: IProfileType = {
   },
   mobiletelephone: {
     label: "Mobile telephone",
-    value: "14155552671", //     value: "+1 (415) 555-2671",
+    //     value: "+1 (415) 555-2671",       "14155552671"
+    value: [
+      {
+        type: "countryCode",
+        label: "Country Code",
+        value: "1",
+      },
+      {
+        type: "phoneNumber",
+        label: "Phone number",
+        value: "4155552671",
+      },
+    ],
   },
   address: {
     label: "Address",
@@ -63,6 +68,12 @@ export const profileMock: IProfileType = {
         type: "country",
         label: "Country",
         value: "United States of America",
+      },
+      {
+        hidden: true,
+        type: "countryCode",
+        label: "Country Code",
+        value: "USA",
       },
       // {
       //   type: "postalCode",
@@ -96,9 +107,105 @@ export const profileMock: IProfileType = {
       // },
     ],
   },
+  visaType: {
+    label: "Visa type",
+    value: "Visit or transit visa",
+  },
 };
 
 export const actionListMock: Record<string, { actions: IActionItemType[] }> = {
+  "Your location": {
+    actions: [
+      {
+        selector: "input[id='value_false']",
+        type: "click",
+      },
+      {
+        selector: "input[id='submit']",
+        type: "click",
+      },
+    ],
+  },
+  "Select your language": {
+    actions: [
+      {
+        selector: "input[id='languageCode_en']",
+        type: "click",
+      },
+      {
+        selector: "input[id='submit']",
+        type: "click",
+      },
+    ],
+  },
+  "Confirm your visa type": {
+    actions: [
+      {
+        selector: "input[id='visaType_visit-visa-ooc-standard']",
+        type: "click",
+      },
+      {
+        selector: "input[id='submit']",
+        type: "click",
+      },
+    ],
+  },
+  "Select a country to provide your biometrics": {
+    actions: [
+      {
+        selector: "select[id='countryCode']",
+        type: "input",
+        value: Array.isArray(profileMock.address.value)
+          ? profileMock.address.value.find((item) => item.type === "countryCode")?.value || ""
+          : "",
+      },
+      {
+        selector: "input[id='submit']",
+        type: "click",
+      },
+    ],
+  },
+  "Check available visa application centre locations": {
+    actions: [
+      {
+        selector: "input[id='vacAvailabilityConfirmed_true']",
+        type: "click",
+      },
+      {
+        selector: "input[id='submit']",
+        type: "click",
+      },
+    ],
+  },
+  "Apply for a UK visit visa": {
+    actions: [
+      {
+        selector: "input[id='submit']",
+        type: "click",
+      },
+    ],
+  },
+  "Register an email": {
+    actions: [
+      {
+        selector: "input[id='email']",
+        type: "input",
+        value: profileMock.email.value.toString(),
+      },
+      {
+        selector: "input[id='password1']",
+        type: "manual",
+      },
+      {
+        selector: "input[id='password2']",
+        type: "manual",
+      },
+      {
+        selector: "input[id='submit']",
+        type: "click",
+      },
+    ],
+  },
   "Contacting you by email": {
     actions: [
       {
@@ -128,7 +235,13 @@ export const actionListMock: Record<string, { actions: IActionItemType[] }> = {
       {
         selector: "input[id='telephoneNumber']",
         type: "input",
-        value: profileMock.mobiletelephone.value.toString(),
+        value:
+          (Array.isArray(profileMock.mobiletelephone.value)
+            ? profileMock.mobiletelephone.value.find((item) => item.type === "countryCode")?.value || ""
+            : "") +
+          (Array.isArray(profileMock.mobiletelephone.value)
+            ? profileMock.mobiletelephone.value.find((item) => item.type === "phoneNumber")?.value || ""
+            : ""),
       },
       {
         selector: "input[id='telephoneNumberPurpose_useInUK']",

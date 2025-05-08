@@ -382,6 +382,8 @@ class ChromeManager {
                     element.click();
                   } else if (action.type === "input") {
                     element.value = action.value;
+                  } else if (action.type === "manual") {
+                    // Manual action
                   }
 
                   return {

@@ -13,7 +13,7 @@ export type ActionResultType = "success" | "notFound" | "";
 
 export interface IActionItemType {
   selector: string;
-  type: "input" | "click";
+  type: "input" | "click" | "manual";
   value?: string;
   actionresult?: ActionResultType;
   actiontimestamp?: string;

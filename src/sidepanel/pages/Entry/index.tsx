@@ -20,7 +20,7 @@ import { IProfileType, actionListMock, profileMock } from "./config/mock";
 import "./index.less";
 
 const TITLE_PAGE = "Ginkgoo AI Form Assistant";
-const DELAY_MOCK_ANALYSIS = 1000;
+const DELAY_MOCK_ANALYSIS = 4000;
 const DELAY_STEP = 2000;
 const DELAY_ACTION = 300;
 const REPEAT_MAX = 5;
@@ -36,6 +36,7 @@ export default function Entry() {
   const [stepListItems, setStepListItems] = useState<IStepItemType[]>([]);
   const [htmlInfo, setHtmlInfo] = useState<string>("");
   const [isDrawerProfileOpen, setDrawerProfileOpen] = useState<boolean>(false);
+  const [isDrawerProfileLoading, setDrawerProfileLoading] = useState<boolean>(true);
   const [profileName, setProfileName] = useState<string>("");
   const [profileItems, setProfileItems] = useState<DescriptionsProps["items"]>([]);
 
@@ -56,10 +57,11 @@ export default function Entry() {
       if (!resMain?.result) {
         setStatus(StatusEnum.STOP);
       }
+      await UtilsManager.sleep(DELAY_STEP);
       refLockSteping.current = false;
     },
     {
-      delay: DELAY_STEP,
+      delay: 20,
       immediate: true,
       enabled: status !== StatusEnum.STOP,
     }
@@ -77,6 +79,7 @@ export default function Entry() {
           label: item.label,
           children: Array.isArray(item.value)
             ? item.value
+                .filter((itemValue) => !itemValue.hidden)
                 .map((itemValue) => {
                   return itemValue.value;
                 })
@@ -326,11 +329,13 @@ export default function Entry() {
     return { result: true, actionlist };
   };
 
-  const executeActionList = async (params: { actionlist: IActionItemType[] }) => {
-    const { actionlist } = params || {};
+  const executeActionList = async (params: { title?: string; actionlist?: IActionItemType[] }) => {
+    const { title = "", actionlist = [] } = params || {};
 
     setStatus(StatusEnum.ACTION);
     for (let i = 0; i < actionlist.length; i++) {
+      const action = actionlist[i];
+
       if (i !== 0) {
         await UtilsManager.sleep(DELAY_ACTION);
       }
@@ -338,13 +343,22 @@ export default function Entry() {
         return { result: false };
       }
 
-      const action = actionlist[i];
       const resActionDom = await ChromeManager.executeScript(refTabActivated.current, {
         cbName: "actionDom",
         cbParams: {
           action,
         },
       });
+
+      if (action.type === "manual") {
+        message.open({ type: "warning", content: "Please complete manually and try to continue" });
+        updateStepListItemsForAddStep({
+          title: title,
+          descriptionText: "Please complete manually and try to continue",
+        });
+        return { result: false };
+      }
+
       const { type } = resActionDom?.[0]?.result || {};
 
       updateStepListItemsForUpdateAction({
@@ -373,7 +387,10 @@ export default function Entry() {
       return { result: false };
     }
 
-    const resExecuteActionList = await executeActionList({ actionlist: resQueryActionList.actionlist || [] });
+    const resExecuteActionList = await executeActionList({
+      title: resQueryHtmlInfo.title,
+      actionlist: resQueryActionList.actionlist,
+    });
     if (!resExecuteActionList.result) {
       return { result: false };
     }
@@ -394,6 +411,10 @@ export default function Entry() {
 
   const handleBtnProfileClick = () => {
     setDrawerProfileOpen(true);
+
+    setTimeout(() => {
+      setDrawerProfileLoading(false);
+    }, 1200);
   };
 
   const handleBtnCleanClick = () => {
@@ -475,7 +496,7 @@ export default function Entry() {
         </div>
       )}
       {/* Layout History */}
-      <Drawer open={isDrawerProfileOpen} title="Profile Info" onClose={() => setDrawerProfileOpen(false)}>
+      <Drawer open={isDrawerProfileOpen} title="Profile Info" loading={isDrawerProfileLoading} onClose={() => setDrawerProfileOpen(false)}>
         <Descriptions items={profileItems} column={1} />
       </Drawer>
     </div>
