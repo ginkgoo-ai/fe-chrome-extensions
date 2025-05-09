@@ -1,4 +1,4 @@
-import { ClearOutlined } from "@ant-design/icons";
+import { ClearOutlined, SettingOutlined } from "@ant-design/icons";
 import { App, Descriptions, DescriptionsProps, Drawer, Steps, Tag, Tooltip, message } from "antd";
 import md5 from "blueimp-md5";
 import classnames from "classnames";
@@ -454,6 +454,10 @@ export default function Entry() {
     });
   };
 
+  const handleBtnSettingClick = async () => {
+    await ChromeManager.openOptionsPage();
+  };
+
   return (
     <div className="entry-wrap flex h-screen w-screen flex-col">
       {/* Header */}
@@ -517,6 +521,7 @@ export default function Entry() {
         <div className="flex flex-row gap-2">
           {/* <MKButton type="primary" shape="circle" icon={<HistoryOutlined />} onClick={handleBtnHistoryClick} /> */}
           <MKButton type="primary" icon={<ClearOutlined />} onClick={handleBtnCleanClick} />
+          <MKButton type="primary" icon={<SettingOutlined />} onClick={handleBtnSettingClick} />
         </div>
       </div>
       {false && (

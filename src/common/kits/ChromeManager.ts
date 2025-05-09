@@ -17,6 +17,20 @@ class ChromeManager {
     return this.instance;
   }
 
+  async openOptionsPage(): Promise<void> {
+    return new Promise((resolve) => {
+      if (GlobalManager.g_isDev) {
+        message.open({
+          content: `打开options页面`,
+          type: "info",
+        });
+      } else {
+        chrome.runtime.openOptionsPage();
+      }
+      resolve();
+    });
+  }
+
   async setSyncStorageCore(params: Record<string, any>): Promise<void> {
     if (GlobalManager.g_isDev) {
       const g_cacheSync = GlobalManager.g_cacheSync || {};
@@ -83,16 +97,6 @@ class ChromeManager {
         });
       }
     });
-  }
-
-  getURLRuntime(url: string): string {
-    let result = "";
-    if (GlobalManager.g_isDev) {
-      result = "./getURLRuntime.js";
-    } else {
-      result = chrome.runtime.getURL(url);
-    }
-    return result;
   }
 
   async queryAllTabs(): Promise<chrome.tabs.Tab[]> {
@@ -506,6 +510,16 @@ class ChromeManager {
         }
       }
     });
+  }
+
+  getURLRuntime(url: string): string {
+    let result = "";
+    if (GlobalManager.g_isDev) {
+      result = "./getURLRuntime.js";
+    } else {
+      result = chrome.runtime.getURL(url);
+    }
+    return result;
   }
 }
 

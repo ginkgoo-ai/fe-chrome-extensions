@@ -37,6 +37,10 @@
       "run_at": "document_end"
     }
   ],
+  // "options_ui": {
+  //   "page": "options/index.html",
+  //   "open_in_tab": true
+  // },
   "side_panel": {
     "default_path": "sidepanel/index.html"
   },
