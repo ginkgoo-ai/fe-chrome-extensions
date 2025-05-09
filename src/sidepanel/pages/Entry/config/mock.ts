@@ -31,7 +31,7 @@ export const profileMock: IProfileType = {
   },
   email: {
     label: "Email",
-    value: "ginkgo20250002@chefalicious.com",
+    value: "ginkgo20250003@chefalicious.com",
   },
   dob: {
     label: "Date of birth",

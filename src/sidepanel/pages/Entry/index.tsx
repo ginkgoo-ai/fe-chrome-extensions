@@ -1,5 +1,5 @@
-import { ClearOutlined, SettingOutlined } from "@ant-design/icons";
-import { App, Descriptions, DescriptionsProps, Drawer, Steps, Tag, Tooltip, message } from "antd";
+import { ClearOutlined, CopyOutlined, SettingOutlined } from "@ant-design/icons";
+import { Alert, App, Descriptions, DescriptionsProps, Drawer, Steps, Tag, Tooltip, message } from "antd";
 import md5 from "blueimp-md5";
 import classnames from "classnames";
 import dayjs from "dayjs";
@@ -33,10 +33,12 @@ export default function Entry() {
   const refRepeatCurrent = useRef<number>(1);
   const refRepeatHash = useRef<string>("");
 
+  const [timerDelay, setTimerDelay] = useState<number | null>(null);
   const [status, setStatus] = useState<StatusEnum>(StatusEnum.STOP);
+  const [alertTip, setAlertTip] = useState<{ type: "success" | "info" | "warning" | "error"; message: string } | null>(null);
   const [stepListCurrent, setStepListCurrent] = useState<number>(-1);
   const [stepListItems, setStepListItems] = useState<IStepItemType[]>([]);
-  const [htmlInfo, setHtmlInfo] = useState<string>("");
+  const [isCopyHtmlLoading, setCopyHtmlLoading] = useState<boolean>(false);
   const [isDrawerProfileOpen, setDrawerProfileOpen] = useState<boolean>(false);
   const [isDrawerProfileLoading, setDrawerProfileLoading] = useState<boolean>(true);
   const [profileName, setProfileName] = useState<string>("");
@@ -48,7 +50,7 @@ export default function Entry() {
 
   const { modal } = App.useApp();
 
-  const { clear: clearInterval } = useInterval(
+  useInterval(
     async () => {
       if (refLockSteping.current) {
         return;
@@ -62,11 +64,8 @@ export default function Entry() {
       await UtilsManager.sleep(DELAY_STEP);
       refLockSteping.current = false;
     },
-    {
-      delay: 20,
-      immediate: true,
-      enabled: status !== StatusEnum.STOP,
-    }
+    timerDelay,
+    true
   );
 
   const init = async () => {
@@ -95,15 +94,22 @@ export default function Entry() {
   useEffect(() => {
     window.document.title = TITLE_PAGE;
     init();
+    return () => {
+      refLockSteping.current = false;
+    };
   }, []);
 
   useEffect(() => {
     if (status === StatusEnum.STOP) {
-      refLockSteping.current = false;
+      setTimerDelay(null);
+      // refLockSteping.current = false; // Don't need to reset
       refTabActivated.current = null;
       refRepeatCurrent.current = 1;
       refRepeatHash.current = "";
-      clearInterval();
+    }
+    if (status === StatusEnum.START) {
+      setTimerDelay(40);
+      setAlertTip(null);
     }
   }, [status]);
 
@@ -170,18 +176,17 @@ export default function Entry() {
   const updateStepListItemsForUpdateStep = (params: { stepcurrent?: number; actionlist: IActionItemType[] }) => {
     const { stepcurrent: stepcurrentParams, actionlist } = params || {};
 
-    const indexStep = stepListCurrent + 1;
-
-    const actionItems = actionlist.map((itemAction, indexAction) => {
-      return calcActionItem(itemAction, indexStep, indexAction);
-    });
-
     setStepListItems((prev) => {
       const stepcurrent = stepcurrentParams === undefined ? prev.length - 1 : stepcurrentParams;
+      const actionItems = actionlist.map((itemAction, indexAction) => {
+        return calcActionItem(itemAction, stepcurrent, indexAction);
+      });
 
       setTimeout(() => {
         document.getElementById(`step-item-${stepcurrent}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 40);
+
+      setStepListCurrent(stepcurrent);
 
       return prev.map((itemStep, indexStep) => {
         if (stepcurrent === indexStep) {
@@ -203,7 +208,6 @@ export default function Entry() {
         return itemStep;
       });
     });
-    setStepListCurrent(indexStep);
   };
 
   const updateStepListItemsForUpdateAction = (params: {
@@ -280,16 +284,13 @@ export default function Entry() {
     const html = resQueryHtmlInfo?.[0]?.result;
 
     if (!html) {
-      message.open({ type: "error", content: MESSAGE.NOT_SUPPORT_PAGE });
+      setAlertTip({ type: "error", message: MESSAGE.NOT_SUPPORT_PAGE });
       return { result: false };
     }
 
     const { rootHtml, mainHtml, h1Text } = HTMLManager.cleansingHtml({ html });
-    const htmlCleansing = mainHtml || rootHtml;
-
-    setHtmlInfo(JSON.stringify(htmlCleansing, null, 2));
-
     const title = h1Text || "Unknown Page";
+    const htmlCleansing = mainHtml || rootHtml;
 
     const hash = md5(title + htmlCleansing);
 
@@ -301,10 +302,10 @@ export default function Entry() {
     }
 
     if (refRepeatCurrent.current > REPEAT_MAX) {
-      message.open({ type: "error", content: MESSAGE.REPEAT_MAX });
+      setAlertTip({ type: "error", message: MESSAGE.REPEAT_MAX_TIP });
       updateStepListItemsForAddStep({
         title: title + `(Repeat: max)`,
-        descriptionText: "Repeat max. Please manually operate and then try start again.",
+        descriptionText: MESSAGE.REPEAT_MAX_TIP,
       });
       return { result: false };
     }
@@ -332,13 +333,13 @@ export default function Entry() {
       await UtilsManager.sleep(Math.floor(Math.random() * DELAY_MOCK_ANALYSIS + 1000));
       actionlist = actionListMock[title]?.actions || [];
       if (actionlist.length === 0) {
-        message.open({
+        setAlertTip({
           type: "success",
-          content: "Feature coming Soon",
+          message: MESSAGE.FEATURE_COMING_SOON,
         });
         updateStepListItemsForAddStep({
-          title: "Feature coming soon",
-          descriptionText: "We're crafting something extraordinary for you. Stay tuned for this remarkable enhancement.🎉",
+          title: MESSAGE.FEATURE_COMING_SOON,
+          descriptionText: MESSAGE.FEATURE_COMING_SOON_TIP,
         });
         return { result: false };
       }
@@ -389,7 +390,7 @@ export default function Entry() {
       });
 
       if (action.type === "manual") {
-        message.open({ type: "warning", content: "Please complete manually and try to continue" });
+        setAlertTip({ type: "warning", message: "Please complete manually and try to continue" });
         return { result: false };
       }
     }
@@ -399,7 +400,7 @@ export default function Entry() {
 
   const main = async () => {
     if (!refTabActivated.current) {
-      message.open({ type: "error", content: MESSAGE.NOT_FOUND_TAB });
+      setAlertTip({ type: "error", message: MESSAGE.NOT_FOUND_TAB });
       return { result: false };
     }
 
@@ -443,13 +444,39 @@ export default function Entry() {
     }, 1200);
   };
 
+  const handleBtnCopyHtmlClick = async () => {
+    setCopyHtmlLoading(true);
+
+    const resQueryHtmlInfo = await ChromeManager.executeScript(x_tabActivated, {
+      cbName: "queryHtmlInfo",
+      cbParams: {},
+    });
+
+    const html = resQueryHtmlInfo?.[0]?.result;
+
+    if (!html) {
+      setAlertTip({ type: "error", message: MESSAGE.NOT_SUPPORT_PAGE });
+      return { result: false };
+    }
+
+    const { rootHtml, mainHtml, h1Text } = HTMLManager.cleansingHtml({ html });
+    const htmlCleansing = mainHtml || rootHtml;
+
+    const htmlCleansingString = JSON.stringify({ html: htmlCleansing }, null, 2);
+
+    await navigator.clipboard.writeText(htmlCleansingString);
+
+    message.open({ type: "success", content: MESSAGE.HTML_INFO_COPIED });
+
+    setCopyHtmlLoading(false);
+  };
+
   const handleBtnCleanClick = () => {
     modal.confirm({
-      title: "Are you sure you want to clean the history?",
+      title: "Are you sure you wish to clear the history?",
       onOk: () => {
         setStepListCurrent(-1);
         setStepListItems([]);
-        setHtmlInfo("");
       },
     });
   };
@@ -470,11 +497,8 @@ export default function Entry() {
           </MKButton>
         </div>
       </div>
+      {/* Status */}
       <div className="flex-0 flex flex-col gap-2 border-b border-solid border-gray-200 p-4">
-        {/* <div className="flex flex-row gap-2">
-          <span className="whitespace-nowrap font-bold">Tab Id:</span>
-          <span className="whitespace-pre-wrap">{x_tabActivated?.id}</span>
-        </div> */}
         <div className="flex flex-row gap-2">
           <span className="whitespace-nowrap font-bold">Tab Url:</span>
           <span className="whitespace-pre-wrap break-words break-all">{x_tabActivated?.url}</span>
@@ -492,20 +516,20 @@ export default function Entry() {
           </span>
         </div>
       </div>
+      {alertTip && (
+        <div className="flex-0 box-border w-full p-1">
+          <Alert closable showIcon={false} type={alertTip.type} message={alertTip.message} onClose={() => setAlertTip(null)} />
+        </div>
+      )}
       {/* Content */}
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden p-4">
+      <div className="flex flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden px-4 pb-[10vh] pt-4">
         {/* Steps */}
         <div className="flex flex-1 flex-col gap-2">
           <div className="whitespace-nowrap font-bold">Steps:</div>
           <Steps direction="vertical" current={stepListCurrent} items={stepListItems} />
         </div>
-        {/* HTML Info */}
-        {false && (
-          <div className="flex flex-row gap-2">
-            <span className="whitespace-nowrap font-bold">HTML Info:</span>
-            <div className="whitespace-pre-wrap">{htmlInfo}</div>
-          </div>
-        )}
+      </div>
+      <div className="flex-0 w-full">
         <MKModuleSupport />
       </div>
       {/* Footer */}
@@ -520,8 +544,9 @@ export default function Entry() {
         </div>
         <div className="flex flex-row gap-2">
           {/* <MKButton type="primary" shape="circle" icon={<HistoryOutlined />} onClick={handleBtnHistoryClick} /> */}
+          <MKButton type="primary" icon={<CopyOutlined />} loading={isCopyHtmlLoading} onClick={handleBtnCopyHtmlClick} />
           <MKButton type="primary" icon={<ClearOutlined />} onClick={handleBtnCleanClick} />
-          <MKButton type="primary" icon={<SettingOutlined />} onClick={handleBtnSettingClick} />
+          {/* <MKButton type="primary" icon={<SettingOutlined />} onClick={handleBtnSettingClick} /> */}
         </div>
       </div>
       {false && (
