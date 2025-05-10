@@ -3,7 +3,7 @@
   "version": "${script replace version}",
   "description": "AI-powered automated form filling extension",
   "manifest_version": 3,
-  "permissions": ["sidePanel", "storage", "scripting", "tabs"],
+  "permissions": ["identity", "sidePanel", "storage", "scripting", "tabs"],
   "commands": {},
   "host_permissions": ["*://*/*"],
   "web_accessible_resources": [

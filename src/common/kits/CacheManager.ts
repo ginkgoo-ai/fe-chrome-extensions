@@ -22,7 +22,7 @@ class CacheManager {
    * @example
    * const res = await CacheManager.setSyncStorage({c_syncKey: 'syncValue'})
    **/
-  async setSyncStorageChrome(params: Record<string, any>): Promise<any> {
+  async setSyncStorageChrome(params: Record<string, string | number | boolean | Record<string, string | number | boolean>>): Promise<void> {
     const res = await ChromeManager.setSyncStorageCore(params);
     return res;
   }
@@ -33,8 +33,13 @@ class CacheManager {
    * @example
    * const res = await CacheManager.getSyncStorage(['c_syncKey']) || {}
    **/
-  async getSyncStorageChrome(params?: string[]): Promise<Record<string, any>> {
+  async getSyncStorageChrome(params?: string[]): Promise<Record<string, string | number | boolean>> {
     const res = await ChromeManager.getSyncStorageCore(params);
+    return res;
+  }
+
+  async removeSyncStorageChrome(params: string[]): Promise<void> {
+    const res = await ChromeManager.removeSyncStorageCore(params);
     return res;
   }
 

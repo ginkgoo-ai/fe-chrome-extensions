@@ -1,5 +1,5 @@
-import { ClearOutlined, CopyOutlined, SettingOutlined } from "@ant-design/icons";
-import { Alert, App, Descriptions, DescriptionsProps, Drawer, Steps, Tag, Tooltip, message } from "antd";
+import { ClearOutlined, CopyOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
+import { Alert, App, Descriptions, DescriptionsProps, Drawer, MenuProps, Steps, Tag, Tooltip, message } from "antd";
 import md5 from "blueimp-md5";
 import classnames from "classnames";
 import dayjs from "dayjs";
@@ -11,6 +11,7 @@ import MKModuleSupport from "@/common/components/MKModuleSupport";
 import { MESSAGE } from "@/common/config/message";
 import ChromeManager from "@/common/kits/ChromeManager";
 import HTMLManager from "@/common/kits/HTMLManager";
+import MemberManager from "@/common/kits/MemberManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { useActions } from "@/common/kits/hooks/useActions";
@@ -34,10 +35,25 @@ export default function Entry() {
   const refRepeatHash = useRef<string>("");
 
   const [timerDelay, setTimerDelay] = useState<number | null>(null);
+  const [dropdownItems, setDropdownItems] = useState<MenuProps["items"]>([
+    {
+      label: "Profile info",
+      key: "profile-info",
+    },
+    {
+      type: "divider",
+    },
+    {
+      label: "Logout",
+      key: "logout",
+      danger: true,
+    },
+  ]);
   const [status, setStatus] = useState<StatusEnum>(StatusEnum.STOP);
   const [alertTip, setAlertTip] = useState<{ type: "success" | "info" | "warning" | "error"; message: string } | null>(null);
   const [stepListCurrent, setStepListCurrent] = useState<number>(-1);
   const [stepListItems, setStepListItems] = useState<IStepItemType[]>([]);
+  const [isLoginLoading, setLoginLoading] = useState<boolean>(false);
   const [isCopyHtmlLoading, setCopyHtmlLoading] = useState<boolean>(false);
   const [isDrawerProfileOpen, setDrawerProfileOpen] = useState<boolean>(false);
   const [isDrawerProfileLoading, setDrawerProfileLoading] = useState<boolean>(true);
@@ -71,7 +87,7 @@ export default function Entry() {
   const init = async () => {
     const resTabInfo = await ChromeManager.queryTabInfo({});
     updateTabActivated(resTabInfo);
-    setProfileName(profileMock.firstname.value.toString().charAt(0).toUpperCase());
+    refreshProfileInfo();
     setProfileItems(
       Object.keys(profileMock).map((key, index) => {
         const item = profileMock[key as keyof IProfileType];
@@ -112,6 +128,11 @@ export default function Entry() {
       setAlertTip(null);
     }
   }, [status]);
+
+  const refreshProfileInfo = async () => {
+    const resMemberInfo = await MemberManager.getToken(); // getMemberInfo();
+    setProfileName(resMemberInfo?.toString()?.charAt(0)?.toUpperCase());
+  };
 
   const calcActionItem = (item: IActionItemType, indexStep: number, indexAction: number) => {
     const { type, selector, value, actionresult, actiontimestamp } = item || {};
@@ -436,12 +457,29 @@ export default function Entry() {
     refTabActivated.current = null;
   };
 
-  const handleBtnProfileClick = () => {
-    setDrawerProfileOpen(true);
+  const handleDropdownClick: MenuProps["onClick"] = ({ key }) => {
+    if (key === "profile-info") {
+      setDrawerProfileOpen(true);
+      setTimeout(() => {
+        setDrawerProfileLoading(false);
+      }, 1200);
+    } else if (key === "logout") {
+      MemberManager.logout();
+      refreshProfileInfo();
+    }
+  };
 
-    setTimeout(() => {
-      setDrawerProfileLoading(false);
-    }, 1200);
+  const handleBtnProfileClick = async () => {
+    setLoginLoading(true);
+    await MemberManager.checkLogin(
+      async () => {
+        refreshProfileInfo();
+      },
+      async () => {
+        message.open({ type: "error", content: "Login failed" });
+      }
+    );
+    setLoginLoading(false);
   };
 
   const handleBtnCopyHtmlClick = async () => {
@@ -471,7 +509,7 @@ export default function Entry() {
     setCopyHtmlLoading(false);
   };
 
-  const handleBtnCleanClick = () => {
+  const handleBtnClearClick = () => {
     modal.confirm({
       title: "Are you sure you wish to clear the history?",
       onOk: () => {
@@ -492,8 +530,8 @@ export default function Entry() {
         <div className="flex-0 w-5"></div>
         <div className="flex-1 whitespace-nowrap text-center font-bold">{TITLE_PAGE}</div>
         <div className="flex-0 w-5">
-          <MKButton type="primary" shape="circle" onClick={handleBtnProfileClick}>
-            {profileName}
+          <MKButton type="primary" shape="circle" loading={isLoginLoading} onClick={handleBtnProfileClick}>
+            {isLoginLoading ? "" : profileName}
           </MKButton>
         </div>
       </div>
@@ -545,7 +583,7 @@ export default function Entry() {
         <div className="flex flex-row gap-2">
           {/* <MKButton type="primary" shape="circle" icon={<HistoryOutlined />} onClick={handleBtnHistoryClick} /> */}
           <MKButton type="primary" icon={<CopyOutlined />} loading={isCopyHtmlLoading} onClick={handleBtnCopyHtmlClick} />
-          <MKButton type="primary" icon={<ClearOutlined />} onClick={handleBtnCleanClick} />
+          <MKButton type="primary" icon={<ClearOutlined />} onClick={handleBtnClearClick} />
           {/* <MKButton type="primary" icon={<SettingOutlined />} onClick={handleBtnSettingClick} /> */}
         </div>
       </div>

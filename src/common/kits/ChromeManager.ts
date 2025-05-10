@@ -2,6 +2,7 @@
 import { message } from "antd";
 import BackgroundEventManager from "@/common/kits/BackgroundEventManager";
 import GlobalManager from "@/common/kits/GlobalManager";
+import UtilsManager from "@/common/kits/UtilsManager";
 import Mock from "@/common/kits/mock";
 
 /**
@@ -16,6 +17,45 @@ class ChromeManager {
     }
     return this.instance;
   }
+
+  async launchWebAuthFlow(): Promise<string> {
+    const redirectUrl = chrome.identity.getRedirectURL();
+    const clientId = "Ov23liKuW50Tuz2cptS9";
+    const authUrl = UtilsManager.router2url("https://github.com/login/oauth/authorize", {
+      client_id: clientId,
+      // response_type: "token",
+      redirect_uri: encodeURIComponent(redirectUrl),
+    });
+
+    console.log("authUrl", authUrl);
+    console.log("redirectUrl", redirectUrl);
+
+    try {
+      const responseUrl = await chrome.identity.launchWebAuthFlow({
+        url: authUrl,
+        interactive: true,
+        // abortOnLoadForNonInteractive: false,
+        // timeoutMsForNonInteractive: 10000
+      });
+
+      const responseParams = UtilsManager.router2Params(responseUrl || "", {
+        decode: false,
+      });
+      const { code = "" } = responseParams.params as Record<string, string>;
+
+      return code;
+    } catch (error) {
+      console.debug("[Debug] ChromeManager launchWebAuthFlow error", error);
+      return "";
+    }
+  }
+
+  // async removeCachedAuthToken(params: Record<string, any>): Promise<any> {
+  //   const { token } = params || {};
+  //   const res = await chrome.identity.removeCachedAuthToken({ token });
+  //   console.log("ChromeManager removeCachedAuthToken", res);
+  //   return res;
+  // }
 
   async openOptionsPage(): Promise<void> {
     return new Promise((resolve) => {
