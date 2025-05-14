@@ -17,6 +17,7 @@ import Api from "@/common/kits/api";
 import { useActions } from "@/common/kits/hooks/useActions";
 import { useInterval } from "@/common/kits/hooks/useInterval";
 import appInfoActions from "@/sidepanel/redux/actions/appInfo";
+import pilotInfoActions from "@/sidepanel/redux/actions/pilotInfo";
 import { IRootStateType } from "@/sidepanel/redux/types";
 import { ActionResultType, IActionItemType, IStepItemType, StatusEnum } from "./config";
 import { IProfileType, actionListMock, profileMock } from "./config/mock";
@@ -28,7 +29,7 @@ const DELAY_STEP = 2000;
 const DELAY_ACTION = 200;
 const REPEAT_MAX = 5;
 
-export default function Entry() {
+export default function Pilot() {
   const refLockSteping = useRef<boolean>(false);
   const refTabActivated = useRef<chrome.tabs.Tab | null>(null);
   const refRepeatCurrent = useRef<number>(1);
@@ -61,7 +62,7 @@ export default function Entry() {
   const [profileItems, setProfileItems] = useState<DescriptionsProps["items"]>([]);
 
   const { x_tabActivated } = useSelector((state: IRootStateType) => state.appInfo);
-
+  const { x_pilotStatus } = useSelector((state: IRootStateType) => state.pilotInfo);
   const { updateTabActivated } = useActions(appInfoActions);
 
   const { modal } = App.useApp();
@@ -552,6 +553,7 @@ export default function Entry() {
           >
             {status}
           </span>
+          <span className="whitespace-nowrap font-bold">{x_pilotStatus}</span>
         </div>
       </div>
       {alertTip && (

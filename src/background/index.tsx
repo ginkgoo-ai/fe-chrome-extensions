@@ -1,5 +1,6 @@
 /*global chrome*/
 // manifest.json的Permissions配置需添加declarativeContent权限
+import { v4 as uuidv4 } from "uuid";
 import BackgroundEventManager from "@/common/kits/BackgroundEventManager";
 
 chrome.runtime.onInstalled.addListener((): void => {
@@ -50,3 +51,34 @@ chrome.tabs.onRemoved.addListener(BackgroundEventManager.onTabsRemoved);
 chrome.commands.onCommand.addListener(BackgroundEventManager.onCommandsCommand);
 
 // chrome.webRequest.onCompleted.addListener(BackgroundEventManager.onWebRequestCompleted, { urls: ["<all_urls>"] });
+
+chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
+  const uuid = uuidv4();
+
+  port.onDisconnect.addListener((port) => {
+    console.log("Background port.onDisconnect", port);
+    BackgroundEventManager.connectMap[port.name] = null;
+    delete BackgroundEventManager.connectMap[port.name];
+  });
+
+  BackgroundEventManager.connectMap[uuid] = port;
+  port.postMessage({ type: "ginkgo-ctc-register", uuid, name: port.name });
+
+  switch (port.name) {
+    case "content-to-background": {
+      port.onMessage.addListener((msg) => {
+        BackgroundEventManager.onConnectContentToBackground(port, msg);
+      });
+      break;
+    }
+    case "sidepanel-to-background": {
+      port.onMessage.addListener((msg) => {
+        BackgroundEventManager.onConnectSidepanelToBackground(port, msg);
+      });
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+});

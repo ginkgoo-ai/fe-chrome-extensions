@@ -35,7 +35,7 @@ ReactDOM.createRoot(rootElement).render(
   </Provider>
 );
 
-// 添加消息监听器
+// 注册监听 Background 消息
 chrome?.runtime?.onMessage?.addListener(async (request, sender, sendResponse) => {
   if (request.type === "onTabsComplete") {
     const resTabInfo = await ChromeManager.queryTabInfo({});
@@ -50,4 +50,25 @@ chrome?.runtime?.onMessage?.addListener(async (request, sender, sendResponse) =>
   }
   sendResponse(true);
   return true;
+});
+
+// 注册监听 Background 消息
+GlobalManager.g_backgroundPort = chrome?.runtime?.connect?.({ name: "sidepanel-to-background" });
+GlobalManager.g_backgroundPort?.onMessage?.addListener(async (message) => {
+  console.log("Received from background:", message);
+  const { type } = message;
+  switch (type) {
+    case "ginkgo-cnt-all-pilot-start":
+    case "ginkgo-cnt-all-pilot-stop":
+    case "ginkgo-cnt-all-pilot-update": {
+      store.dispatch({
+        type: "UPDATE_PILOT_STATUS",
+        payload: type,
+      });
+      break;
+    }
+    default: {
+      break;
+    }
+  }
 });

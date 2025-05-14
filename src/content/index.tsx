@@ -1,4 +1,77 @@
+import GlobalManager from "@/common/kits/GlobalManager";
 import "./index.less";
+
+let port: chrome.runtime.Port | null = null;
+
+const handleMessage = (event: MessageEvent) => {
+  console.log("ContentScript handleMessage", event);
+  const { type, ...otherInfo } = event.data;
+
+  switch (type) {
+    case "ginkgo-msg-content-pilot-start":
+    case "ginkgo-msg-content-pilot-stop": {
+      const msg = {
+        ...otherInfo,
+        type: type.replace("ginkgo-msg-content-", "ginkgo-cnt-background-"),
+      };
+      port?.postMessage(msg);
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+};
+
+const handleConnectMessage = (message: any, port: chrome.runtime.Port) => {
+  console.log("ContentScript handleConnectMessage", message);
+  const { type } = message;
+
+  switch (type) {
+    case "ginkgo-cnt-all-pilot-start":
+    case "ginkgo-cnt-all-pilot-stop":
+    case "ginkgo-cnt-all-pilot-update": {
+      const msg = {
+        ...message,
+        type: message.type.replace("ginkgo-cnt-all-", "ginkgo-msg-page-"),
+      };
+      window.postMessage(msg, window.location.origin);
+      break;
+    }
+    default: {
+      window.postMessage(message, window.location.origin);
+      break;
+    }
+  }
+};
+
+window.addEventListener("load", () => {
+  try {
+    // 仅白名单网站才会注入脚本
+    if (!GlobalManager.g_whiteList.includes(window.location.origin)) {
+      return;
+    }
+
+    console.log("fe-chrome-extensions load");
+
+    // 发送消息到宿主
+    const message = { type: "ginkgo-page-msg-load" };
+    window.postMessage(message, window.location.origin);
+
+    // 注册监听页面事件
+    window.addEventListener("message", handleMessage);
+
+    // 注册监听background事件
+    port = chrome.runtime.connect({ name: "content-to-background" });
+    port.onMessage.addListener(handleConnectMessage);
+  } catch (error) {
+    console.log("fe-chrome-extensions load error", error);
+  }
+});
+
+window.addEventListener("unload", () => {
+  window.removeEventListener("message", handleMessage);
+});
 
 // function Content(): JSX.Element {
 //   const [isShowModalVisible, setShowModalVisible] = useState(false);
