@@ -11,6 +11,8 @@ export const CRX_OUTDIR = "build";
 export const CRX_BACKGROUND_OUTDIR = path.resolve(__dirname, "_build_background");
 // 临时build content script的目录
 export const CRX_CONTENT_OUTDIR = path.resolve(__dirname, "_build_content");
+// 临时build options的目录
+export const CRX_OPTIONS_OUTDIR = path.resolve(__dirname, "_build_options");
 // 临时build popup的目录
 export const CRX_POPUP_OUTDIR = path.resolve(__dirname, "_build_popup");
 // 临时build side panel的目录

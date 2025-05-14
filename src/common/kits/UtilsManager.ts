@@ -77,7 +77,7 @@ class UtilsManager implements UtilsManagerType {
     }
   };
 
-  checkValueExist = (value: any): boolean => {
+  checkValueExist = (value: unknown): boolean => {
     if (Array.isArray(value)) {
       return !!value.length;
     } else if (value === null || value === undefined) {
@@ -101,8 +101,8 @@ class UtilsManager implements UtilsManagerType {
         clone[i] = this.deepClone(obj[i]);
       }
     } else {
-      clone = {} as Record<string, any>;
-      for (let key in obj) {
+      clone = {} as Record<string, unknown>;
+      for (const key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
           clone[key] = this.deepClone(obj[key]);
         }
@@ -146,13 +146,13 @@ class UtilsManager implements UtilsManagerType {
     return shuffled.slice(0, num); // 返回前N个元素
   };
 
-  checkSupport = (supportList: any[], supportRule: Record<string, any>): boolean => {
+  checkSupport = (supportList: Record<string, unknown>[], supportRule: Record<string, unknown>): boolean => {
     if (!supportList) {
       return true;
     }
-    return supportList.some((support) => {
+    return supportList.some((support: Record<string, unknown>) => {
       return Object.keys(support).every((key) => {
-        return support[key].includes(supportRule[key]);
+        return (support[key] as string).includes(supportRule[key] as string);
       });
     });
   };
@@ -194,11 +194,11 @@ class UtilsManager implements UtilsManagerType {
     });
   };
 
-  traverseObject = <T>(params: { obj: T; modifier: (value: any) => any }): T => {
+  traverseObject = <T>(params: { obj: T; modifier: (value: unknown) => any }): T => {
     const { obj, modifier } = params || {};
     const newObj = this.deepClone(obj); // 创建新的对象
 
-    for (let key in newObj) {
+    for (const key in newObj) {
       if (Object.prototype.hasOwnProperty.call(newObj, key)) {
         if (typeof newObj[key] === "object" && newObj[key] !== null) {
           newObj[key] = this.traverseObject({ obj: newObj[key], modifier }); // 递归调用遍历子对象，并将结果赋值给新对象的对应字段
@@ -211,11 +211,41 @@ class UtilsManager implements UtilsManagerType {
     return newObj; // 返回新对象
   };
 
-  router2url = (strPath: string, objParams: Record<string, any> = {}): string => {
+  router2Params = (strRouter: string, options?: Record<string, unknown>): Record<string, unknown> => {
+    const { decode = true } = options || {};
+    const strRouterTmp = strRouter || "";
+    let strResultPath = strRouterTmp;
+    const objResultParam: Record<string, unknown> = {};
+
+    const nIndexPath = strRouterTmp.indexOf("?");
+    if (nIndexPath >= 0) {
+      strResultPath = strRouterTmp.substring(0, nIndexPath);
+      const strParam = strRouterTmp.slice(nIndexPath + 1);
+      const arrParam = strParam.split("&");
+      // console.log('router2Params', strResultPath, strParam, arrParam)
+
+      arrParam.forEach((strItem) => {
+        const nIndexParam = strItem.indexOf("=");
+        if (nIndexParam >= 0) {
+          const strParamKey = strItem.substring(0, nIndexParam);
+          const strParamValue = strItem.slice(nIndexParam + 1);
+          objResultParam[strParamKey] = decode ? decodeURIComponent(strParamValue) : strParamValue;
+        }
+      });
+    }
+    // console.log('router2Params', objResultParam)
+
+    return {
+      path: strResultPath,
+      params: objResultParam,
+    };
+  };
+
+  router2url = (strPath: string, objParams: Record<string, unknown> = {}): string => {
     let strResult = strPath;
     let isFirstParam = !strPath.includes("?");
 
-    for (let key in objParams) {
+    for (const key in objParams) {
       if (isFirstParam) {
         strResult += `?${key}=${objParams[key]}`;
         isFirstParam = false;

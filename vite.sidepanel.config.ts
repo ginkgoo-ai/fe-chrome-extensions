@@ -10,6 +10,19 @@ export default defineConfig({
   build: {
     // 指定build输出目录
     outDir: CRX_SIDEPANEL_OUTDIR,
+    // 设置代码分割配置
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // 将 React 相关代码打包到单独的 chunk
+          "vendor-react": ["react", "react-dom"],
+          // 将第三方库打包到单独的 chunk  "lodash", "axios"
+          "vendor": [],
+        },
+      },
+    },
+    // 调整 chunk 大小警告限制
+    chunkSizeWarningLimit: 500,
   },
   server: {
     // 指定dev sever的端口号

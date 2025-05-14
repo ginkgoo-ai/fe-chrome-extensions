@@ -30,6 +30,22 @@ if (!rootElement) {
   throw new Error("Root element not found");
 }
 
+// // 禁用 findDOMNode 警告
+// const originalError = console.error;
+// const originalWarn = console.warn;
+// console.error = (...args) => {
+//   if (typeof args[0] === "string" && (args[0].includes("findDOMNode") || args[0].includes("Warning: findDOMNode"))) {
+//     return;
+//   }
+//   originalError.call(console, ...args);
+// };
+// console.warn = (...args) => {
+//   if (typeof args[0] === "string" && (args[0].includes("findDOMNode") || args[0].includes("Warning: findDOMNode"))) {
+//     return;
+//   }
+//   originalWarn.call(console, ...args);
+// };
+
 ReactDOM.createRoot(rootElement).render(
   <Provider store={store}>
     <Popup />

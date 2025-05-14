@@ -3,6 +3,7 @@ import About from "@/sidepanel/pages/About";
 import Debug from "@/sidepanel/pages/Debug";
 import Entry from "@/sidepanel/pages/Entry";
 import Login from "@/sidepanel/pages/Login";
+import Privacy from "@/sidepanel/pages/Privacy";
 
 // 全局路由
 export const globalRouters = createHashRouter([
@@ -24,6 +25,10 @@ export const globalRouters = createHashRouter([
       {
         path: "/debug",
         element: <Debug />,
+      },
+      {
+        path: "/privacy",
+        element: <Privacy />,
       },
       {
         path: "*",

@@ -1,15 +1,15 @@
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { defineConfig } from "vite";
-import { CRX_POPUP_OUTDIR, __dirname } from "./config";
+import { CRX_OPTIONS_OUTDIR, __dirname } from "./config";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  root: path.resolve(__dirname, "./src/popup"),
-  base: "/popup/",
+  root: path.resolve(__dirname, "./src/options"),
+  base: "/options/",
   build: {
     // 指定build输出目录
-    outDir: CRX_POPUP_OUTDIR,
+    outDir: CRX_OPTIONS_OUTDIR,
     // 设置代码分割配置
     rollupOptions: {
       output: {
@@ -26,7 +26,7 @@ export default defineConfig({
   },
   server: {
     // 指定dev sever的端口号
-    port: 19002,
+    port: 19001,
     // 自动打开浏览器运行以下页面
     open: "/",
     // 设置反向代理

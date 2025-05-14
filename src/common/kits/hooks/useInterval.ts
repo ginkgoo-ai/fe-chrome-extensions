@@ -1,15 +1,7 @@
 import { useEffect, useRef } from "react";
 
-interface UseIntervalOptions {
-  delay?: number;
-  immediate?: boolean;
-  enabled?: boolean;
-}
-
-export function useInterval(callback: () => void, options: UseIntervalOptions = {}) {
-  const { delay = 1000, immediate = false, enabled = true } = options;
+export function useInterval(callback: () => void, wait: number | null, immediate: boolean = false) {
   const savedCallback = useRef<() => void>();
-  const timerRef = useRef<NodeJS.Timeout>();
 
   // 保存最新的回调函数
   useEffect(() => {
@@ -18,30 +10,17 @@ export function useInterval(callback: () => void, options: UseIntervalOptions = 
 
   // 设置定时器
   useEffect(() => {
-    const tick = () => {
+    function tick() {
       savedCallback.current?.();
-    };
-
-    if (immediate && enabled) {
-      tick();
     }
 
-    if (delay !== null && enabled) {
-      timerRef.current = setInterval(tick, delay);
-      return () => {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-        }
-      };
+    if (wait !== null) {
+      // 如果需要立即执行
+      if (immediate) {
+        tick();
+      }
+      const id = setInterval(tick, wait);
+      return () => clearInterval(id);
     }
-  }, [delay, immediate, enabled]);
-
-  // 返回清除定时器的方法
-  const clear = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-  };
-
-  return { clear };
+  }, [wait, immediate]);
 }
