@@ -53,14 +53,14 @@ chrome?.runtime?.onMessage?.addListener(async (request, sender, sendResponse) =>
 });
 
 // 注册监听 Background 消息
-GlobalManager.g_backgroundPort = chrome?.runtime?.connect?.({ name: "sidepanel-to-background" });
+GlobalManager.g_backgroundPort = chrome?.runtime?.connect?.({ name: "ginkgo-sidepanel" });
 GlobalManager.g_backgroundPort?.onMessage?.addListener(async (message) => {
   console.log("Received from background:", message);
   const { type } = message;
   switch (type) {
-    case "ginkgo-cnt-all-pilot-start":
-    case "ginkgo-cnt-all-pilot-stop":
-    case "ginkgo-cnt-all-pilot-update": {
+    case "ginkgo-background-all-pilot-start":
+    case "ginkgo-background-all-pilot-stop":
+    case "ginkgo-background-all-pilot-update": {
       store.dispatch({
         type: "UPDATE_PILOT_STATUS",
         payload: type,

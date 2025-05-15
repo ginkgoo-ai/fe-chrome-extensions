@@ -4,21 +4,17 @@ import "./index.less";
 let port: chrome.runtime.Port | null = null;
 
 const handleMessage = (event: MessageEvent) => {
-  console.log("ContentScript handleMessage", event);
-  const { type, ...otherInfo } = event.data;
+  const message = event.data;
+  const { type, ...otherInfo } = message;
+  console.log("ContentScript handleMessage", event, type, type.startsWith("ginkgo-page-"));
 
-  switch (type) {
-    case "ginkgo-msg-content-pilot-start":
-    case "ginkgo-msg-content-pilot-stop": {
-      const msg = {
-        ...otherInfo,
-        type: type.replace("ginkgo-msg-content-", "ginkgo-cnt-background-"),
-      };
-      port?.postMessage(msg);
-      break;
-    }
-    default: {
-      break;
+  if (type.startsWith("ginkgo-page-")) {
+    // 如果是自身来源的消息，才会转发
+    switch (type) {
+      default: {
+        port?.postMessage(message);
+        break;
+      }
     }
   }
 };
@@ -28,16 +24,6 @@ const handleConnectMessage = (message: any, port: chrome.runtime.Port) => {
   const { type } = message;
 
   switch (type) {
-    case "ginkgo-cnt-all-pilot-start":
-    case "ginkgo-cnt-all-pilot-stop":
-    case "ginkgo-cnt-all-pilot-update": {
-      const msg = {
-        ...message,
-        type: message.type.replace("ginkgo-cnt-all-", "ginkgo-msg-page-"),
-      };
-      window.postMessage(msg, window.location.origin);
-      break;
-    }
     default: {
       window.postMessage(message, window.location.origin);
       break;
@@ -54,15 +40,11 @@ window.addEventListener("load", () => {
 
     console.log("fe-chrome-extensions load");
 
-    // 发送消息到宿主
-    const message = { type: "ginkgo-page-msg-load" };
-    window.postMessage(message, window.location.origin);
-
     // 注册监听页面事件
     window.addEventListener("message", handleMessage);
 
     // 注册监听background事件
-    port = chrome.runtime.connect({ name: "content-to-background" });
+    port = chrome.runtime.connect({ name: "ginkgo-page" });
     port.onMessage.addListener(handleConnectMessage);
   } catch (error) {
     console.log("fe-chrome-extensions load error", error);

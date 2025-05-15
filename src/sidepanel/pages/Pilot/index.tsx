@@ -10,6 +10,7 @@ import MKModuleLoading from "@/common/components/MKModuleLoading";
 import MKModuleSupport from "@/common/components/MKModuleSupport";
 import { MESSAGE } from "@/common/config/message";
 import ChromeManager from "@/common/kits/ChromeManager";
+import GlobalManager from "@/common/kits/GlobalManager";
 import HTMLManager from "@/common/kits/HTMLManager";
 import MemberManager from "@/common/kits/MemberManager";
 import UtilsManager from "@/common/kits/UtilsManager";
@@ -17,7 +18,6 @@ import Api from "@/common/kits/api";
 import { useActions } from "@/common/kits/hooks/useActions";
 import { useInterval } from "@/common/kits/hooks/useInterval";
 import appInfoActions from "@/sidepanel/redux/actions/appInfo";
-import pilotInfoActions from "@/sidepanel/redux/actions/pilotInfo";
 import { IRootStateType } from "@/sidepanel/redux/types";
 import { ActionResultType, IActionItemType, IStepItemType, StatusEnum } from "./config";
 import { IProfileType, actionListMock, profileMock } from "./config/mock";
@@ -123,10 +123,18 @@ export default function Pilot() {
       refTabActivated.current = null;
       refRepeatCurrent.current = 1;
       refRepeatHash.current = "";
+
+      GlobalManager.g_backgroundPort?.postMessage({
+        type: "ginkgo-sidepanel-all-pilot-stop",
+      });
     }
     if (status === StatusEnum.START) {
       setTimerDelay(40);
       setAlertTip(null);
+
+      GlobalManager.g_backgroundPort?.postMessage({
+        type: "ginkgo-sidepanel-all-pilot-start",
+      });
     }
   }, [status]);
 
@@ -341,7 +349,7 @@ export default function Pilot() {
   };
 
   const queryActionList = async (params: { title?: string; htmlCleansing?: string }) => {
-    const isMock = false;
+    const isMock = true;
     const { title = "", htmlCleansing = "" } = params || {};
     let actionlist: IActionItemType[] = [];
 

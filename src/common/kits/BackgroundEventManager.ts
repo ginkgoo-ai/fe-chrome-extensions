@@ -9,7 +9,13 @@ import { EventHandler } from "@/types/types";
 class BackgroundEventManager {
   static instance: BackgroundEventManager | null = null;
 
-  connectMap: Record<string, chrome.runtime.Port | null> = {};
+  connectMap: Record<
+    string,
+    {
+      uuid: string;
+      port: chrome.runtime.Port | null;
+    } | null
+  > = {};
 
   static getInstance(): BackgroundEventManager {
     if (!this.instance) {
@@ -29,7 +35,7 @@ class BackgroundEventManager {
     const client = this.connectMap[uuid];
 
     try {
-      client?.postMessage(message);
+      client?.port?.postMessage(message);
     } catch (error) {
       console.debug("[Debug] Port disconnected, cleaning up:", client);
     }
@@ -37,9 +43,9 @@ class BackgroundEventManager {
 
   async postConnectMessageByName(message: any, name: string) {
     for (const client of Object.values(this.connectMap)) {
-      if (client?.name === name) {
+      if (client?.port?.name === name) {
         try {
-          client?.postMessage(message);
+          client?.port?.postMessage(message);
         } catch (error) {
           console.debug("[Debug] Port disconnected, cleaning up:", client);
         }
@@ -48,9 +54,17 @@ class BackgroundEventManager {
   }
 
   async postConnectMessage(message: any) {
+    const { type } = message || {};
+    const arrType = type.split("-");
+    // const source = arrType[1];
+    const target = arrType[2];
+
     for (const client of Object.values(this.connectMap)) {
       try {
-        client?.postMessage(message);
+        const clientName = client?.port?.name?.split("-")[1];
+        if (target === clientName || target === "all") {
+          client?.port?.postMessage(message);
+        }
       } catch (error) {
         console.debug("[Debug] Port disconnected, cleaning up:", client);
       }
@@ -178,41 +192,16 @@ class BackgroundEventManager {
     // const { tabId, url } = details || {};
   }
 
-  async onConnectContentToBackground(port: chrome.runtime.Port, message: any): Promise<void> {
-    console.log("BackgroundEventManager onConnectContentToBackground", port, message);
+  async onConnectCommon(message: any, port: chrome.runtime.Port): Promise<void> {
+    console.log("BackgroundEventManager onConnectCommon", port, message);
     // port.postMessage({ message: "Background script received your message!" });
     const { type, ...otherInfo } = message;
     switch (type) {
-      case "ginkgo-cnt-background-pilot-start":
-      case "ginkgo-cnt-background-pilot-stop": {
-        const msg = {
-          ...otherInfo,
-          type: type.replace("ginkgo-cnt-background-", "ginkgo-cnt-all-"),
-        };
-        this.postConnectMessage(msg);
-        break;
-      }
       default: {
-        break;
-      }
-    }
-  }
-
-  async onConnectSidepanelToBackground(port: chrome.runtime.Port, message: any): Promise<void> {
-    console.log("BackgroundEventManager onConnectSidepanelToBackground", port, message);
-    // port.postMessage({ message: "Background script received your message!" });
-    const { type, ...otherInfo } = message;
-    switch (type) {
-      case "ginkgo-cnt-background-pilot-start":
-      case "ginkgo-cnt-background-pilot-stop": {
-        const msg = {
+        this.postConnectMessage({
+          type: type.replace(/ginkgo-([^-]+)-/, "ginkgo-background-"),
           ...otherInfo,
-          type: type.replace("ginkgo-cnt-background-", "ginkgo-cnt-all-"),
-        };
-        this.postConnectMessage(msg);
-        break;
-      }
-      default: {
+        });
         break;
       }
     }

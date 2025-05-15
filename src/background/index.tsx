@@ -61,19 +61,24 @@ chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
     delete BackgroundEventManager.connectMap[port.name];
   });
 
-  BackgroundEventManager.connectMap[uuid] = port;
-  port.postMessage({ type: "ginkgo-ctc-register", uuid, name: port.name });
+  BackgroundEventManager.connectMap[uuid] = {
+    uuid,
+    port,
+  };
+  if (port.name === "ginkgo-page") {
+    port.postMessage({ type: "ginkgo-background-page-register", uuid });
+  }
 
   switch (port.name) {
-    case "content-to-background": {
-      port.onMessage.addListener((msg) => {
-        BackgroundEventManager.onConnectContentToBackground(port, msg);
+    case "ginkgo-page": {
+      port.onMessage.addListener((message) => {
+        BackgroundEventManager.onConnectCommon(message, port);
       });
       break;
     }
-    case "sidepanel-to-background": {
-      port.onMessage.addListener((msg) => {
-        BackgroundEventManager.onConnectSidepanelToBackground(port, msg);
+    case "ginkgo-sidepanel": {
+      port.onMessage.addListener((message) => {
+        BackgroundEventManager.onConnectCommon(message, port);
       });
       break;
     }
