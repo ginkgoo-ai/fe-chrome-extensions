@@ -5,7 +5,7 @@ import { CRX_POPUP_OUTDIR, __dirname } from "./config";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  root: path.resolve(__dirname, "./src/popup"),
+  root: path.resolve(__dirname, "../src/popup"),
   base: "/popup/",
   build: {
     // 指定build输出目录
@@ -43,7 +43,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(__dirname, "../src"),
     },
   },
   // 解决react代码中包含process.env.NODE_ENV导致无法使用的问题

@@ -6,7 +6,7 @@ let port: chrome.runtime.Port | null = null;
 const handleMessage = (event: MessageEvent) => {
   const message = event.data;
   const { type, ...otherInfo } = message;
-  console.log("ContentScript handleMessage", event, type, type.startsWith("ginkgo-page-"));
+  console.log("[Ginkgo] ContentScript handleMessage", event, type, type.startsWith("ginkgo-page-"));
 
   if (type.startsWith("ginkgo-page-")) {
     // 如果是自身来源的消息，才会转发
@@ -20,7 +20,7 @@ const handleMessage = (event: MessageEvent) => {
 };
 
 const handleConnectMessage = (message: any, port: chrome.runtime.Port) => {
-  console.log("ContentScript handleConnectMessage", message);
+  console.log("[Ginkgo] ContentScript handleConnectMessage", message, window.location.origin);
   const { type } = message;
 
   switch (type) {
@@ -38,7 +38,7 @@ window.addEventListener("load", () => {
       return;
     }
 
-    console.log("fe-chrome-extensions load");
+    console.log("[Ginkgo] fe-chrome-extensions load");
 
     // 注册监听页面事件
     window.addEventListener("message", handleMessage);
@@ -47,7 +47,7 @@ window.addEventListener("load", () => {
     port = chrome.runtime.connect({ name: "ginkgo-page" });
     port.onMessage.addListener(handleConnectMessage);
   } catch (error) {
-    console.log("fe-chrome-extensions load error", error);
+    console.log("[Ginkgo] fe-chrome-extensions load error", error);
   }
 });
 

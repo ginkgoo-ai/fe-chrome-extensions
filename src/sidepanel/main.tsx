@@ -55,7 +55,7 @@ chrome?.runtime?.onMessage?.addListener(async (request, sender, sendResponse) =>
 // 注册监听 Background 消息
 GlobalManager.g_backgroundPort = chrome?.runtime?.connect?.({ name: "ginkgo-sidepanel" });
 GlobalManager.g_backgroundPort?.onMessage?.addListener(async (message) => {
-  console.log("Received from background:", message);
+  console.log("[Ginkgo] Received from background:", message);
   const { type } = message;
   switch (type) {
     case "ginkgo-background-all-pilot-start":

@@ -78,12 +78,12 @@ class BackgroundEventManager {
 
   onMessage: EventHandler = (request, sender, sendResponse) => {
     const { type } = request || {};
-    console.debug("BackgroundEventManager onMessage", request);
+    // console.debug("BackgroundEventManager onMessage", request);
 
     switch (type) {
       case "console": {
         const { msg } = request || {};
-        console.log("BackgroundEventManager console", msg);
+        // console.log("BackgroundEventManager console", msg);
         sendResponse(true);
         return true;
       }
@@ -100,7 +100,7 @@ class BackgroundEventManager {
       case "sendRequest": {
         const { config } = request || {};
         FetchManager?.sendRequest(config).then((res: any) => {
-          console.log("BackgroundEventManager sendRequest", { config, res });
+          // console.log("BackgroundEventManager sendRequest", { config, res });
           sendResponse(res);
         });
         return true;
@@ -182,7 +182,7 @@ class BackgroundEventManager {
   }
 
   async onCommandsCommand(command: string): Promise<void> {
-    console.log("User triggered command: " + command);
+    // console.log("User triggered command: " + command);
 
     switch (command) {
       default: {
@@ -198,7 +198,7 @@ class BackgroundEventManager {
   }
 
   async onConnectCommon(message: any, port: chrome.runtime.Port): Promise<void> {
-    console.log("BackgroundEventManager onConnectCommon", port, message);
+    console.log("[Ginkgo] BackgroundEventManager onConnectCommon", port, message);
     // port.postMessage({ message: "Background script received your message!" });
     const { type } = message;
     switch (type) {

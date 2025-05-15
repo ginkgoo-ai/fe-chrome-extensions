@@ -4,13 +4,14 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev:popup": "vite --mode development -c vite.popup.config.js",
-    "dev:sidepanel": "vite --mode development -c vite.sidepanel.config.js",
-    "build": "vite build -c vite.background.config.js && vite build -c vite.content.config.js && vite build -c vite.sidepanel.config.js",
+    "dev:popup": "vite --mode development -c ./script/vite.popup.config.js",
+    "dev:sidepanel": "vite --mode development -c ./script/vite.sidepanel.config.js",
+    "build": "vite build -c ./script/vite.background.config.js && vite build -c ./script/vite.content.config.js && vite build -c ./script/vite.sidepanel.config.js",
     "prebuild": "rm -rf _build_* && rm -rf build",
-    "postbuild": "node ./build.js",
+    "postbuild": "node ./script/build.js",
+    "deploy": "node ./script/deploy.js",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview -c vite.popup.config.js"
+    "preview": "vite preview -c ./script/vite.popup.config.js"
   },
   "dependencies": {
     "antd": "^5.25.1",

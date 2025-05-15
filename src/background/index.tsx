@@ -56,7 +56,7 @@ chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
   const uuid = uuidv4();
 
   port.onDisconnect.addListener((port) => {
-    console.log("Background port.onDisconnect", port);
+    console.log("[Ginkgo] Background port.onDisconnect", port);
     BackgroundEventManager.connectMap[port.name] = null;
     delete BackgroundEventManager.connectMap[port.name];
   });
@@ -65,9 +65,6 @@ chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
     uuid,
     port,
   };
-  if (port.name === "ginkgo-page") {
-    port.postMessage({ type: "ginkgo-background-page-register", uuid });
-  }
 
   switch (port.name) {
     case "ginkgo-page": {
