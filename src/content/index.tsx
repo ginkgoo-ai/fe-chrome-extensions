@@ -6,7 +6,7 @@ let port: chrome.runtime.Port | null = null;
 const handleMessage = (event: MessageEvent) => {
   const message = event.data;
   const { type, ...otherInfo } = message;
-  console.log("[Ginkgo] ContentScript handleMessage", event, type, type.startsWith("ginkgo-page-"));
+  // console.log("[Ginkgo] ContentScript handleMessage", event, type, type.startsWith("ginkgo-page-"));
 
   if (type.startsWith("ginkgo-page-")) {
     // 如果是自身来源的消息，才会转发
@@ -20,7 +20,7 @@ const handleMessage = (event: MessageEvent) => {
 };
 
 const handleConnectMessage = (message: any, port: chrome.runtime.Port) => {
-  console.log("[Ginkgo] ContentScript handleConnectMessage", message, window.location.origin);
+  // console.log("[Ginkgo] ContentScript handleConnectMessage", message, window.location.origin);
   const { type } = message;
 
   switch (type) {

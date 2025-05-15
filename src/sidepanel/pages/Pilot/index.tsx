@@ -16,6 +16,7 @@ import MemberManager from "@/common/kits/MemberManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { useActions } from "@/common/kits/hooks/useActions";
+import { useEventManager } from "@/common/kits/hooks/useEventManager";
 import { useInterval } from "@/common/kits/hooks/useInterval";
 import appInfoActions from "@/sidepanel/redux/actions/appInfo";
 import { IRootStateType } from "@/sidepanel/redux/types";
@@ -62,8 +63,25 @@ export default function Pilot() {
   const [profileItems, setProfileItems] = useState<DescriptionsProps["items"]>([]);
 
   const { x_tabActivated } = useSelector((state: IRootStateType) => state.appInfo);
-  const { x_pilotStatus } = useSelector((state: IRootStateType) => state.pilotInfo);
   const { updateTabActivated } = useActions(appInfoActions);
+
+  const { emit } = useEventManager(
+    "ginkgo-message",
+    (message) => {
+      console.log("[Ginkgo] Received from sidepanel:", message);
+      const { type } = message;
+      if (type === "ginkgo-background-all-pilot-start") {
+        refTabActivated.current = x_tabActivated;
+        setStatus(StatusEnum.START);
+      } else if (type === "ginkgo-background-all-pilot-stop") {
+        setStatus(StatusEnum.STOP);
+        refTabActivated.current = null;
+      } else if (type === "ginkgo-background-all-pilot-update") {
+        // setStatus(StatusEnum.UPDATE);
+      }
+    },
+    [x_tabActivated]
+  );
 
   const { modal } = App.useApp();
 
@@ -123,18 +141,10 @@ export default function Pilot() {
       refTabActivated.current = null;
       refRepeatCurrent.current = 1;
       refRepeatHash.current = "";
-
-      GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgo-sidepanel-all-pilot-stop",
-      });
     }
     if (status === StatusEnum.START) {
       setTimerDelay(40);
       setAlertTip(null);
-
-      GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgo-sidepanel-all-pilot-start",
-      });
     }
   }, [status]);
 
@@ -457,13 +467,15 @@ export default function Pilot() {
   };
 
   const handleBtnStartClick = () => {
-    refTabActivated.current = x_tabActivated;
-    setStatus(StatusEnum.START);
+    GlobalManager.g_backgroundPort?.postMessage({
+      type: "ginkgo-sidepanel-all-pilot-start",
+    });
   };
 
   const handleBtnStopClick = () => {
-    setStatus(StatusEnum.STOP);
-    refTabActivated.current = null;
+    GlobalManager.g_backgroundPort?.postMessage({
+      type: "ginkgo-sidepanel-all-pilot-stop",
+    });
   };
 
   const handleDropdownClick: MenuProps["onClick"] = ({ key }) => {
@@ -561,7 +573,6 @@ export default function Pilot() {
           >
             {status}
           </span>
-          <span className="whitespace-nowrap font-bold">{x_pilotStatus}</span>
         </div>
       </div>
       {alertTip && (

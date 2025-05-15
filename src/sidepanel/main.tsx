@@ -2,6 +2,7 @@ import { message } from "antd";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 import ChromeManager from "@/common/kits/ChromeManager";
+import EventManager from "@/common/kits/EventManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import "@/common/styles/frame.less";
 import SidePanel from "@/sidepanel";
@@ -55,20 +56,20 @@ chrome?.runtime?.onMessage?.addListener(async (request, sender, sendResponse) =>
 // 注册监听 Background 消息
 GlobalManager.g_backgroundPort = chrome?.runtime?.connect?.({ name: "ginkgo-sidepanel" });
 GlobalManager.g_backgroundPort?.onMessage?.addListener(async (message) => {
-  console.log("[Ginkgo] Received from background:", message);
-  const { type } = message;
-  switch (type) {
-    case "ginkgo-background-all-pilot-start":
-    case "ginkgo-background-all-pilot-stop":
-    case "ginkgo-background-all-pilot-update": {
-      store.dispatch({
-        type: "UPDATE_PILOT_STATUS",
-        payload: type,
-      });
-      break;
-    }
-    default: {
-      break;
-    }
-  }
+  EventManager.emit("ginkgo-message", message);
+  // const { type } = message;
+  // switch (type) {
+  //   case "ginkgo-background-all-pilot-start":
+  //   case "ginkgo-background-all-pilot-stop":
+  //   case "ginkgo-background-all-pilot-update": {
+  //     store.dispatch({
+  //       type: "UPDATE_PILOT_STATUS",
+  //       payload: type,
+  //     });
+  //     break;
+  //   }
+  //   default: {
+  //     break;
+  //   }
+  // }
 });

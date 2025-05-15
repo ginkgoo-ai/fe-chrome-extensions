@@ -58,16 +58,14 @@ class BackgroundEventManager {
     const arrType = type.split("-");
     // const source = arrType[1];
     const target = arrType[2];
-    const typeNew = type.replace(/ginkgo-([^-]+)-/, "ginkgo-background-");
 
     for (const client of Object.values(this.connectMap)) {
       try {
         const clientName = client?.port?.name?.split("-")[1];
         if (target === clientName || target === "all") {
           client?.port?.postMessage({
+            ...message,
             uuid: client?.uuid,
-            type: typeNew,
-            ...otherInfo,
           });
         }
       } catch (error) {
@@ -200,13 +198,22 @@ class BackgroundEventManager {
   async onConnectCommon(message: any, port: chrome.runtime.Port): Promise<void> {
     console.log("[Ginkgo] BackgroundEventManager onConnectCommon", port, message);
     // port.postMessage({ message: "Background script received your message!" });
-    const { type } = message;
-    switch (type) {
-      default: {
-        this.postConnectMessage(message);
-        break;
-      }
+    const { type, ...otherInfo } = message || {};
+    const arrType = type.split("-");
+    // const source = arrType[1];
+    const target = arrType[2];
+    const typeNew = type.replace(/ginkgo-([^-]+)-/, "ginkgo-background-");
+
+    let messageNew = {
+      ...(message || {}),
+      type: typeNew,
+    };
+
+    if (type.endsWith("-register")) {
+      messageNew.version = chrome.runtime.getManifest().version;
     }
+
+    this.postConnectMessage(messageNew);
   }
 }
 
