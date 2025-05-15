@@ -54,16 +54,21 @@ class BackgroundEventManager {
   }
 
   async postConnectMessage(message: any) {
-    const { type } = message || {};
+    const { type, ...otherInfo } = message || {};
     const arrType = type.split("-");
     // const source = arrType[1];
     const target = arrType[2];
+    const typeNew = type.replace(/ginkgo-([^-]+)-/, "ginkgo-background-");
 
     for (const client of Object.values(this.connectMap)) {
       try {
         const clientName = client?.port?.name?.split("-")[1];
         if (target === clientName || target === "all") {
-          client?.port?.postMessage(message);
+          client?.port?.postMessage({
+            uuid: client?.uuid,
+            type: typeNew,
+            ...otherInfo,
+          });
         }
       } catch (error) {
         console.debug("[Debug] Port disconnected, cleaning up:", client);
@@ -195,13 +200,10 @@ class BackgroundEventManager {
   async onConnectCommon(message: any, port: chrome.runtime.Port): Promise<void> {
     console.log("BackgroundEventManager onConnectCommon", port, message);
     // port.postMessage({ message: "Background script received your message!" });
-    const { type, ...otherInfo } = message;
+    const { type } = message;
     switch (type) {
       default: {
-        this.postConnectMessage({
-          type: type.replace(/ginkgo-([^-]+)-/, "ginkgo-background-"),
-          ...otherInfo,
-        });
+        this.postConnectMessage(message);
         break;
       }
     }
