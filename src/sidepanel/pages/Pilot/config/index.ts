@@ -1,12 +1,13 @@
 import { StepProps } from "antd";
 
-export enum StatusEnum {
+export enum PilotStatusEnum {
+  INIT = "INIT",
   START = "START",
   QUERY = "QUERY",
   ANALYSIS = "ANALYSIS",
   ACTION = "ACTION",
   WAIT = "WAIT",
-  STOP = "STOP",
+  HOLD = "HOLD",
 }
 
 export type ActionResultType = "success" | "notFound" | "";

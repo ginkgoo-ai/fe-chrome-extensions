@@ -57,19 +57,4 @@ chrome?.runtime?.onMessage?.addListener(async (request, sender, sendResponse) =>
 GlobalManager.g_backgroundPort = chrome?.runtime?.connect?.({ name: "ginkgo-sidepanel" });
 GlobalManager.g_backgroundPort?.onMessage?.addListener(async (message) => {
   EventManager.emit("ginkgo-message", message);
-  // const { type } = message;
-  // switch (type) {
-  //   case "ginkgo-background-all-pilot-start":
-  //   case "ginkgo-background-all-pilot-stop":
-  //   case "ginkgo-background-all-pilot-update": {
-  //     store.dispatch({
-  //       type: "UPDATE_PILOT_STATUS",
-  //       payload: type,
-  //     });
-  //     break;
-  //   }
-  //   default: {
-  //     break;
-  //   }
-  // }
 });

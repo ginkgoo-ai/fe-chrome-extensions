@@ -20,7 +20,7 @@ import { useEventManager } from "@/common/kits/hooks/useEventManager";
 import { useInterval } from "@/common/kits/hooks/useInterval";
 import appInfoActions from "@/sidepanel/redux/actions/appInfo";
 import { IRootStateType } from "@/sidepanel/redux/types";
-import { ActionResultType, IActionItemType, IStepItemType, StatusEnum } from "./config";
+import { ActionResultType, IActionItemType, IStepItemType, PilotStatusEnum } from "./config";
 import { IProfileType, actionListMock, profileMock } from "./config/mock";
 import "./index.less";
 
@@ -51,7 +51,7 @@ export default function Pilot() {
       danger: true,
     },
   ]);
-  const [status, setStatus] = useState<StatusEnum>(StatusEnum.STOP);
+  const [pilotStatus, setPilotStatus] = useState<PilotStatusEnum>(PilotStatusEnum.HOLD);
   const [alertTip, setAlertTip] = useState<{ type: "success" | "info" | "warning" | "error"; message: string } | null>(null);
   const [stepListCurrent, setStepListCurrent] = useState<number>(-1);
   const [stepListItems, setStepListItems] = useState<IStepItemType[]>([]);
@@ -72,12 +72,12 @@ export default function Pilot() {
       const { type } = message;
       if (type === "ginkgo-background-all-pilot-start") {
         refTabActivated.current = x_tabActivated;
-        setStatus(StatusEnum.START);
+        setPilotStatus(PilotStatusEnum.START);
       } else if (type === "ginkgo-background-all-pilot-stop") {
-        setStatus(StatusEnum.STOP);
+        setPilotStatus(PilotStatusEnum.HOLD);
         refTabActivated.current = null;
       } else if (type === "ginkgo-background-all-pilot-update") {
-        // setStatus(StatusEnum.UPDATE);
+        // setPilotStatus(PilotStatusEnum.UPDATE);
       }
     },
     [x_tabActivated]
@@ -94,7 +94,7 @@ export default function Pilot() {
       refLockSteping.current = true;
       const resMain = await main();
       if (!resMain?.result) {
-        setStatus(StatusEnum.STOP);
+        setPilotStatus(PilotStatusEnum.HOLD);
       }
       await UtilsManager.sleep(DELAY_STEP);
       refLockSteping.current = false;
@@ -135,18 +135,18 @@ export default function Pilot() {
   }, []);
 
   useEffect(() => {
-    if (status === StatusEnum.STOP) {
+    if (pilotStatus === PilotStatusEnum.HOLD) {
       setTimerDelay(null);
       // refLockSteping.current = false; // Don't need to reset
       refTabActivated.current = null;
       refRepeatCurrent.current = 1;
       refRepeatHash.current = "";
     }
-    if (status === StatusEnum.START) {
+    if (pilotStatus === PilotStatusEnum.START) {
       setTimerDelay(40);
       setAlertTip(null);
     }
-  }, [status]);
+  }, [pilotStatus]);
 
   const refreshProfileInfo = async () => {
     const resMemberInfo = await MemberManager.getToken(); // getMemberInfo();
@@ -315,7 +315,7 @@ export default function Pilot() {
       return { result: false };
     }
 
-    setStatus(StatusEnum.QUERY);
+    setPilotStatus(PilotStatusEnum.QUERY);
     const resQueryHtmlInfo = await ChromeManager.executeScript(refTabActivated.current, {
       cbName: "queryHtmlInfo",
       cbParams: {},
@@ -367,7 +367,7 @@ export default function Pilot() {
       return { result: false };
     }
 
-    setStatus(StatusEnum.ANALYSIS);
+    setPilotStatus(PilotStatusEnum.ANALYSIS);
 
     if (isMock) {
       await UtilsManager.sleep(Math.floor(Math.random() * DELAY_MOCK_ANALYSIS + 1000));
@@ -403,7 +403,7 @@ export default function Pilot() {
   const executeActionList = async (params: { title?: string; actionlist?: IActionItemType[] }) => {
     const { title = "", actionlist = [] } = params || {};
 
-    setStatus(StatusEnum.ACTION);
+    setPilotStatus(PilotStatusEnum.ACTION);
     for (let i = 0; i < actionlist.length; i++) {
       const action = actionlist[i];
 
@@ -462,7 +462,7 @@ export default function Pilot() {
       return { result: false };
     }
 
-    setStatus(StatusEnum.WAIT);
+    setPilotStatus(PilotStatusEnum.WAIT);
     return { result: true };
   };
 
@@ -567,11 +567,11 @@ export default function Pilot() {
           <span className="whitespace-nowrap font-bold">Status:</span>
           <span
             className={classnames("font-bold", {
-              "text-green-500": status !== StatusEnum.STOP,
-              "text-red-500": status === StatusEnum.STOP,
+              "text-green-500": pilotStatus !== PilotStatusEnum.HOLD,
+              "text-red-500": pilotStatus === PilotStatusEnum.HOLD,
             })}
           >
-            {status}
+            {pilotStatus}
           </span>
         </div>
       </div>
@@ -594,10 +594,10 @@ export default function Pilot() {
       {/* Footer */}
       <div className="flex-0 flex flex-row items-center justify-between border-t border-solid border-gray-200 px-4 py-2">
         <div className="flex flex-row gap-2">
-          <MKButton type="primary" disabled={status !== StatusEnum.STOP} onClick={handleBtnStartClick}>
+          <MKButton type="primary" disabled={pilotStatus !== PilotStatusEnum.HOLD} onClick={handleBtnStartClick}>
             Start
           </MKButton>
-          <MKButton type="default" disabled={status === StatusEnum.STOP} onClick={handleBtnStopClick}>
+          <MKButton type="default" disabled={pilotStatus === PilotStatusEnum.HOLD} onClick={handleBtnStopClick}>
             Stop
           </MKButton>
         </div>
