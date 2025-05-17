@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import GlobalManager from "@/common/kits/GlobalManager";
 import "./index.less";
 
@@ -21,12 +22,15 @@ const handleMessage = (event: MessageEvent) => {
 
 const handleConnectMessage = (message: any, port: chrome.runtime.Port) => {
   // console.log("[Ginkgo] ContentScript handleConnectMessage", message, window.location.origin);
-  const { type } = message;
+  const { type, scope } = message;
 
-  switch (type) {
-    default: {
-      window.postMessage(message, window.location.origin);
-      break;
+  if (!scope || scope.includes(port.name)) {
+    // 如果有指定送达范围，则只送达指定范围
+    switch (type) {
+      default: {
+        window.postMessage(message, window.location.origin);
+        break;
+      }
     }
   }
 };
@@ -44,7 +48,7 @@ window.addEventListener("load", () => {
     window.addEventListener("message", handleMessage);
 
     // 注册监听background事件
-    port = chrome.runtime.connect({ name: "ginkgo-page" });
+    port = chrome.runtime.connect({ name: `ginkgo-page-${uuidv4()}` });
     port.onMessage.addListener(handleConnectMessage);
   } catch (error) {
     console.log("[Ginkgo] fe-chrome-extensions load error", error);

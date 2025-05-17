@@ -53,34 +53,18 @@ chrome.commands.onCommand.addListener(BackgroundEventManager.onCommandsCommand);
 // chrome.webRequest.onCompleted.addListener(BackgroundEventManager.onWebRequestCompleted, { urls: ["<all_urls>"] });
 
 chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
-  const uuid = uuidv4();
-
   port.onDisconnect.addListener((port) => {
     console.log("[Ginkgo] Background port.onDisconnect", port);
-    BackgroundEventManager.connectMap[port.name] = null;
-    delete BackgroundEventManager.connectMap[port.name];
+    BackgroundEventManager.connectList = BackgroundEventManager.connectList.filter((item) => {
+      return item.port?.name !== port.name;
+    });
   });
 
-  BackgroundEventManager.connectMap[uuid] = {
-    uuid,
+  BackgroundEventManager.connectList.push({
     port,
-  };
+  });
 
-  switch (port.name) {
-    case "ginkgo-page": {
-      port.onMessage.addListener((message) => {
-        BackgroundEventManager.onConnectCommon(message, port);
-      });
-      break;
-    }
-    case "ginkgo-sidepanel": {
-      port.onMessage.addListener((message) => {
-        BackgroundEventManager.onConnectCommon(message, port);
-      });
-      break;
-    }
-    default: {
-      break;
-    }
-  }
+  port.onMessage.addListener((message) => {
+    BackgroundEventManager.onConnectCommon(message, port);
+  });
 });

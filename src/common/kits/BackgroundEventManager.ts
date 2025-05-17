@@ -9,18 +9,15 @@ import { EventHandler } from "@/types/types";
 class BackgroundEventManager {
   static instance: BackgroundEventManager | null = null;
 
-  connectMap: Record<
-    string,
-    {
-      uuid: string;
-      port: chrome.runtime.Port | null;
-    } | null
-  > = {};
+  connectList: {
+    // uuid: string;
+    port: chrome.runtime.Port;
+  }[] = [];
 
   static getInstance(): BackgroundEventManager {
     if (!this.instance) {
       this.instance = new BackgroundEventManager();
-      this.instance.connectMap = {};
+      this.instance.connectList = [];
     }
     return this.instance;
   }
@@ -31,18 +28,8 @@ class BackgroundEventManager {
   //   }
   // }
 
-  async postConnectMessageByUuid(message: any, uuid: string) {
-    const client = this.connectMap[uuid];
-
-    try {
-      client?.port?.postMessage(message);
-    } catch (error) {
-      console.debug("[Debug] Port disconnected, cleaning up:", client);
-    }
-  }
-
-  async postConnectMessageByName(message: any, name: string) {
-    for (const client of Object.values(this.connectMap)) {
+  postConnectMessageByName = (message: any, name: string) => {
+    for (const client of this.connectList) {
       if (client?.port?.name === name) {
         try {
           client?.port?.postMessage(message);
@@ -51,28 +38,25 @@ class BackgroundEventManager {
         }
       }
     }
-  }
+  };
 
-  async postConnectMessage(message: any) {
-    const { type, ...otherInfo } = message || {};
+  postConnectMessage = (message: any) => {
+    const { type } = message || {};
     const arrType = type.split("-");
     // const source = arrType[1];
     const target = arrType[2];
 
-    for (const client of Object.values(this.connectMap)) {
-      try {
-        const clientName = client?.port?.name?.split("-")[1];
-        if (target === clientName || target === "all") {
-          client?.port?.postMessage({
-            ...message,
-            uuid: client?.uuid,
-          });
+    for (const client of this.connectList) {
+      const clientName = client?.port?.name?.split("-")[1];
+      if (target === clientName || target === "all") {
+        try {
+          client?.port?.postMessage(message);
+        } catch (error) {
+          console.debug("[Debug] Port disconnected, cleaning up:", client);
         }
-      } catch (error) {
-        console.debug("[Debug] Port disconnected, cleaning up:", client);
       }
     }
-  }
+  };
 
   onMessage: EventHandler = (request, sender, sendResponse) => {
     const { type } = request || {};
@@ -136,7 +120,7 @@ class BackgroundEventManager {
     return true;
   };
 
-  async onTabsUpdated(tabId: number, changeInfo: Record<string, any>, tab: chrome.tabs.Tab): Promise<void> {
+  onTabsUpdated = async (tabId: number, changeInfo: Record<string, any>, tab: chrome.tabs.Tab) => {
     if (changeInfo?.status === "complete") {
       // dosomething on tab updated
       // console.log("BackgroundEventManager onTabsUpdated 1", tab);
@@ -146,30 +130,38 @@ class BackgroundEventManager {
       //   enabled: true,
       // });
       // console.log("BackgroundEventManager onTabsUpdated 2", tab);
-      await ChromeManager.sendMessageRuntime({
-        type: "onTabsComplete",
-        tabInfo: tab,
-      });
+      try {
+        this.postConnectMessage({
+          type: "ginkgo-background-all-tab-complete",
+          tabInfo: tab,
+        });
+      } catch (error) {
+        console.debug("[Debug] onTabsUpdated postConnectMessage", error);
+      }
     }
-  }
+  };
 
-  async onTabsActivated(activeInfo: { tabId: number; windowId: number }): Promise<void> {
+  onTabsActivated = async (activeInfo: { tabId: number; windowId: number }) => {
     // 获取当前激活的 tab 的 HTML 内容
     if (activeInfo.tabId) {
       const resTabInfo = await ChromeManager.getTabInfo(activeInfo.tabId);
-      await ChromeManager.sendMessageRuntime({
-        type: "onTabsComplete",
-        tabInfo: resTabInfo,
-      });
+      try {
+        this.postConnectMessage({
+          type: "ginkgo-background-all-tab-activated",
+          tabInfo: resTabInfo,
+        });
+      } catch (error) {
+        console.debug("[Debug] onTabsActivated postConnectMessage", error);
+      }
     }
-  }
+  };
 
-  onTabsRemoved(tabId: number, removeInfo: { windowId: number; isWindowClosing: boolean }): void {
+  onTabsRemoved = (tabId: number, removeInfo: { windowId: number; isWindowClosing: boolean }) => {
     // dosomething on tab removed
     // console.log("BackgroundEventManager onTabsRemoved", { tabId, removeInfo });
-  }
+  };
 
-  async onContextMenusClick(menuInfo: any, tabInfo: chrome.tabs.Tab): Promise<void> {
+  onContextMenusClick = (menuInfo: any, tabInfo: chrome.tabs.Tab) => {
     const { menuItemId } = menuInfo || {};
 
     switch (menuItemId) {
@@ -177,9 +169,9 @@ class BackgroundEventManager {
         break;
       }
     }
-  }
+  };
 
-  async onCommandsCommand(command: string): Promise<void> {
+  onCommandsCommand = (command: string) => {
     // console.log("User triggered command: " + command);
 
     switch (command) {
@@ -187,15 +179,16 @@ class BackgroundEventManager {
         break;
       }
     }
-  }
+    return true;
+  };
 
-  onWebRequestCompleted(details: any): void {
+  onWebRequestCompleted = (details: any) => {
     // console.debug("请求 URL:", details.url);
     // console.debug("请求 detail:", details);
     // const { tabId, url } = details || {};
-  }
+  };
 
-  async onConnectCommon(message: any, port: chrome.runtime.Port): Promise<void> {
+  onConnectCommon = (message: any, port: chrome.runtime.Port) => {
     console.log("[Ginkgo] BackgroundEventManager onConnectCommon", port, message);
     // port.postMessage({ message: "Background script received your message!" });
     const { type, ...otherInfo } = message || {};
@@ -210,11 +203,13 @@ class BackgroundEventManager {
     };
 
     if (type.endsWith("-register")) {
+      messageNew.scope = [port.name];
       messageNew.version = chrome.runtime.getManifest().version;
     }
 
     this.postConnectMessage(messageNew);
-  }
+    return true;
+  };
 }
 
 export default BackgroundEventManager.getInstance();
