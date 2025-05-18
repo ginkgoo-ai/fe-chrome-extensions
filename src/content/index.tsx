@@ -13,7 +13,11 @@ const handleMessage = (event: MessageEvent) => {
     // 如果是自身来源的消息，才会转发
     switch (type) {
       default: {
-        port?.postMessage(message);
+        try {
+          port?.postMessage(message);
+        } catch (error) {
+          console.error("[Ginkgo] ContentScript postMessage error", error);
+        }
         break;
       }
     }

@@ -4,7 +4,6 @@ import md5 from "blueimp-md5";
 import classnames from "classnames";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
-import { v4 as uuidV4 } from "uuid";
 import { useEffect, useRef, useState } from "react";
 import MKButton from "@/common/components/MKButton";
 import MKModuleLoading from "@/common/components/MKModuleLoading";
@@ -471,9 +470,6 @@ export default function Pilot() {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgo-sidepanel-all-pilot-start",
-        pilotId: uuidV4(),
-        caseId: "demo",
-        tabInfo: x_tabActivated,
       });
     } catch (error) {
       console.error("[Ginkgo] Sidepanel handleBtnStartClick error", error);

@@ -1,6 +1,7 @@
 /*global chrome*/
 import ChromeManager from "@/common/kits/ChromeManager";
 import FetchManager from "@/common/kits/FetchManager";
+import PilotManager from "@/common/kits/PilotManager";
 import { EventHandler } from "@/types/types";
 
 /**
@@ -50,6 +51,7 @@ class BackgroundEventManager {
       const clientName = client?.port?.name?.split("-")[1];
       if (target === clientName || target === "all") {
         try {
+          console.log("[Debug] BackgroundEventManager postConnectMessage", client, message);
           client?.port?.postMessage(message);
         } catch (error) {
           console.debug("[Debug] Port disconnected, cleaning up:", client);
@@ -124,19 +126,22 @@ class BackgroundEventManager {
     if (changeInfo?.status === "complete") {
       // dosomething on tab updated
       // console.log("BackgroundEventManager onTabsUpdated 1", tab);
+      // 设置 sidePanel
       // await chrome.sidePanel.setOptions({
       //   tabId: tab.id,
       //   path: "index.html",
       //   enabled: true,
       // });
       // console.log("BackgroundEventManager onTabsUpdated 2", tab);
-      try {
-        this.postConnectMessage({
-          type: "ginkgo-background-all-tab-complete",
-          tabInfo: tab,
-        });
-      } catch (error) {
-        console.debug("[Debug] onTabsUpdated postConnectMessage", error);
+      // 发送 tab 完成事件
+      // this.postConnectMessage({
+      //   type: "ginkgo-background-all-tab-complete",
+      //   tabInfo: tab,
+      // });
+      // 判断是否存在 pilot
+      if (!!PilotManager.getPilot({ tabId: tab.id })) {
+        // 发送 pilot 完成事件
+        PilotManager.start({ tabInfo: tab });
       }
     }
   };
@@ -159,6 +164,7 @@ class BackgroundEventManager {
   onTabsRemoved = (tabId: number, removeInfo: { windowId: number; isWindowClosing: boolean }) => {
     // dosomething on tab removed
     // console.log("BackgroundEventManager onTabsRemoved", { tabId, removeInfo });
+    // TODO: 移除pilotMap
   };
 
   onContextMenusClick = (menuInfo: any, tabInfo: chrome.tabs.Tab) => {
@@ -202,12 +208,34 @@ class BackgroundEventManager {
       type: typeNew,
     };
 
-    if (type.endsWith("-register")) {
-      messageNew.scope = [port.name];
-      messageNew.version = chrome.runtime.getManifest().version;
+    switch (type) {
+      case "ginkgo-page-page-register": {
+        messageNew.scope = [port.name];
+        messageNew.version = chrome.runtime.getManifest().version;
+        this.postConnectMessage(messageNew);
+        break;
+      }
+      case "ginkgo-page-all-pilot-start":
+      case "ginkgo-sidepanel-all-pilot-start": {
+        const pilotItem = PilotManager.getPilot({ pilotId: otherInfo.pilotId });
+        if (!!pilotItem) {
+          PilotManager.start({
+            pilotId: pilotItem.pilotId,
+            caseId: pilotItem.caseId,
+            tabInfo: pilotItem.tabInfo,
+          });
+        } else {
+          PilotManager.open(otherInfo);
+        }
+        break;
+      }
+      case "ginkgo-page-all-pilot-stop":
+      case "ginkgo-sidepanel-all-pilot-stop": {
+        PilotManager.stop(otherInfo);
+        break;
+      }
     }
 
-    this.postConnectMessage(messageNew);
     return true;
   };
 }

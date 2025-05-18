@@ -2,7 +2,7 @@ import { StepProps } from "antd";
 
 export enum PilotStatusEnum {
   INIT = "INIT",
-  START = "START",
+  OPEN = "OPEN",
   QUERY = "QUERY",
   ANALYSIS = "ANALYSIS",
   ACTION = "ACTION",
@@ -28,6 +28,7 @@ export interface IStepActionType {
 }
 
 export interface IStepItemType extends StepProps {
+  descriptionText: string;
   actioncurrent: number;
   actionlist: IActionItemType[];
 }
