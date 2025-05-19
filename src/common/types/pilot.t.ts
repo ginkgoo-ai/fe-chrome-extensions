@@ -12,6 +12,22 @@ export enum PilotStatusEnum {
 
 export type ActionResultType = "success" | "notFound" | "";
 
+export interface IAddressItemType {
+  hidden?: boolean;
+  type: string;
+  label: string;
+  value: string;
+}
+
+export interface IProfileItemType {
+  label: string;
+  value: string | IAddressItemType[];
+}
+
+export interface IProfileType {
+  [key: string]: IProfileItemType;
+}
+
 export interface IActionItemType {
   selector: string;
   type: "input" | "click" | "manual";

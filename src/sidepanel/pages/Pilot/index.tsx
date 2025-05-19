@@ -1,61 +1,35 @@
 import { ClearOutlined, CopyOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
-import { Alert, App, Descriptions, DescriptionsProps, Drawer, MenuProps, Steps, Tag, Tooltip, message } from "antd";
-import md5 from "blueimp-md5";
+import { Alert, App, Descriptions, DescriptionsProps, Drawer, StepProps, Steps, Tag, Tooltip, message } from "antd";
 import classnames from "classnames";
-import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import { v4 as uuidV4 } from "uuid";
 import { useEffect, useRef, useState } from "react";
 import MKButton from "@/common/components/MKButton";
-import MKModuleLoading from "@/common/components/MKModuleLoading";
 import MKModuleSupport from "@/common/components/MKModuleSupport";
 import { MESSAGE } from "@/common/config/message";
 import ChromeManager from "@/common/kits/ChromeManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import HTMLManager from "@/common/kits/HTMLManager";
 import MemberManager from "@/common/kits/MemberManager";
-import UtilsManager from "@/common/kits/UtilsManager";
-import Api from "@/common/kits/api";
 import { useActions } from "@/common/kits/hooks/useActions";
 import { useEventManager } from "@/common/kits/hooks/useEventManager";
-import { useInterval } from "@/common/kits/hooks/useInterval";
+import { IActionItemType, IStepItemType, PilotStatusEnum } from "@/common/types/pilot.t";
 import appInfoActions from "@/sidepanel/redux/actions/appInfo";
 import { IRootStateType } from "@/sidepanel/redux/types";
-import { ActionResultType, IActionItemType, IStepItemType, PilotStatusEnum } from "./config";
-import { IProfileType, actionListMock, profileMock } from "./config/mock";
+import { IProfileType, profileMock } from "./config/mock";
 import "./index.less";
 
 const TITLE_PAGE = "Ginkgoo AI Form Assistant";
-const DELAY_MOCK_ANALYSIS = 2000;
-const DELAY_STEP = 2000;
-const DELAY_ACTION = 200;
-const REPEAT_MAX = 5;
 
 export default function Pilot() {
-  const refLockSteping = useRef<boolean>(false);
-  const refTabActivated = useRef<chrome.tabs.Tab | null>(null);
-  const refRepeatCurrent = useRef<number>(1);
-  const refRepeatHash = useRef<string>("");
+  const { modal } = App.useApp();
 
-  const [timerDelay, setTimerDelay] = useState<number | null>(null);
-  const [dropdownItems, setDropdownItems] = useState<MenuProps["items"]>([
-    {
-      label: "Profile info",
-      key: "profile-info",
-    },
-    {
-      type: "divider",
-    },
-    {
-      label: "Logout",
-      key: "logout",
-      danger: true,
-    },
-  ]);
+  const pilotId = useRef<string>(uuidV4());
+
   const [pilotStatus, setPilotStatus] = useState<PilotStatusEnum>(PilotStatusEnum.HOLD);
   const [alertTip, setAlertTip] = useState<{ type: "success" | "info" | "warning" | "error"; message: string } | null>(null);
   const [stepListCurrent, setStepListCurrent] = useState<number>(-1);
-  const [stepListItems, setStepListItems] = useState<IStepItemType[]>([]);
+  const [stepListItems, setStepListItems] = useState<StepProps[]>([]);
   const [isLoginLoading, setLoginLoading] = useState<boolean>(false);
   const [isCopyHtmlLoading, setCopyHtmlLoading] = useState<boolean>(false);
   const [isDrawerProfileOpen, setDrawerProfileOpen] = useState<boolean>(false);
@@ -66,93 +40,16 @@ export default function Pilot() {
   const { x_tabActivated } = useSelector((state: IRootStateType) => state.appInfo);
   const { updateTabActivated } = useActions(appInfoActions);
 
-  const { emit } = useEventManager(
-    "ginkgo-message",
-    (message) => {
-      console.log("[Ginkgo] Received from sidepanel:", message);
-      const { type } = message;
-      if (type === "ginkgo-background-all-pilot-start") {
-        refTabActivated.current = x_tabActivated;
-        setPilotStatus(PilotStatusEnum.START);
-      } else if (type === "ginkgo-background-all-pilot-stop") {
-        setPilotStatus(PilotStatusEnum.HOLD);
-        refTabActivated.current = null;
-      } else if (type === "ginkgo-background-all-pilot-update") {
-        // setPilotStatus(PilotStatusEnum.UPDATE);
-      }
-    },
-    [x_tabActivated]
-  );
+  const { emit } = useEventManager("ginkgo-message", (message) => {
+    // console.log('🚀 ~ useEventManager ~ data:', message);
 
-  const { modal } = App.useApp();
-
-  useInterval(
-    async () => {
-      if (refLockSteping.current) {
-        return;
-      }
-
-      refLockSteping.current = true;
-      const resMain = await main();
-      if (!resMain?.result) {
-        setPilotStatus(PilotStatusEnum.HOLD);
-      }
-      await UtilsManager.sleep(DELAY_STEP);
-      refLockSteping.current = false;
-    },
-    timerDelay,
-    true
-  );
-
-  const init = async () => {
-    const resTabInfo = await ChromeManager.queryTabInfo({});
-    updateTabActivated(resTabInfo);
-    refreshProfileInfo();
-    setProfileItems(
-      Object.keys(profileMock).map((key, index) => {
-        const item = profileMock[key as keyof IProfileType];
-        return {
-          key: index,
-          label: item.label,
-          children: Array.isArray(item.value)
-            ? item.value
-                .filter((itemValue) => !itemValue.hidden)
-                .map((itemValue) => {
-                  return itemValue.value;
-                })
-                .join(", ")
-            : item.value,
-        };
-      })
-    );
-  };
-
-  useEffect(() => {
-    window.document.title = TITLE_PAGE;
-    init();
-    return () => {
-      refLockSteping.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (pilotStatus === PilotStatusEnum.HOLD) {
-      setTimerDelay(null);
-      // refLockSteping.current = false; // Don't need to reset
-      refTabActivated.current = null;
-      refRepeatCurrent.current = 1;
-      refRepeatHash.current = "";
+    const { type, pilotItem } = message;
+    if (type === "ginkgo-background-all-pilot-update") {
+      setPilotStatus(pilotItem.pilotStatus);
+      setStepListCurrent(pilotItem.stepListCurrent);
+      setStepListItems(calcStepListCurrent(pilotItem.stepListItems));
     }
-    if (pilotStatus === PilotStatusEnum.START) {
-      setTimerDelay(40);
-      setAlertTip(null);
-    }
-  }, [pilotStatus]);
-
-  const refreshProfileInfo = async () => {
-    const resMemberInfo = await MemberManager.getToken(); // getMemberInfo();
-    setProfileName(resMemberInfo?.toString()?.charAt(0)?.toUpperCase());
-  };
+  });
 
   const calcActionItem = (item: IActionItemType, indexStep: number, indexAction: number) => {
     const { type, selector, value, actionresult, actiontimestamp } = item || {};
@@ -182,296 +79,67 @@ export default function Pilot() {
     };
   };
 
-  const updateStepListItemsForAddStep = (params: { title: string; descriptionText: string }) => {
-    const { title, descriptionText = "Analyzing" } = params || {};
-
-    setStepListItems((prev) => {
-      const prevLength = prev.length;
-
-      setTimeout(() => {
-        document.getElementById(`step-item-${prevLength}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 40);
-
-      setStepListCurrent(prevLength);
-
-      return [
-        ...prev,
-        {
-          title: (
-            <div id={`step-item-${prevLength}`} className="font-bold">
-              {title}
-            </div>
-          ),
-          description: (
-            <div className="box-border pl-2">
-              {["Analyzing"].includes(descriptionText) ? <MKModuleLoading label={descriptionText} /> : <span>{descriptionText}</span>}
-            </div>
-          ),
-          actioncurrent: 0,
-          actionlist: [],
-        },
-      ];
+  const calcStepListCurrent = (source: IStepItemType[] = []) => {
+    const result = source.map((itemStep, indexStep) => {
+      return {
+        title: (
+          <div id={`step-item-${indexStep}`} className="font-bold">
+            {itemStep.title}
+          </div>
+        ),
+        description: (
+          <div className="box-border pl-2">
+            <Steps
+              progressDot
+              direction="vertical"
+              current={itemStep.actioncurrent}
+              items={itemStep.actionlist.map((itemAction, indexAction) => calcActionItem(itemAction, indexStep, indexAction))}
+            />
+          </div>
+        ),
+      };
     });
+
+    return result;
   };
 
-  const updateStepListItemsForUpdateStep = (params: { stepcurrent?: number; actionlist: IActionItemType[] }) => {
-    const { stepcurrent: stepcurrentParams, actionlist } = params || {};
-
-    setStepListItems((prev) => {
-      const stepcurrent = stepcurrentParams === undefined ? prev.length - 1 : stepcurrentParams;
-      const actionItems = actionlist.map((itemAction, indexAction) => {
-        return calcActionItem(itemAction, stepcurrent, indexAction);
-      });
-
-      setTimeout(() => {
-        document.getElementById(`step-item-${stepcurrent}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 40);
-
-      setStepListCurrent(stepcurrent);
-
-      return prev.map((itemStep, indexStep) => {
-        if (stepcurrent === indexStep) {
-          return {
-            title: (
-              <div id={`step-item-${indexStep}`} className="font-bold">
-                {itemStep.title}
-              </div>
-            ),
-            description: (
-              <div className="box-border pl-2">
-                <Steps progressDot direction="vertical" current={0} items={actionItems} />
-              </div>
-            ),
-            actioncurrent: 0,
-            actionlist: actionlist,
-          };
-        }
-        return itemStep;
-      });
-    });
-  };
-
-  const updateStepListItemsForUpdateAction = (params: {
-    stepcurrent?: number;
-    actioncurrent?: number;
-    actionresult?: ActionResultType;
-    actiontimestamp?: string;
-  }) => {
-    const {
-      stepcurrent: stepcurrentParams,
-      actioncurrent = 0,
-      actionresult = "",
-      actiontimestamp = dayjs().format("YYYY-MM-DD HH:mm:ss"),
-    } = params || {};
-
-    setStepListItems((prev) => {
-      const stepcurrent = stepcurrentParams === undefined ? prev.length - 1 : stepcurrentParams;
-
-      setTimeout(() => {
-        document.getElementById(`action-item-${stepcurrent}-${actioncurrent}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 40);
-
-      return prev.map((itemStep, indexStep) => {
-        let actioncurrentReal = itemStep.actioncurrent;
-        let actionlistReal = itemStep.actionlist;
-
-        if (stepcurrent === indexStep) {
-          actioncurrentReal = actioncurrent;
-        }
-
-        actionlistReal = actionlistReal.map((itemAction, indexAction) => {
-          const isUpdateAction = stepcurrent === indexStep && actioncurrent === indexAction;
-
-          return {
-            ...itemAction,
-            actionresult: isUpdateAction ? actionresult : itemAction.actionresult,
-            actiontimestamp: isUpdateAction ? actiontimestamp : itemAction.actiontimestamp,
-          };
-        });
-
-        const actionItems = actionlistReal.map((itemAction, indexAction) => {
-          return calcActionItem(itemAction, indexStep, indexAction);
-        });
-
+  const init = async () => {
+    const resTabInfo = await ChromeManager.queryTabInfo({});
+    updateTabActivated(resTabInfo);
+    refreshProfileInfo();
+    setProfileItems(
+      Object.keys(profileMock).map((key, index) => {
+        const item = profileMock[key as keyof IProfileType];
         return {
-          title: (
-            <div id={`step-item-${indexStep}`} className="font-bold">
-              {itemStep.title}
-            </div>
-          ),
-          description: (
-            <div className="box-border pl-2">
-              <Steps progressDot direction="vertical" current={actioncurrentReal} items={actionItems} />
-            </div>
-          ),
-          actioncurrent: actioncurrentReal,
-          actionlist: actionlistReal,
+          key: index,
+          label: item.label,
+          children: Array.isArray(item.value)
+            ? item.value
+                .filter((itemValue) => !itemValue.hidden)
+                .map((itemValue) => {
+                  return itemValue.value;
+                })
+                .join(", ")
+            : item.value,
         };
-      });
-    });
+      })
+    );
   };
 
-  const queryHtmlInfo = async () => {
-    if (!refTabActivated.current) {
-      return { result: false };
-    }
+  useEffect(() => {
+    init();
+  }, []);
 
-    setPilotStatus(PilotStatusEnum.QUERY);
-    const resQueryHtmlInfo = await ChromeManager.executeScript(refTabActivated.current, {
-      cbName: "queryHtmlInfo",
-      cbParams: {},
-    });
-
-    const html = resQueryHtmlInfo?.[0]?.result;
-
-    if (!html) {
-      setAlertTip({ type: "error", message: MESSAGE.NOT_SUPPORT_PAGE });
-      return { result: false };
-    }
-
-    const { rootHtml, mainHtml, h1Text } = HTMLManager.cleansingHtml({ html });
-    const title = h1Text || "Unknown Page";
-    const htmlCleansing = mainHtml || rootHtml;
-
-    const hash = md5(title + htmlCleansing);
-
-    if (hash === refRepeatHash.current) {
-      refRepeatCurrent.current++;
-    } else {
-      refRepeatCurrent.current = 1;
-      refRepeatHash.current = hash;
-    }
-
-    if (refRepeatCurrent.current > REPEAT_MAX) {
-      setAlertTip({ type: "error", message: MESSAGE.REPEAT_MAX_TIP });
-      updateStepListItemsForAddStep({
-        title: title + `(Repeat: max)`,
-        descriptionText: MESSAGE.REPEAT_MAX_TIP,
-      });
-      return { result: false };
-    }
-
-    updateStepListItemsForAddStep({
-      title: title + (refRepeatCurrent.current > 1 ? `(Repeat: ${refRepeatCurrent.current})` : ""),
-      descriptionText: "Analyzing",
-    });
-
-    return { result: true, title, htmlCleansing };
-  };
-
-  const queryActionList = async (params: { title?: string; htmlCleansing?: string }) => {
-    const isMock = true;
-    const { title = "", htmlCleansing = "" } = params || {};
-    let actionlist: IActionItemType[] = [];
-
-    if (!refTabActivated.current) {
-      return { result: false };
-    }
-
-    setPilotStatus(PilotStatusEnum.ANALYSIS);
-
-    if (isMock) {
-      await UtilsManager.sleep(Math.floor(Math.random() * DELAY_MOCK_ANALYSIS + 1000));
-      actionlist = actionListMock[title]?.actions || [];
-      if (actionlist.length === 0) {
-        setAlertTip({
-          type: "success",
-          message: MESSAGE.FEATURE_COMING_SOON,
-        });
-        updateStepListItemsForAddStep({
-          title: MESSAGE.FEATURE_COMING_SOON,
-          descriptionText: MESSAGE.FEATURE_COMING_SOON_TIP,
-        });
-        return { result: false };
-      }
-    } else {
-      const resAssistent = await Api.Ginkgo.getAssistent({
-        body: {
-          message: htmlCleansing,
-        },
-      });
-
-      actionlist = resAssistent?.result?.actions || [];
-    }
-
-    updateStepListItemsForUpdateStep({
-      actionlist,
-    });
-
-    return { result: true, actionlist };
-  };
-
-  const executeActionList = async (params: { title?: string; actionlist?: IActionItemType[] }) => {
-    const { title = "", actionlist = [] } = params || {};
-
-    setPilotStatus(PilotStatusEnum.ACTION);
-    for (let i = 0; i < actionlist.length; i++) {
-      const action = actionlist[i];
-
-      if (i !== 0) {
-        await UtilsManager.sleep(DELAY_ACTION);
-      }
-      if (!refTabActivated.current) {
-        return { result: false };
-      }
-
-      const resActionDom = await ChromeManager.executeScript(refTabActivated.current, {
-        cbName: "actionDom",
-        cbParams: {
-          action,
-        },
-      });
-
-      const { type } = resActionDom?.[0]?.result || {};
-
-      updateStepListItemsForUpdateAction({
-        actioncurrent: i,
-        actionresult: type,
-        actiontimestamp: dayjs().format("YYYY-MM-DD HH:mm:ss:SSS"),
-      });
-
-      if (action.type === "manual") {
-        setAlertTip({ type: "warning", message: "Please complete manually and try to continue" });
-        return { result: false };
-      }
-    }
-
-    return { result: true };
-  };
-
-  const main = async () => {
-    if (!refTabActivated.current) {
-      setAlertTip({ type: "error", message: MESSAGE.NOT_FOUND_TAB });
-      return { result: false };
-    }
-
-    const resQueryHtmlInfo = await queryHtmlInfo();
-    if (!resQueryHtmlInfo.result) {
-      return { result: false };
-    }
-
-    const resQueryActionList = await queryActionList({ title: resQueryHtmlInfo.title, htmlCleansing: resQueryHtmlInfo.htmlCleansing });
-    if (!resQueryActionList.result) {
-      return { result: false };
-    }
-
-    const resExecuteActionList = await executeActionList({
-      title: resQueryHtmlInfo.title,
-      actionlist: resQueryActionList.actionlist,
-    });
-    if (!resExecuteActionList.result) {
-      return { result: false };
-    }
-
-    setPilotStatus(PilotStatusEnum.WAIT);
-    return { result: true };
+  const refreshProfileInfo = async () => {
+    const resMemberInfo = await MemberManager.getToken(); // getMemberInfo();
+    setProfileName(resMemberInfo?.toString()?.charAt(0)?.toUpperCase());
   };
 
   const handleBtnStartClick = () => {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgo-sidepanel-all-pilot-start",
-        pilotId: uuidV4(),
+        pilotId: pilotId.current,
         caseId: "demo",
         tabInfo: x_tabActivated,
       });
@@ -484,21 +152,12 @@ export default function Pilot() {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgo-sidepanel-all-pilot-stop",
+        pilotId: pilotId.current,
+        caseId: "demo",
+        tabInfo: x_tabActivated,
       });
     } catch (error) {
       console.error("[Ginkgo] Sidepanel handleBtnStopClick error", error);
-    }
-  };
-
-  const handleDropdownClick: MenuProps["onClick"] = ({ key }) => {
-    if (key === "profile-info") {
-      setDrawerProfileOpen(true);
-      setTimeout(() => {
-        setDrawerProfileLoading(false);
-      }, 1200);
-    } else if (key === "logout") {
-      MemberManager.logout();
-      refreshProfileInfo();
     }
   };
 
@@ -550,10 +209,6 @@ export default function Pilot() {
         setStepListItems([]);
       },
     });
-  };
-
-  const handleBtnSettingClick = async () => {
-    await ChromeManager.openOptionsPage();
   };
 
   return (
@@ -620,11 +275,6 @@ export default function Pilot() {
           {/* <MKButton type="primary" icon={<SettingOutlined />} onClick={handleBtnSettingClick} /> */}
         </div>
       </div>
-      {false && (
-        <div className="flex-0 flex flex-row items-center justify-between border-t border-solid border-gray-200 px-4 py-2">
-          {/* <MKButton onClick={handleBtnMockStepClick}>Mock Step</MKButton> */}
-        </div>
-      )}
       {/* Layout History */}
       <Drawer open={isDrawerProfileOpen} title="Profile Info" loading={isDrawerProfileLoading} onClose={() => setDrawerProfileOpen(false)}>
         <Descriptions items={profileItems} column={1} />

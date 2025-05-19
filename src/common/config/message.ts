@@ -6,4 +6,5 @@ export const MESSAGE = {
   NOT_FOUND_TAB: "No tab found.",
   NOT_SUPPORT_PAGE: "This page is not supported.",
   REPEAT_MAX_TIP: "Please manually operate and then try start again.",
+  MANUAL_TIP: "Please complete manually and try to continue.",
 };
