@@ -44,10 +44,14 @@ export default function Pilot() {
     // console.log('🚀 ~ useEventManager ~ data:', message);
 
     const { type, pilotItem } = message;
-    if (type === "ginkgo-background-all-pilot-update") {
-      setPilotStatus(pilotItem.pilotStatus);
-      setStepListCurrent(pilotItem.stepListCurrent);
-      setStepListItems(calcStepListCurrent(pilotItem.stepListItems));
+
+    switch (type) {
+      case "ginkgo-background-all-pilot-update": {
+        setPilotStatus(pilotItem.pilotStatus);
+        setStepListCurrent(pilotItem.stepListCurrent);
+        setStepListItems(calcStepListCurrent(pilotItem.stepListItems));
+        break;
+      }
     }
   });
 
@@ -261,10 +265,10 @@ export default function Pilot() {
       {/* Footer */}
       <div className="flex-0 flex flex-row items-center justify-between border-t border-solid border-gray-200 px-4 py-2">
         <div className="flex flex-row gap-2">
-          <MKButton type="primary" disabled={pilotStatus !== PilotStatusEnum.HOLD} onClick={handleBtnStartClick}>
+          <MKButton type="primary" disabled={false} onClick={handleBtnStartClick}>
             Start
           </MKButton>
-          <MKButton type="default" disabled={pilotStatus === PilotStatusEnum.HOLD} onClick={handleBtnStopClick}>
+          <MKButton type="default" disabled={false} onClick={handleBtnStopClick}>
             Stop
           </MKButton>
         </div>

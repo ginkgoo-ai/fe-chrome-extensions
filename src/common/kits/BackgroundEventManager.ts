@@ -3,6 +3,7 @@ import ChromeManager from "@/common/kits/ChromeManager";
 import FetchManager from "@/common/kits/FetchManager";
 import PilotManager from "@/common/kits/PilotManager";
 import { EventHandler } from "@/types/types";
+import { PilotStatusEnum } from "../types/pilot.t";
 
 /**
  * @description background事件管理器
@@ -139,8 +140,8 @@ class BackgroundEventManager {
       //   tabInfo: tab,
       // });
       // 判断是否存在 pilot
-      if (!!PilotManager.getPilot({ tabId: tab.id })) {
-        // 发送 pilot 完成事件
+      const pilotItem = PilotManager.getPilot({ tabId: tab.id });
+      if (pilotItem?.pilotStatus === PilotStatusEnum.OPEN) {
         PilotManager.start({ tabInfo: tab });
       }
     }

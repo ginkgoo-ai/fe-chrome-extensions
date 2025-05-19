@@ -32,7 +32,7 @@ class PilotManager {
       caseId: string;
       tabInfo: chrome.tabs.Tab;
       timer: NodeJS.Timeout | null;
-      status: string;
+      pilotStatus: PilotStatusEnum;
       stepListCurrent: number;
       stepListItems: IStepItemType[];
       repeatHash: string;
@@ -124,7 +124,7 @@ class PilotManager {
     const { pilotId, caseId, tabInfo } = params || {};
     const pilotItem = this.getPilot({ pilotId });
 
-    if (!tabInfo) {
+    if (!tabInfo || !pilotItem) {
       return { result: false };
     }
 
@@ -137,8 +137,9 @@ class PilotManager {
 
     if (!html) {
       // setAlertTip({ type: "error", message: MESSAGE.NOT_SUPPORT_PAGE });
+      pilotItem.pilotStatus = PilotStatusEnum.NOT_SUPPORT;
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-pilot-not-support`,
+        type: `ginkgo-background-all-pilot-update`,
         pilotId,
         pilotItem,
       });
@@ -150,15 +151,6 @@ class PilotManager {
     const htmlCleansing = mainHtml || rootHtml;
 
     const hash = md5(title + htmlCleansing);
-    console.log("queryHtmlInfo hash", hash, title);
-    if (!pilotItem) {
-      BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-pilot-no-pilot`,
-        pilotId,
-        pilotItem,
-      });
-      return { result: false };
-    }
 
     if (hash === pilotItem?.repeatHash) {
       this.updatePilotMap({
@@ -210,15 +202,15 @@ class PilotManager {
     const isMock = true;
     const { pilotId, caseId, tabInfo, title = "", htmlCleansing = "" } = params || {};
     const pilotItem = this.getPilot({ pilotId });
-    let actionlist: IActionItemType[] = [];
+    let actionlist: IActionItemType[];
 
-    if (!tabInfo) {
+    if (!tabInfo || !pilotItem) {
       return { result: false };
     }
 
     if (isMock) {
       await UtilsManager.sleep(Math.floor(Math.random() * this.DELAY_MOCK_ANALYSIS + 1000));
-      actionlist = mock_pilotManager_actionList[title]?.actions || [];
+      actionlist = mock_pilotManager_actionList[title]?.actions;
     } else {
       const resAssistent = await Api.Ginkgo.getAssistent({
         body: {
@@ -226,10 +218,10 @@ class PilotManager {
         },
       });
 
-      actionlist = resAssistent?.result?.actions || [];
+      actionlist = resAssistent?.result?.actions;
     }
 
-    if (actionlist.length === 0) {
+    if (!!actionlist) {
       this.updatePilotMapForAddStep({
         pilotId,
         update: {
@@ -237,8 +229,9 @@ class PilotManager {
           descriptionText: MESSAGE.FEATURE_COMING_SOON_TIP,
         },
       });
+      pilotItem.pilotStatus = PilotStatusEnum.COMING_SOON;
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-pilot-coming-soon`,
+        type: `ginkgo-background-all-pilot-update`,
         pilotId,
         pilotItem,
       });
@@ -265,7 +258,7 @@ class PilotManager {
     const { pilotId, caseId, tabInfo, title = "", actionlist = [] } = params || {};
     const pilotItem = this.getPilot({ pilotId });
 
-    if (!tabInfo) {
+    if (!tabInfo || !pilotItem) {
       return { result: false };
     }
 
@@ -301,8 +294,9 @@ class PilotManager {
       });
 
       if (action.type === "manual") {
+        pilotItem.pilotStatus = PilotStatusEnum.MANUAL;
         BackgroundEventManager.postConnectMessage({
-          type: `ginkgo-background-all-pilot-manual`,
+          type: `ginkgo-background-all-pilot-update`,
           pilotId,
           pilotItem,
         });
@@ -317,11 +311,11 @@ class PilotManager {
     const { pilotId, caseId = "demo", tabInfo } = params || {};
     const pilotItem = this.getPilot({ pilotId });
 
-    while (true) {
+    while (!!pilotItem) {
       // 查询页面
+      pilotItem.pilotStatus = PilotStatusEnum.QUERY;
       BackgroundEventManager.postConnectMessage({
         type: `ginkgo-background-all-pilot-update`,
-        pilotStatus: PilotStatusEnum.QUERY,
         pilotId,
         pilotItem,
       });
@@ -329,10 +323,11 @@ class PilotManager {
       if (!pilotItem?.timer || !resQueryHtmlInfo.result) {
         break;
       }
+
       // 分析页面
+      pilotItem.pilotStatus = PilotStatusEnum.ANALYSIS;
       BackgroundEventManager.postConnectMessage({
         type: `ginkgo-background-all-pilot-update`,
-        pilotStatus: PilotStatusEnum.ANALYSIS,
         pilotId,
         pilotItem,
       });
@@ -341,10 +336,11 @@ class PilotManager {
       if (!pilotItem?.timer || !resQueryActionList.result) {
         break;
       }
+
       // 执行动作
+      pilotItem.pilotStatus = PilotStatusEnum.ACTION;
       BackgroundEventManager.postConnectMessage({
         type: `ginkgo-background-all-pilot-update`,
-        pilotStatus: PilotStatusEnum.ACTION,
         pilotId,
         pilotItem,
       });
@@ -355,9 +351,9 @@ class PilotManager {
       }
 
       // 等待
+      pilotItem.pilotStatus = PilotStatusEnum.WAIT;
       BackgroundEventManager.postConnectMessage({
         type: `ginkgo-background-all-pilot-update`,
-        pilotStatus: PilotStatusEnum.WAIT,
         pilotId,
         pilotItem,
       });
@@ -366,40 +362,35 @@ class PilotManager {
         break;
       }
 
-      // break;
-
-      // 分析页面
-
-      // 获取当前的HTML信息
-      // const html = await this.queryHtmlInfo(url);
-      // 获取当前的HTML信息
-      // const html = await this.queryHtmlInfo(url);
-      // 获取当前的HTML信息
+      //
     }
   };
 
   open = async (params: { pilotId: string; caseId: string }) => {
     const { pilotId, caseId } = params || {};
 
-    BackgroundEventManager.postConnectMessage({
-      type: `ginkgo-background-all-pilot-open`,
-      pilotId,
-    });
     const tabInfo = await ChromeManager.createTab({
       url: this.caseUrlMap[caseId],
       active: false,
     });
-
-    this.pilotMap.set(pilotId, {
+    const pilotItem = {
       pilotId,
       caseId,
       tabInfo,
       timer: null,
-      status: PilotStatusEnum.OPEN,
+      pilotStatus: PilotStatusEnum.OPEN,
       stepListCurrent: 0,
       stepListItems: [],
       repeatHash: "",
       repeatCurrent: 0,
+    };
+
+    this.pilotMap.set(pilotId, pilotItem);
+
+    BackgroundEventManager.postConnectMessage({
+      type: `ginkgo-background-all-pilot-open`,
+      pilotId,
+      pilotItem,
     });
   };
 
@@ -412,7 +403,7 @@ class PilotManager {
         caseId,
         tabInfo,
         timer: null,
-        status: PilotStatusEnum.HOLD,
+        pilotStatus: PilotStatusEnum.HOLD,
         stepListCurrent: 0,
         stepListItems: [],
         repeatHash: "",
@@ -433,7 +424,7 @@ class PilotManager {
 
     this.updatePilotMap({
       pilotId: pilotItem.pilotId,
-      update: { timer },
+      update: { timer, pilotStatus: PilotStatusEnum.HOLD },
     });
   };
 
@@ -442,17 +433,20 @@ class PilotManager {
     const { pilotId } = params || {};
     const pilotItem = this.pilotMap.get(pilotId);
 
-    if (pilotItem?.timer) {
-      clearTimeout(pilotItem.timer);
-      pilotItem.timer = null;
-    }
+    if (pilotItem) {
+      if (pilotItem.timer) {
+        clearTimeout(pilotItem.timer);
+        pilotItem.timer = null;
+      }
 
-    // 会覆盖报错状态
-    BackgroundEventManager.postConnectMessage({
-      type: `ginkgo-background-all-pilot-hold`,
-      pilotId: pilotItem?.pilotId,
-      pilotItem,
-    });
+      // 会覆盖报错状态
+      pilotItem.pilotStatus = PilotStatusEnum.HOLD;
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgo-background-all-pilot-update`,
+        pilotId: pilotItem?.pilotId,
+        pilotItem,
+      });
+    }
 
     // Don't need to delete pilotItem
     // this.pilotMap.delete(pilotId);

@@ -61,6 +61,13 @@ GlobalManager.g_backgroundPort?.onMessage?.addListener(async (message, port: chr
   if (!scope || scope.includes(port.name)) {
     // 如果有指定送达范围，则只送达指定范围
     switch (type) {
+      case "ginkgo-background-all-tab-activated": {
+        store.dispatch({
+          type: "UPDATE_TAB_ACTIVATED",
+          payload: message?.tabInfo,
+        });
+        break;
+      }
       default: {
         EventManager.emit("ginkgo-message", message);
         break;
