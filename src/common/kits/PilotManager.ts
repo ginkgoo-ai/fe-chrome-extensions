@@ -221,7 +221,7 @@ class PilotManager {
       actionlist = resAssistent?.result?.actions;
     }
 
-    if (!!actionlist) {
+    if (!actionlist) {
       this.updatePilotMapForAddStep({
         pilotId,
         update: {
