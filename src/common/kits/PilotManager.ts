@@ -7,7 +7,7 @@ import HTMLManager from "@/common/kits/HTMLManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { mock_pilotManager_actionList } from "@/common/kits/mock";
-import { ActionResultType, IActionItemType, IStepItemType, PilotStatusEnum } from "@/common/types/pilot.t";
+import { ActionResultType, IActionItemType, IStepItemType, PilotStatusEnum } from "@/common/types/case";
 
 /**
  * @description 处理HTML管理器
@@ -28,8 +28,8 @@ class PilotManager {
   pilotMap: Map<
     string,
     {
-      pilotId: string;
       caseId: string;
+      fill_data: Record<string, unknown>;
       tabInfo: chrome.tabs.Tab;
       timer: NodeJS.Timeout | null;
       pilotStatus: PilotStatusEnum;
@@ -47,12 +47,12 @@ class PilotManager {
     return this.instance;
   }
 
-  getPilot = (params: { pilotId?: string; tabId?: number }) => {
-    const { pilotId, tabId } = params || {};
+  getPilot = (params: { caseId?: string; tabId?: number }) => {
+    const { caseId, tabId } = params || {};
 
     return Array.from(this.pilotMap.values()).find((pilot) => {
-      // 如果提供了 pilotId，则必须匹配
-      if (pilotId && pilot.pilotId !== pilotId) {
+      // 如果提供了 caseId
+      if (caseId && pilot.caseId !== caseId) {
         return false;
       }
       // 如果提供了 tabId，则必须匹配
@@ -64,9 +64,9 @@ class PilotManager {
     });
   };
 
-  updatePilotMap = (params: { pilotId: string; update: Record<string, any> }) => {
-    const { pilotId, update } = params || {};
-    const pilot = this.pilotMap.get(pilotId);
+  updatePilotMap = (params: { caseId: string; update: Record<string, any> }) => {
+    const { caseId, update } = params || {};
+    const pilot = this.pilotMap.get(caseId);
 
     if (pilot) {
       Object.keys(update).forEach((key) => {
@@ -75,11 +75,11 @@ class PilotManager {
     }
   };
 
-  updatePilotMapForAddStep = (params: { pilotId: string; update: { title: string; descriptionText: string } }) => {
-    const { pilotId, update } = params || {};
+  updatePilotMapForAddStep = (params: { caseId: string; update: { title: string; descriptionText: string } }) => {
+    const { caseId, update } = params || {};
     const { title, descriptionText } = update || {};
 
-    const pilotFind = this.pilotMap.get(pilotId);
+    const pilotFind = this.pilotMap.get(caseId);
 
     if (pilotFind) {
       pilotFind.stepListItems.push({
@@ -92,11 +92,11 @@ class PilotManager {
     }
   };
 
-  updatePilotMapForUpdateStep = (params: { pilotId: string; update: { stepcurrent?: number; actionlist: IActionItemType[] } }) => {
-    const { pilotId, update } = params || {};
+  updatePilotMapForUpdateStep = (params: { caseId: string; update: { stepcurrent?: number; actionlist: IActionItemType[] } }) => {
+    const { caseId, update } = params || {};
     const { stepcurrent = 0, actionlist = [] } = update || {};
 
-    const pilotFind = this.pilotMap.get(pilotId);
+    const pilotFind = this.pilotMap.get(caseId);
 
     if (pilotFind) {
       pilotFind.stepListItems[pilotFind.stepListCurrent].actioncurrent = stepcurrent;
@@ -105,13 +105,13 @@ class PilotManager {
   };
 
   updatePilotMapForUpdateAction = (params: {
-    pilotId: string;
+    caseId: string;
     update: { actioncurrent?: number; actionresult?: ActionResultType; actiontimestamp?: string };
   }) => {
-    const { pilotId, update } = params || {};
+    const { caseId, update } = params || {};
     const { actioncurrent = 0, actionresult = "", actiontimestamp = "" } = update || {};
 
-    const pilotFind = this.pilotMap.get(pilotId);
+    const pilotFind = this.pilotMap.get(caseId);
 
     if (pilotFind) {
       pilotFind.stepListItems[pilotFind.stepListCurrent].actioncurrent = actioncurrent;
@@ -120,9 +120,9 @@ class PilotManager {
     }
   };
 
-  queryHtmlInfo = async (params: { pilotId: string; caseId: string; tabInfo?: chrome.tabs.Tab }) => {
-    const { pilotId, caseId, tabInfo } = params || {};
-    const pilotItem = this.getPilot({ pilotId });
+  queryHtmlInfo = async (params: { caseId: string; tabInfo?: chrome.tabs.Tab }) => {
+    const { caseId, tabInfo } = params || {};
+    const pilotItem = this.getPilot({ caseId });
 
     if (!tabInfo || !pilotItem) {
       return { result: false };
@@ -139,8 +139,8 @@ class PilotManager {
       // setAlertTip({ type: "error", message: MESSAGE.NOT_SUPPORT_PAGE });
       pilotItem.pilotStatus = PilotStatusEnum.NOT_SUPPORT;
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-pilot-update`,
-        pilotId,
+        type: `ginkgo-background-all-case-update`,
+        caseId,
         pilotItem,
       });
       return { result: false };
@@ -154,14 +154,14 @@ class PilotManager {
 
     if (hash === pilotItem?.repeatHash) {
       this.updatePilotMap({
-        pilotId,
+        caseId,
         update: {
           repeatCurrent: pilotItem?.repeatCurrent + 1,
         },
       });
     } else {
       this.updatePilotMap({
-        pilotId,
+        caseId,
         update: {
           repeatCurrent: 1,
           repeatHash: hash,
@@ -172,7 +172,7 @@ class PilotManager {
     if (Number(pilotItem?.repeatCurrent) > this.REPEAT_MAX) {
       // setAlertTip({ type: "error", message: MESSAGE.REPEAT_MAX_TIP });
       this.updatePilotMapForAddStep({
-        pilotId,
+        caseId,
         update: {
           title: title + `(Repeat: max)`,
           descriptionText: MESSAGE.REPEAT_MAX_TIP,
@@ -182,7 +182,7 @@ class PilotManager {
     }
 
     this.updatePilotMapForAddStep({
-      pilotId,
+      caseId,
       update: {
         title: title + (pilotItem?.repeatCurrent > 1 ? `(Repeat: ${pilotItem?.repeatCurrent})` : ""),
         descriptionText: "Analyzing",
@@ -192,16 +192,10 @@ class PilotManager {
     return { result: true, title, htmlCleansing };
   };
 
-  queryActionList = async (params: {
-    pilotId: string;
-    caseId: string;
-    tabInfo?: chrome.tabs.Tab;
-    title?: string;
-    htmlCleansing?: string;
-  }) => {
-    const isMock = true;
-    const { pilotId, caseId, tabInfo, title = "", htmlCleansing = "" } = params || {};
-    const pilotItem = this.getPilot({ pilotId });
+  queryActionList = async (params: { caseId: string; tabInfo?: chrome.tabs.Tab; title?: string; htmlCleansing?: string }) => {
+    const isMock = false;
+    const { caseId, tabInfo, title = "", htmlCleansing = "" } = params || {};
+    const pilotItem = this.getPilot({ caseId });
     let actionlist: IActionItemType[];
 
     if (!tabInfo || !pilotItem) {
@@ -215,6 +209,8 @@ class PilotManager {
       const resAssistent = await Api.Ginkgo.getAssistent({
         body: {
           message: htmlCleansing,
+          fill_data: pilotItem.fill_data,
+          trace_id: caseId,
         },
       });
 
@@ -223,7 +219,7 @@ class PilotManager {
 
     if (!actionlist) {
       this.updatePilotMapForAddStep({
-        pilotId,
+        caseId,
         update: {
           title: MESSAGE.FEATURE_COMING_SOON,
           descriptionText: MESSAGE.FEATURE_COMING_SOON_TIP,
@@ -231,15 +227,15 @@ class PilotManager {
       });
       pilotItem.pilotStatus = PilotStatusEnum.COMING_SOON;
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-pilot-update`,
-        pilotId,
+        type: `ginkgo-background-all-case-update`,
+        caseId,
         pilotItem,
       });
       return { result: false };
     }
 
     this.updatePilotMapForUpdateStep({
-      pilotId,
+      caseId,
       update: {
         actionlist,
       },
@@ -248,15 +244,9 @@ class PilotManager {
     return { result: true, actionlist };
   };
 
-  executeActionList = async (params: {
-    pilotId: string;
-    caseId: string;
-    tabInfo?: chrome.tabs.Tab;
-    title?: string;
-    actionlist?: IActionItemType[];
-  }) => {
-    const { pilotId, caseId, tabInfo, title = "", actionlist = [] } = params || {};
-    const pilotItem = this.getPilot({ pilotId });
+  executeActionList = async (params: { caseId: string; tabInfo?: chrome.tabs.Tab; title?: string; actionlist?: IActionItemType[] }) => {
+    const { caseId, tabInfo, title = "", actionlist = [] } = params || {};
+    const pilotItem = this.getPilot({ caseId });
 
     if (!tabInfo || !pilotItem) {
       return { result: false };
@@ -279,7 +269,7 @@ class PilotManager {
       const { type } = resActionDom?.[0]?.result || {};
 
       this.updatePilotMapForUpdateAction({
-        pilotId,
+        caseId,
         update: {
           actioncurrent: i,
           actionresult: type,
@@ -287,17 +277,17 @@ class PilotManager {
         },
       });
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-pilot-update`,
+        type: `ginkgo-background-all-case-update`,
         pilotStatus: PilotStatusEnum.ACTION,
-        pilotId,
+        caseId,
         pilotItem,
       });
 
       if (action.type === "manual") {
         pilotItem.pilotStatus = PilotStatusEnum.MANUAL;
         BackgroundEventManager.postConnectMessage({
-          type: `ginkgo-background-all-pilot-update`,
-          pilotId,
+          type: `ginkgo-background-all-case-update`,
+          caseId,
           pilotItem,
         });
         return { result: false };
@@ -307,16 +297,16 @@ class PilotManager {
     return { result: true };
   };
 
-  main = async (params: { pilotId: string; caseId: string; tabInfo: chrome.tabs.Tab }) => {
-    const { pilotId, caseId = "demo", tabInfo } = params || {};
-    const pilotItem = this.getPilot({ pilotId });
+  main = async (params: { caseId: string; tabInfo: chrome.tabs.Tab }) => {
+    const { caseId = "caseId-123456", tabInfo } = params || {};
+    const pilotItem = this.getPilot({ caseId });
 
     while (!!pilotItem) {
       // 查询页面
       pilotItem.pilotStatus = PilotStatusEnum.QUERY;
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-pilot-update`,
-        pilotId,
+        type: `ginkgo-background-all-case-update`,
+        caseId,
         pilotItem,
       });
       const resQueryHtmlInfo = await this.queryHtmlInfo(params);
@@ -327,12 +317,12 @@ class PilotManager {
       // 分析页面
       pilotItem.pilotStatus = PilotStatusEnum.ANALYSIS;
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-pilot-update`,
-        pilotId,
+        type: `ginkgo-background-all-case-update`,
+        caseId,
         pilotItem,
       });
       const { title, htmlCleansing } = resQueryHtmlInfo;
-      const resQueryActionList = await this.queryActionList({ pilotId, caseId, tabInfo, title, htmlCleansing });
+      const resQueryActionList = await this.queryActionList({ caseId, tabInfo, title, htmlCleansing });
       if (!pilotItem?.timer || !resQueryActionList.result) {
         break;
       }
@@ -340,12 +330,12 @@ class PilotManager {
       // 执行动作
       pilotItem.pilotStatus = PilotStatusEnum.ACTION;
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-pilot-update`,
-        pilotId,
+        type: `ginkgo-background-all-case-update`,
+        caseId,
         pilotItem,
       });
       const { actionlist } = resQueryActionList;
-      const resExecuteActionList = await this.executeActionList({ pilotId, caseId, tabInfo, title, actionlist });
+      const resExecuteActionList = await this.executeActionList({ caseId, tabInfo, title, actionlist });
       if (!pilotItem?.timer || !resExecuteActionList.result) {
         break;
       }
@@ -353,8 +343,8 @@ class PilotManager {
       // 等待
       pilotItem.pilotStatus = PilotStatusEnum.WAIT;
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-pilot-update`,
-        pilotId,
+        type: `ginkgo-background-all-case-update`,
+        caseId,
         pilotItem,
       });
       await UtilsManager.sleep(3000);
@@ -366,16 +356,16 @@ class PilotManager {
     }
   };
 
-  open = async (params: { pilotId: string; caseId: string }) => {
-    const { pilotId, caseId } = params || {};
+  open = async (params: { caseId: string; fill_data: Record<string, unknown> }) => {
+    const { caseId, fill_data } = params || {};
 
     const tabInfo = await ChromeManager.createTab({
-      url: this.caseUrlMap[caseId],
+      url: this.caseUrlMap[caseId] || this.caseUrlMap.demo,
       active: false,
     });
     const pilotItem = {
-      pilotId,
       caseId,
+      fill_data,
       tabInfo,
       timer: null,
       pilotStatus: PilotStatusEnum.OPEN,
@@ -385,22 +375,22 @@ class PilotManager {
       repeatCurrent: 0,
     };
 
-    this.pilotMap.set(pilotId, pilotItem);
+    this.pilotMap.set(caseId, pilotItem);
 
     BackgroundEventManager.postConnectMessage({
-      type: `ginkgo-background-all-pilot-open`,
-      pilotId,
+      type: `ginkgo-background-all-case-open`,
+      caseId,
       pilotItem,
     });
   };
 
-  start = (params: { pilotId?: string; caseId?: string; tabInfo: chrome.tabs.Tab }) => {
-    const { pilotId = "", caseId = "", tabInfo } = params || {};
+  start = (params: { caseId?: string; tabInfo: chrome.tabs.Tab }) => {
+    const { caseId = "", tabInfo } = params || {};
     let pilotItem = this.getPilot({ tabId: tabInfo.id });
     if (!pilotItem) {
       pilotItem = {
-        pilotId,
         caseId,
+        fill_data: {},
         tabInfo,
         timer: null,
         pilotStatus: PilotStatusEnum.HOLD,
@@ -409,13 +399,12 @@ class PilotManager {
         repeatHash: "",
         repeatCurrent: 0,
       };
-      this.pilotMap.set(pilotId, pilotItem);
+      this.pilotMap.set(caseId, pilotItem);
     }
     pilotItem.tabInfo = tabInfo; // update tabInfo
 
     const timer = setTimeout(async () => {
       await this.main({
-        pilotId: pilotItem.pilotId,
         caseId: pilotItem.caseId,
         tabInfo: pilotItem.tabInfo,
       });
@@ -423,15 +412,15 @@ class PilotManager {
     }, 0);
 
     this.updatePilotMap({
-      pilotId: pilotItem.pilotId,
+      caseId: pilotItem.caseId,
       update: { timer, pilotStatus: PilotStatusEnum.HOLD },
     });
   };
 
-  stop = (params: { pilotId: string }) => {
+  stop = (params: { caseId: string }) => {
     // 实现你的任务逻辑
-    const { pilotId } = params || {};
-    const pilotItem = this.pilotMap.get(pilotId);
+    const { caseId } = params || {};
+    const pilotItem = this.pilotMap.get(caseId);
 
     if (pilotItem) {
       if (pilotItem.timer) {
@@ -442,14 +431,14 @@ class PilotManager {
       // 会覆盖报错状态
       pilotItem.pilotStatus = PilotStatusEnum.HOLD;
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-pilot-update`,
-        pilotId: pilotItem?.pilotId,
+        type: `ginkgo-background-all-case-update`,
+        caseId: pilotItem?.caseId,
         pilotItem,
       });
     }
 
     // Don't need to delete pilotItem
-    // this.pilotMap.delete(pilotId);
+    // this.pilotMap.delete(caseId);
   };
 }
 

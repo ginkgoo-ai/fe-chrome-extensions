@@ -13,10 +13,12 @@ const handleMessage = (event: MessageEvent) => {
     // 如果是自身来源的消息，才会转发
     switch (type) {
       default: {
-        try {
-          port?.postMessage(message);
-        } catch (error) {
-          console.error("[Ginkgo] ContentScript postMessage error", error);
+        if (port?.name) {
+          try {
+            port?.postMessage(message);
+          } catch (error) {
+            console.debug("[Ginkgo] ContentScript postMessage error", error);
+          }
         }
         break;
       }
@@ -43,6 +45,7 @@ window.addEventListener("load", () => {
   try {
     // 仅白名单网站才会注入脚本
     if (!GlobalManager.g_whiteList.includes(window.location.origin)) {
+      console.log("[Ginkgo] fe-chrome-extensions ignore");
       return;
     }
 
@@ -55,13 +58,18 @@ window.addEventListener("load", () => {
     port = chrome.runtime.connect({ name: `ginkgo-page-${uuidv4()}` });
     port.onMessage.addListener(handleConnectMessage);
   } catch (error) {
-    console.log("[Ginkgo] fe-chrome-extensions load error", error);
+    console.debug("[Ginkgo] Error in load event:", error);
   }
 });
 
-window.addEventListener("unload", () => {
+// 添加页面卸载前的清理逻辑
+window.addEventListener("beforeunload", () => {
   window.removeEventListener("message", handleMessage);
 });
+
+// window.addEventListener("unload", () => {
+//   window.removeEventListener("message", handleMessage);
+// });
 
 // function Content(): JSX.Element {
 //   const [isShowModalVisible, setShowModalVisible] = useState(false);

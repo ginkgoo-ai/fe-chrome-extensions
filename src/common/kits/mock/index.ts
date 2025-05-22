@@ -1,4 +1,4 @@
-import { IActionItemType, IProfileType } from "@/common/types/pilot.t";
+import { IActionItemType, IProfileType } from "@/common/types/case";
 
 const mock_url1 = "http://localhost:9002/#/home";
 const mock_url2 = "https://www.baidu.com/";

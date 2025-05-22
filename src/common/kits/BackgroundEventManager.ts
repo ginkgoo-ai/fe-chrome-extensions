@@ -3,7 +3,7 @@ import ChromeManager from "@/common/kits/ChromeManager";
 import FetchManager from "@/common/kits/FetchManager";
 import PilotManager from "@/common/kits/PilotManager";
 import { EventHandler } from "@/types/types";
-import { PilotStatusEnum } from "../types/pilot.t";
+import { PilotStatusEnum } from "../types/case";
 
 /**
  * @description background事件管理器
@@ -52,7 +52,7 @@ class BackgroundEventManager {
       const clientName = client?.port?.name?.split("-")[1];
       if (target === clientName || target === "all") {
         try {
-          console.log("[Debug] BackgroundEventManager postConnectMessage", client, message);
+          // console.log("[Debug] BackgroundEventManager postConnectMessage", client, message);
           client?.port?.postMessage(message);
         } catch (error) {
           console.debug("[Debug] Port disconnected, cleaning up:", client);
@@ -196,7 +196,6 @@ class BackgroundEventManager {
   };
 
   onConnectCommon = (message: any, port: chrome.runtime.Port) => {
-    console.log("[Ginkgo] BackgroundEventManager onConnectCommon", port, message);
     // port.postMessage({ message: "Background script received your message!" });
     const { type, ...otherInfo } = message || {};
     const arrType = type.split("-");
@@ -216,12 +215,11 @@ class BackgroundEventManager {
         this.postConnectMessage(messageNew);
         break;
       }
-      case "ginkgo-page-all-pilot-start":
-      case "ginkgo-sidepanel-all-pilot-start": {
-        const pilotItem = PilotManager.getPilot({ pilotId: otherInfo.pilotId });
+      case "ginkgo-page-all-case-start":
+      case "ginkgo-sidepanel-all-case-start": {
+        const pilotItem = PilotManager.getPilot({ caseId: otherInfo.caseId });
         if (!!pilotItem) {
           PilotManager.start({
-            pilotId: pilotItem.pilotId,
             caseId: pilotItem.caseId,
             tabInfo: pilotItem.tabInfo,
           });
@@ -230,9 +228,13 @@ class BackgroundEventManager {
         }
         break;
       }
-      case "ginkgo-page-all-pilot-stop":
-      case "ginkgo-sidepanel-all-pilot-stop": {
+      case "ginkgo-page-all-case-stop":
+      case "ginkgo-sidepanel-all-case-stop": {
         PilotManager.stop(otherInfo);
+        break;
+      }
+      default: {
+        console.log("[Ginkgo] BackgroundEventManager onConnectCommon", port, message);
         break;
       }
     }

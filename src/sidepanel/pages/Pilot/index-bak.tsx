@@ -70,13 +70,13 @@ export default function Pilot() {
     (message) => {
       console.log("[Ginkgo] Received from sidepanel:", message);
       const { type } = message;
-      if (type === "ginkgo-background-all-pilot-start") {
+      if (type === "ginkgo-background-all-case-start") {
         refTabActivated.current = x_tabActivated;
         setPilotStatus(PilotStatusEnum.START);
-      } else if (type === "ginkgo-background-all-pilot-stop") {
+      } else if (type === "ginkgo-background-all-case-stop") {
         setPilotStatus(PilotStatusEnum.HOLD);
         refTabActivated.current = null;
-      } else if (type === "ginkgo-background-all-pilot-update") {
+      } else if (type === "ginkgo-background-all-case-update") {
         // setPilotStatus(PilotStatusEnum.UPDATE);
       }
     },
@@ -469,7 +469,7 @@ export default function Pilot() {
   const handleBtnStartClick = () => {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgo-sidepanel-all-pilot-start",
+        type: "ginkgo-sidepanel-all-case-start",
       });
     } catch (error) {
       console.error("[Ginkgo] Sidepanel handleBtnStartClick error", error);
@@ -479,7 +479,7 @@ export default function Pilot() {
   const handleBtnStopClick = () => {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgo-sidepanel-all-pilot-stop",
+        type: "ginkgo-sidepanel-all-case-stop",
       });
     } catch (error) {
       console.error("[Ginkgo] Sidepanel handleBtnStopClick error", error);

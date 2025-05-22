@@ -4,7 +4,7 @@ import UtilsManager from "@/common/kits/UtilsManager";
 
 const getAssistent = async (config = {}) => {
   const { headers = {}, query = {}, body = {}, ...otherConfig } = config || {};
-  const url = "http://192.168.31.205:8080/assistant";
+  const url = "http://192.168.31.205:6011/assistant";
   // const url = "http://localhost:6011/assistant";
 
   const res = await FetchManager.fetchAPI({

@@ -13,7 +13,7 @@ import HTMLManager from "@/common/kits/HTMLManager";
 import MemberManager from "@/common/kits/MemberManager";
 import { useActions } from "@/common/kits/hooks/useActions";
 import { useEventManager } from "@/common/kits/hooks/useEventManager";
-import { IActionItemType, IStepItemType, PilotStatusEnum } from "@/common/types/pilot.t";
+import { IActionItemType, IStepItemType, PilotStatusEnum } from "@/common/types/case";
 import appInfoActions from "@/sidepanel/redux/actions/appInfo";
 import { IRootStateType } from "@/sidepanel/redux/types";
 import { IProfileType, profileMock } from "./config/mock";
@@ -24,7 +24,7 @@ const TITLE_PAGE = "Ginkgoo AI Form Assistant";
 export default function Pilot() {
   const { modal } = App.useApp();
 
-  const pilotId = useRef<string>(uuidV4());
+  const caseId = useRef<string>(uuidV4());
 
   const [pilotStatus, setPilotStatus] = useState<PilotStatusEnum>(PilotStatusEnum.HOLD);
   const [alertTip, setAlertTip] = useState<{ type: "success" | "info" | "warning" | "error"; message: string } | null>(null);
@@ -46,7 +46,7 @@ export default function Pilot() {
     const { type, pilotItem } = message;
 
     switch (type) {
-      case "ginkgo-background-all-pilot-update": {
+      case "ginkgo-background-all-case-update": {
         setPilotStatus(pilotItem.pilotStatus);
         setStepListCurrent(pilotItem.stepListCurrent);
         setStepListItems(calcStepListCurrent(pilotItem.stepListItems));
@@ -142,9 +142,8 @@ export default function Pilot() {
   const handleBtnStartClick = () => {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgo-sidepanel-all-pilot-start",
-        pilotId: pilotId.current,
-        caseId: "demo",
+        type: "ginkgo-sidepanel-all-case-start",
+        caseId: caseId.current,
         tabInfo: x_tabActivated,
       });
     } catch (error) {
@@ -155,9 +154,8 @@ export default function Pilot() {
   const handleBtnStopClick = () => {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgo-sidepanel-all-pilot-stop",
-        pilotId: pilotId.current,
-        caseId: "demo",
+        type: "ginkgo-sidepanel-all-case-stop",
+        caseId: caseId.current,
         tabInfo: x_tabActivated,
       });
     } catch (error) {
