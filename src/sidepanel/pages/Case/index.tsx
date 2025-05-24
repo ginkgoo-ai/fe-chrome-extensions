@@ -21,7 +21,7 @@ import "./index.less";
 
 const TITLE_PAGE = "Ginkgoo AI Form Assistant";
 
-export default function Pilot() {
+export default function Case() {
   const { modal } = App.useApp();
 
   const caseId = useRef<string>(uuidV4());
@@ -47,9 +47,30 @@ export default function Pilot() {
 
     switch (type) {
       case "ginkgo-background-all-case-update": {
-        setPilotStatus(pilotItem.pilotStatus);
-        setStepListCurrent(pilotItem.stepListCurrent);
-        setStepListItems(calcStepListCurrent(pilotItem.stepListItems));
+        const {
+          caseId: caseIdMsg,
+          pilotStatus: pilotStatusMsg,
+          stepListCurrent: stepListCurrentMsg,
+          stepListItems: stepListItemsMsg,
+        } = pilotItem || {};
+
+        caseId.current = caseIdMsg;
+        setPilotStatus(pilotStatusMsg);
+        setStepListCurrent(stepListCurrentMsg);
+        setStepListItems(calcStepListCurrent(stepListItemsMsg));
+
+        if (stepListCurrentMsg >= 0 && stepListItemsMsg?.length > 0 && !!stepListItemsMsg[stepListCurrentMsg]) {
+          setTimeout(() => {
+            const { actioncurrent, actionlist } = stepListItemsMsg[stepListCurrentMsg] || {};
+            if (actioncurrent >= 0 && actionlist?.length > 0) {
+              document
+                .getElementById(`action-item-${stepListCurrentMsg}-${actioncurrent}`)
+                ?.scrollIntoView({ behavior: "smooth", block: "center" });
+            } else {
+              document.getElementById(`step-item-${stepListCurrentMsg}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }, 40);
+        }
         break;
       }
     }
@@ -110,6 +131,13 @@ export default function Pilot() {
   const init = async () => {
     const resTabInfo = await ChromeManager.queryTabInfo({});
     updateTabActivated(resTabInfo);
+    // case
+    GlobalManager.g_backgroundPort?.postMessage({
+      type: "ginkgo-sidepanel-background-case-query",
+      tabInfo: x_tabActivated,
+    });
+
+    // Profile
     refreshProfileInfo();
     setProfileItems(
       Object.keys(profileMock).map((key, index) => {

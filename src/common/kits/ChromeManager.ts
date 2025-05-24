@@ -18,7 +18,17 @@ class ChromeManager {
     return this.instance;
   }
 
-  async launchWebAuthFlow(): Promise<string> {
+  private getInjectionResult = (tabInfo: chrome.tabs.Tab, result: any): chrome.scripting.InjectionResult<any>[] => {
+    return [
+      {
+        documentId: "0",
+        frameId: 0,
+        result,
+      },
+    ];
+  };
+
+  launchWebAuthFlow = async (): Promise<string> => {
     const redirectUrl = chrome.identity.getRedirectURL();
     const clientId = "Ov23liKuW50Tuz2cptS9";
     const authUrl = UtilsManager.router2url("https://github.com/login/oauth/authorize", {
@@ -48,7 +58,7 @@ class ChromeManager {
       console.debug("[Debug] ChromeManager launchWebAuthFlow error", error);
       return "";
     }
-  }
+  };
 
   // async removeCachedAuthToken(params: Record<string, any>): Promise<any> {
   //   const { token } = params || {};
@@ -57,34 +67,34 @@ class ChromeManager {
   //   return res;
   // }
 
-  async openOptionsPage(): Promise<void> {
+  openOptionsPage = async (): Promise<void> => {
     return new Promise((resolve) => {
       if (GlobalManager.g_isDev) {
         message.open({
           content: `打开options页面`,
           type: "info",
         });
+        resolve(void 0);
       } else {
-        chrome.runtime.openOptionsPage();
+        resolve(chrome.runtime.openOptionsPage());
       }
-      resolve();
     });
-  }
+  };
 
-  async setSyncStorageCore(params: Record<string, any>): Promise<void> {
+  setSyncStorageCore = async (params: Record<string, any>): Promise<void> => {
     if (GlobalManager.g_isDev) {
       const g_cacheSync = GlobalManager.g_cacheSync || {};
       GlobalManager.g_cacheSync = {
         ...g_cacheSync,
         ...params,
       };
-      return;
+      return void 0;
     } else {
       return await chrome.storage.sync.set(params);
     }
-  }
+  };
 
-  async getSyncStorageCore(params?: string[]): Promise<Record<string, any>> {
+  getSyncStorageCore = async (params?: string[]): Promise<Record<string, any>> => {
     if (GlobalManager.g_isDev) {
       let result: Record<string, any> = {};
       if (params) {
@@ -98,9 +108,9 @@ class ChromeManager {
     } else {
       return await chrome.storage.sync.get(params);
     }
-  }
+  };
 
-  async removeSyncStorageCore(params: string[]): Promise<void> {
+  removeSyncStorageCore = async (params: string[]): Promise<void> => {
     if (GlobalManager.g_isDev) {
       const g_cacheSync = GlobalManager.g_cacheSync || {};
       params.forEach((item) => {
@@ -110,17 +120,35 @@ class ChromeManager {
     } else {
       return await chrome.storage.sync.remove(params);
     }
-  }
+  };
 
-  async clearSyncStorageCore(): Promise<void> {
+  clearSyncStorageCore = async (): Promise<void> => {
     if (GlobalManager.g_isDev) {
       GlobalManager.g_cacheSync = {};
     } else {
       return await chrome.storage.sync.clear();
     }
-  }
+  };
 
-  async sendMessageRuntime(params: any): Promise<any> {
+  getSyncCookiesCore = async (tab: chrome.tabs.Tab): Promise<chrome.cookies.Cookie[]> => {
+    if (!tab?.url) {
+      return [];
+    }
+
+    try {
+      const url = new URL(tab.url);
+      const cookies = await chrome.cookies.getAll({
+        url: tab.url,
+        domain: url.hostname,
+      });
+      return cookies;
+    } catch (error) {
+      console.debug("[Debug] ChromeManager getSyncCookiesCore error", error);
+      return [];
+    }
+  };
+
+  sendMessageRuntime = async (params: any): Promise<any> => {
     return new Promise((resolve) => {
       if (GlobalManager.g_isDev) {
         BackgroundEventManager.onMessage(params, {}, (response) => {
@@ -137,9 +165,9 @@ class ChromeManager {
         });
       }
     });
-  }
+  };
 
-  async queryAllTabs(): Promise<chrome.tabs.Tab[]> {
+  queryAllTabs = async (): Promise<chrome.tabs.Tab[]> => {
     return new Promise((resolve) => {
       if (GlobalManager.g_isDev) {
         message.open({
@@ -162,9 +190,9 @@ class ChromeManager {
         });
       }
     });
-  }
+  };
 
-  async getTabInfo(tabId: number): Promise<chrome.tabs.Tab> {
+  getTabInfo = async (tabId: number): Promise<chrome.tabs.Tab> => {
     return new Promise((resolve) => {
       if (GlobalManager.g_isDev) {
         message.open({
@@ -181,9 +209,9 @@ class ChromeManager {
         });
       }
     });
-  }
+  };
 
-  async queryTabInfo(queryInfo: Record<string, any>): Promise<chrome.tabs.Tab> {
+  queryTabInfo = async (queryInfo: Record<string, any>): Promise<chrome.tabs.Tab> => {
     return new Promise((resolve) => {
       if (GlobalManager.g_isDev) {
         message.open({
@@ -200,9 +228,9 @@ class ChromeManager {
         });
       }
     });
-  }
+  };
 
-  async createTab(createProperties: Record<string, any>): Promise<chrome.tabs.Tab> {
+  createTab = async (createProperties: Record<string, any>): Promise<chrome.tabs.Tab> => {
     return new Promise((resolve) => {
       if (GlobalManager.g_isDev) {
         message.open({
@@ -219,19 +247,24 @@ class ChromeManager {
         });
       }
     });
-  }
+  };
 
-  async executeScript(tab: chrome.tabs.Tab, params: Record<string, unknown>): Promise<{ result: any }[]> {
-    if (!tab?.url) {
+  executeScript = async (
+    tab: chrome.tabs.Tab,
+    params: Record<string, unknown>
+  ): Promise<chrome.scripting.InjectionResult<any>[] | null> => {
+    console.log("executeScript tab", tab);
+
+    if (!tab?.id || !tab?.url) {
       return new Promise((resolve) => {
-        resolve([{ result: false }]);
+        resolve(this.getInjectionResult(tab, false));
       });
     }
 
     if (tab?.url?.startsWith("chrome://")) {
       console.debug("[Debug] Cannot execute script on chrome:// URL");
       return new Promise((resolve) => {
-        resolve([{ result: false }]);
+        resolve(this.getInjectionResult(tab, false));
       });
     }
 
@@ -244,7 +277,7 @@ class ChromeManager {
               content: `执行脚本：${tab.id} ${JSON.stringify(params)}`,
               type: "info",
             });
-            resolve([{ result: true }]);
+            resolve(this.getInjectionResult(tab, true));
             break;
           }
           case "setLocalStorage": {
@@ -252,7 +285,7 @@ class ChromeManager {
               content: `执行脚本：${tab.id} ${JSON.stringify(params)}`,
               type: "info",
             });
-            resolve([{ result: true }]);
+            resolve(this.getInjectionResult(tab, true));
             break;
           }
           case "getLocalStorage": {
@@ -260,7 +293,7 @@ class ChromeManager {
               content: `执行脚本：${tab.id} ${JSON.stringify(params)}`,
               type: "info",
             });
-            resolve(Mock.mock_chromeManager_executeScript_getLocalStorage);
+            resolve(this.getInjectionResult(tab, Mock.mock_chromeManager_executeScript_getLocalStorage));
             break;
           }
           case "queryHtmlInfo": {
@@ -268,7 +301,7 @@ class ChromeManager {
               content: `执行脚本：${tab.id} ${JSON.stringify(params)}`,
               type: "info",
             });
-            resolve(Mock.mock_chromeManager_executeScript_queryHtmlInfo);
+            resolve(this.getInjectionResult(tab, Mock.mock_chromeManager_executeScript_queryHtmlInfo));
             break;
           }
           default: {
@@ -276,7 +309,7 @@ class ChromeManager {
               content: `执行脚本：${tab.id} ${JSON.stringify(params)}`,
               type: "info",
             });
-            resolve([{ result: true }]);
+            resolve(this.getInjectionResult(tab, true));
             break;
           }
         }
@@ -294,6 +327,11 @@ class ChromeManager {
                 args: [cbParams],
               },
               (res) => {
+                if (chrome.runtime.lastError) {
+                  console.debug("[Debug] ChromeManager executeScript error:", chrome.runtime.lastError);
+                  resolve(this.getInjectionResult(tab, false));
+                  return;
+                }
                 resolve(res);
               }
             );
@@ -303,7 +341,7 @@ class ChromeManager {
             chrome.scripting.executeScript(
               {
                 target: { tabId: tab.id },
-                func: (cbParams) => {
+                func: (cbParams: any) => {
                   const { consoleText } = cbParams || {};
                   console.log(consoleText);
                   return true;
@@ -311,6 +349,11 @@ class ChromeManager {
                 args: [cbParams],
               },
               (res) => {
+                if (chrome.runtime.lastError) {
+                  console.debug("[Debug] ChromeManager executeScript error:", chrome.runtime.lastError);
+                  resolve(this.getInjectionResult(tab, false));
+                  return;
+                }
                 resolve(res);
               }
             );
@@ -320,7 +363,7 @@ class ChromeManager {
             chrome.scripting.executeScript(
               {
                 target: { tabId: tab.id },
-                func: (cbParams) => {
+                func: (cbParams: any) => {
                   const { storageInfo, isNeedReload } = cbParams || {};
                   storageInfo &&
                     storageInfo.map((item: any) => {
@@ -335,6 +378,11 @@ class ChromeManager {
                 args: [cbParams],
               },
               (res) => {
+                if (chrome.runtime.lastError) {
+                  console.debug("[Debug] ChromeManager executeScript error:", chrome.runtime.lastError);
+                  resolve(this.getInjectionResult(tab, false));
+                  return;
+                }
                 resolve(res);
               }
             );
@@ -344,7 +392,7 @@ class ChromeManager {
             chrome.scripting.executeScript(
               {
                 target: { tabId: tab.id },
-                func: (cbParams) => {
+                func: (cbParams: any) => {
                   const { storageKey } = cbParams || {};
                   const result =
                     storageKey &&
@@ -359,6 +407,11 @@ class ChromeManager {
                 args: [cbParams],
               },
               (res) => {
+                if (chrome.runtime.lastError) {
+                  console.debug("[Debug] ChromeManager executeScript error:", chrome.runtime.lastError);
+                  resolve(this.getInjectionResult(tab, false));
+                  return;
+                }
                 console.log("handleExecuteScript getLocalStorage", res);
                 resolve(res);
               }
@@ -369,7 +422,7 @@ class ChromeManager {
             chrome.scripting.executeScript(
               {
                 target: { tabId: tab.id },
-                func: (cbParams) => {
+                func: (cbParams: any) => {
                   const { selector, attr = [] } = cbParams || {};
                   const element: HTMLElement | null = document.querySelector(selector);
                   if (element) {
@@ -385,6 +438,11 @@ class ChromeManager {
                 args: [cbParams],
               },
               (res) => {
+                if (chrome.runtime.lastError) {
+                  console.debug("[Debug] ChromeManager executeScript error:", chrome.runtime.lastError);
+                  resolve(this.getInjectionResult(tab, false));
+                  return;
+                }
                 resolve(res);
               }
             );
@@ -399,6 +457,11 @@ class ChromeManager {
                 },
               },
               (res) => {
+                if (chrome.runtime.lastError) {
+                  console.debug("[Debug] ChromeManager executeScript error:", chrome.runtime.lastError);
+                  resolve(this.getInjectionResult(tab, false));
+                  return;
+                }
                 resolve(res);
               }
             );
@@ -408,7 +471,7 @@ class ChromeManager {
             chrome.scripting.executeScript(
               {
                 target: { tabId: tab.id },
-                func: async (cbParams) => {
+                func: async (cbParams: any) => {
                   const { action = {} } = cbParams || {};
 
                   const element = document.querySelector(action.selector);
@@ -441,16 +504,21 @@ class ChromeManager {
                 args: [cbParams],
               },
               (res) => {
+                if (chrome.runtime.lastError) {
+                  console.debug("[Debug] ChromeManager executeScript error:", chrome.runtime.lastError);
+                  resolve(this.getInjectionResult(tab, false));
+                  return;
+                }
                 resolve(res);
               }
             );
             break;
           }
-          case "bulkButtonActions": {
+          case "actionDomBulk": {
             chrome.scripting.executeScript(
               {
                 target: { tabId: tab.id },
-                func: async (cbParams) => {
+                func: async (cbParams: any) => {
                   let count = 0;
                   const { btnClassName = [], spanClassName = ".Button-label", spanText = "", actions = [] } = cbParams || {};
                   const buttons = document.getElementsByTagName("button");
@@ -475,68 +543,12 @@ class ChromeManager {
                 args: [cbParams],
               },
               (res) => {
+                if (chrome.runtime.lastError) {
+                  console.debug("[Debug] ChromeManager executeScript error:", chrome.runtime.lastError);
+                  resolve(this.getInjectionResult(tab, false));
+                  return;
+                }
                 console.log("handleExecuteScript bulkButtonActions", res);
-                resolve(res);
-              }
-            );
-            break;
-          }
-          case "bulkActions": {
-            chrome.scripting.executeScript(
-              {
-                target: { tabId: tab.id },
-                func: async (cbParams) => {
-                  const { actions = [], onComplete = () => {} } = cbParams || {};
-
-                  for (let i = 0; i < actions.length; i++) {
-                    const action = actions[i];
-                    const element = document.querySelector(action.selector);
-
-                    if (!element) {
-                      console.debug("[Debug] ChromeManager executeScript aiActions", action, element);
-                      onComplete({
-                        type: "notFound",
-                        action,
-                        index: i,
-                      });
-                      continue;
-                    }
-
-                    element.scrollIntoView({ behavior: "auto", block: "center" });
-
-                    if (action.type === "click") {
-                      element.click();
-                    } else if (action.type === "input") {
-                      element.value = action.value;
-                    } else if (action.type === "select") {
-                      element.value = action.value;
-                    } else if (action.type === "checkbox") {
-                      element.checked = action.checked;
-                    } else if (action.type === "radio") {
-                      element.checked = action.checked;
-                    } else if (action.type === "textarea") {
-                      element.value = action.value;
-                    } else if (action.type === "file") {
-                      element.value = action.value;
-                    } else if (action.type === "button") {
-                      element.click();
-                    } else if (action.type === "link") {
-                      element.click();
-                    }
-
-                    onComplete({
-                      type: "success",
-                      action,
-                      index: i,
-                    });
-                  }
-
-                  return true;
-                },
-                args: [cbParams],
-              },
-              (res) => {
-                console.log("handleExecuteScript aiActions", res);
                 resolve(res);
               }
             );
@@ -550,9 +562,9 @@ class ChromeManager {
         }
       }
     });
-  }
+  };
 
-  getURLRuntime(url: string): string {
+  getURLRuntime = (url: string): string => {
     let result = "";
     if (GlobalManager.g_isDev) {
       result = "./getURLRuntime.js";
@@ -560,7 +572,11 @@ class ChromeManager {
       result = chrome.runtime.getURL(url);
     }
     return result;
-  }
+  };
+
+  openSidePanel = (options: chrome.sidePanel.OpenOptions): Promise<void> => {
+    return chrome.sidePanel.open(options);
+  };
 }
 
 export default ChromeManager.getInstance();

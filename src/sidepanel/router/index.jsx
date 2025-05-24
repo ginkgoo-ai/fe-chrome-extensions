@@ -1,8 +1,8 @@
 import { Navigate, createHashRouter } from "react-router-dom";
 import About from "@/sidepanel/pages/About";
+import Pilot from "@/sidepanel/pages/Case";
 import Debug from "@/sidepanel/pages/Debug";
 import Login from "@/sidepanel/pages/Login";
-import Pilot from "@/sidepanel/pages/Pilot";
 import Privacy from "@/sidepanel/pages/Privacy";
 
 // 全局路由

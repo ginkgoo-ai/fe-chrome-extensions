@@ -80,9 +80,24 @@ class HTMLManager {
     const rootHtml = UtilsManager.formatStr(serialize(root));
     const mainHtml = main ? UtilsManager.formatStr(serialize(main)) : "";
     const h1Text =
-      (h1 as unknown as Parse5Node)?.childNodes?.find((child: Parse5Node) => {
-        return child.nodeName.toLowerCase() === "#text";
-      })?.value || "";
+      // 获取h1标签下，里面的内容
+      (h1 as unknown as Parse5Node)?.childNodes
+        ?.find((child: Parse5Node) => {
+          return child.nodeName.toLowerCase() === "#text";
+        })
+        ?.value?.trim() ||
+      // 获取h1标签下，第一个span标签里面的内容
+      (h1 as unknown as Parse5Node)?.childNodes
+        ?.find((child: Parse5Node) => {
+          return child.nodeName.toLowerCase() === "span";
+        })
+        ?.childNodes?.find((grandChild: Parse5Node) => {
+          return grandChild.nodeName.toLowerCase() === "#text";
+        })
+        ?.value?.trim() ||
+      "";
+
+    console.log("cleanHtml", h1);
     return { root, rootHtml, main, mainHtml, h1, h1Text };
   }
 

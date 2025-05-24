@@ -104,6 +104,14 @@ class BackgroundEventManager {
         });
         return true;
       }
+      // case "updateSidePanel": {
+      //   console.log("openSidePanel 2");
+      //   const { tabInfo } = request || {};
+      //   chrome.sidePanel.open({
+      //     tabId: tabInfo.id,
+      //   });
+      //   return true;
+      // }
       default: {
         sendResponse(true);
         return true;
@@ -127,13 +135,6 @@ class BackgroundEventManager {
     if (changeInfo?.status === "complete") {
       // dosomething on tab updated
       // console.log("BackgroundEventManager onTabsUpdated 1", tab);
-      // 设置 sidePanel
-      // await chrome.sidePanel.setOptions({
-      //   tabId: tab.id,
-      //   path: "index.html",
-      //   enabled: true,
-      // });
-      // console.log("BackgroundEventManager onTabsUpdated 2", tab);
       // 发送 tab 完成事件
       // this.postConnectMessage({
       //   type: "ginkgo-background-all-tab-complete",
@@ -148,24 +149,26 @@ class BackgroundEventManager {
   };
 
   onTabsActivated = async (activeInfo: { tabId: number; windowId: number }) => {
+    const { tabId, windowId } = activeInfo || {};
     // 获取当前激活的 tab 的 HTML 内容
-    if (activeInfo.tabId) {
-      const resTabInfo = await ChromeManager.getTabInfo(activeInfo.tabId);
-      try {
-        this.postConnectMessage({
-          type: "ginkgo-background-all-tab-activated",
-          tabInfo: resTabInfo,
-        });
-      } catch (error) {
-        console.debug("[Debug] onTabsActivated postConnectMessage", error);
-      }
+    if (tabId) {
+      const resTabInfo = await ChromeManager.getTabInfo(tabId);
+      this.postConnectMessage({
+        type: "ginkgo-background-all-tab-activated",
+        tabInfo: resTabInfo,
+      });
+      // const pilotItem = PilotManager.getPilot({ tabId });
+      // console.log("openSidePanel 0", pilotItem?.caseId, !!pilotItem?.caseId);
+
+      // console.log("openSidePanel 1");
+      // await ChromeManager.openSidePanel({
+      //   tabId: !!pilotItem?.caseId ? tabId : -1,
+      // });
     }
   };
 
   onTabsRemoved = (tabId: number, removeInfo: { windowId: number; isWindowClosing: boolean }) => {
-    // dosomething on tab removed
-    // console.log("BackgroundEventManager onTabsRemoved", { tabId, removeInfo });
-    // TODO: 移除pilotMap
+    PilotManager.delete({ tabId });
   };
 
   onContextMenusClick = (menuInfo: any, tabInfo: chrome.tabs.Tab) => {
@@ -231,6 +234,10 @@ class BackgroundEventManager {
       case "ginkgo-page-all-case-stop":
       case "ginkgo-sidepanel-all-case-stop": {
         PilotManager.stop(otherInfo);
+        break;
+      }
+      case "ginkgo-sidepanel-background-case-query": {
+        PilotManager.queryPilot(otherInfo);
         break;
       }
       default: {
