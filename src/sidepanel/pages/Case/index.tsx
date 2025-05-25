@@ -1,4 +1,4 @@
-import { ClearOutlined, CopyOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
+import { ClearOutlined, CopyOutlined, MehOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
 import { Alert, App, Descriptions, DescriptionsProps, Drawer, StepProps, Steps, Tag, Tooltip, message } from "antd";
 import classnames from "classnames";
 import { useSelector } from "react-redux";
@@ -40,10 +40,10 @@ export default function Case() {
   const { x_tabActivated } = useSelector((state: IRootStateType) => state.appInfo);
   const { updateTabActivated } = useActions(appInfoActions);
 
-  const { emit } = useEventManager("ginkgo-message", (message) => {
+  const { emit } = useEventManager("ginkgo-message", async (message) => {
     // console.log('🚀 ~ useEventManager ~ data:', message);
 
-    const { type, pilotItem } = message;
+    const { type, pilotInfo, cookiesInfo } = message;
 
     switch (type) {
       case "ginkgo-background-all-case-update": {
@@ -52,7 +52,7 @@ export default function Case() {
           pilotStatus: pilotStatusMsg,
           stepListCurrent: stepListCurrentMsg,
           stepListItems: stepListItemsMsg,
-        } = pilotItem || {};
+        } = pilotInfo || {};
 
         caseId.current = caseIdMsg;
         setPilotStatus(pilotStatusMsg);
@@ -72,6 +72,11 @@ export default function Case() {
           }, 40);
         }
         break;
+      }
+      case "ginkgo-background-sidepanel-cookies-query": {
+        // console.log("ginkgo-background-sidepanel-cookies-query", cookiesInfo, JSON.stringify(cookiesInfo));
+        // await navigator.clipboard.writeText(JSON.stringify(cookiesInfo));
+        // break;
       }
     }
   });
@@ -129,12 +134,12 @@ export default function Case() {
   };
 
   const init = async () => {
-    const resTabInfo = await ChromeManager.queryTabInfo({});
+    const resTabInfo = await ChromeManager.getActiveTabInfo({});
     updateTabActivated(resTabInfo);
     // case
     GlobalManager.g_backgroundPort?.postMessage({
       type: "ginkgo-sidepanel-background-case-query",
-      tabInfo: x_tabActivated,
+      tabId: x_tabActivated.tabId,
     });
 
     // Profile
@@ -202,6 +207,14 @@ export default function Case() {
       }
     );
     setLoginLoading(false);
+  };
+
+  const handleBtnCookiesClick = () => {
+    console.log("handleBtnCookiesClick");
+    GlobalManager.g_backgroundPort?.postMessage({
+      type: "ginkgo-sidepanel-sidepanel-cookies-query",
+      tabInfo: x_tabActivated,
+    });
   };
 
   const handleBtnCopyHtmlClick = async () => {
@@ -300,6 +313,7 @@ export default function Case() {
         </div>
         <div className="flex flex-row gap-2">
           {/* <MKButton type="primary" shape="circle" icon={<HistoryOutlined />} onClick={handleBtnHistoryClick} /> */}
+          <MKButton type="primary" icon={<MehOutlined />} onClick={handleBtnCookiesClick} />
           <MKButton type="primary" icon={<CopyOutlined />} loading={isCopyHtmlLoading} onClick={handleBtnCopyHtmlClick} />
           <MKButton type="primary" icon={<ClearOutlined />} onClick={handleBtnClearClick} />
           {/* <MKButton type="primary" icon={<SettingOutlined />} onClick={handleBtnSettingClick} /> */}

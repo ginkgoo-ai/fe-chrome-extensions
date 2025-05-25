@@ -130,22 +130,61 @@ class ChromeManager {
     }
   };
 
-  getSyncCookiesCore = async (tab: chrome.tabs.Tab): Promise<chrome.cookies.Cookie[]> => {
-    if (!tab?.url) {
-      return [];
+  getSyncCookiesCore = async (tabInfo: chrome.tabs.Tab): Promise<{ cookies: chrome.cookies.Cookie[]; cookiesStr: string }> => {
+    let result: { cookies: chrome.cookies.Cookie[]; cookiesStr: string } = {
+      cookies: [],
+      cookiesStr: "",
+    };
+
+    if (tabInfo?.url) {
+      try {
+        const url = new URL(tabInfo.url);
+        const cookies = await chrome.cookies.getAll({
+          url: tabInfo.url,
+          domain: url.hostname,
+        });
+        result = {
+          cookies,
+          cookiesStr: cookies
+            .map((cookie) => {
+              const cookieParts = [`${cookie.name}=${cookie.value}`];
+
+              // 添加过期时间
+              if (cookie.expirationDate) {
+                const expires = new Date(cookie.expirationDate * 1000).toUTCString();
+                cookieParts.push(`Expires=${expires}`);
+              }
+
+              // 添加路径
+              if (cookie.path) {
+                cookieParts.push(`Path=${cookie.path}`);
+              }
+
+              // 添加域名
+              if (cookie.domain) {
+                cookieParts.push(`Domain=${cookie.domain}`);
+              }
+
+              // 添加安全标志
+              if (cookie.secure) {
+                cookieParts.push("Secure");
+              }
+
+              // 添加 HttpOnly 标志
+              if (cookie.httpOnly) {
+                cookieParts.push("HttpOnly");
+              }
+
+              return cookieParts.join("; ");
+            })
+            .join("; "), // 将cookies转换为axios可用的header cookies传参
+        };
+      } catch (error) {
+        console.debug("[Debug] ChromeManager getSyncCookiesCore error", error);
+      }
     }
 
-    try {
-      const url = new URL(tab.url);
-      const cookies = await chrome.cookies.getAll({
-        url: tab.url,
-        domain: url.hostname,
-      });
-      return cookies;
-    } catch (error) {
-      console.debug("[Debug] ChromeManager getSyncCookiesCore error", error);
-      return [];
-    }
+    return result;
   };
 
   sendMessageRuntime = async (params: any): Promise<any> => {
@@ -211,7 +250,7 @@ class ChromeManager {
     });
   };
 
-  queryTabInfo = async (queryInfo: Record<string, any>): Promise<chrome.tabs.Tab> => {
+  getActiveTabInfo = async (queryInfo: Record<string, any>): Promise<chrome.tabs.Tab> => {
     return new Promise((resolve) => {
       if (GlobalManager.g_isDev) {
         message.open({
@@ -230,7 +269,7 @@ class ChromeManager {
     });
   };
 
-  createTab = async (createProperties: Record<string, any>): Promise<chrome.tabs.Tab> => {
+  createTab = async (createProperties: chrome.tabs.UpdateProperties): Promise<chrome.tabs.Tab> => {
     return new Promise((resolve) => {
       if (GlobalManager.g_isDev) {
         message.open({
@@ -249,11 +288,20 @@ class ChromeManager {
     });
   };
 
+  updateTab = async (tabId: number, updateProperties: chrome.tabs.UpdateProperties): Promise<chrome.tabs.Tab | undefined> => {
+    return new Promise((resolve) => {
+      // console.log("updateTab", tabId, updateProperties);
+      chrome.tabs.update(tabId, updateProperties, (tab) => {
+        resolve(tab);
+      });
+    });
+  };
+
   executeScript = async (
     tab: chrome.tabs.Tab,
     params: Record<string, unknown>
   ): Promise<chrome.scripting.InjectionResult<any>[] | null> => {
-    console.log("executeScript tab", tab);
+    // console.log("executeScript tab", tab);
 
     if (!tab?.id || !tab?.url) {
       return new Promise((resolve) => {
@@ -418,22 +466,30 @@ class ChromeManager {
             );
             break;
           }
-          case "querySelector": {
+          case "querySelectors": {
             chrome.scripting.executeScript(
               {
                 target: { tabId: tab.id },
                 func: (cbParams: any) => {
-                  const { selector, attr = [] } = cbParams || {};
-                  const element: HTMLElement | null = document.querySelector(selector);
-                  if (element) {
-                    const result: Record<string, unknown> = {};
-                    attr.forEach((item: { key: keyof HTMLElement; defaultWindowKey: keyof Window }) => {
-                      const { key } = item || {};
-                      result[key] = element[key as keyof HTMLElement] || "";
-                    });
-                    return result;
-                  }
-                  return false;
+                  const result: Record<string, unknown>[] = [];
+                  const { selectors = [] } = cbParams || {};
+
+                  selectors.forEach((itemSelector: any, indexSelector: number) => {
+                    const { selector, attr = [] } = itemSelector || {};
+                    const element: HTMLElement | null = document.querySelector(selector);
+                    if (element) {
+                      const resultSelector: Record<string, unknown> = {};
+                      attr.forEach((item: { key: keyof HTMLElement; defaultWindowKey: keyof Window }) => {
+                        const { key } = item || {};
+                        resultSelector[key] = element[key as keyof HTMLElement] || "";
+                      });
+                      result.push(resultSelector);
+                    } else {
+                      result.push({});
+                    }
+                  });
+
+                  return result;
                 },
                 args: [cbParams],
               },

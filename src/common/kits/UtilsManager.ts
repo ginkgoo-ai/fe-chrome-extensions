@@ -257,6 +257,35 @@ class UtilsManager implements UtilsManagerType {
     return strResult;
   };
 
+  getUrlInfo = (url?: string) => {
+    // if (typeof window === "undefined") {
+    //   return {};
+    // }
+
+    const urlInfo = new URL(url || window.location.href) || {};
+    const { hash, host, hostname, href, origin = "", password, pathname = "", port, protocol, search, searchParams, username } = urlInfo;
+
+    // For example: http://localhost:3000/en/?q=2#why
+    const result = {
+      hash, // #why
+      host, // localhost:3000
+      hostname, // localhost
+      href, // http://localhost:3000/en/?q=2#why
+      origin, // http://localhost:3000
+      password, // ""
+      pathname, // /en/
+      port, // 3000
+      protocol, // http:
+      search, // ?q=2
+      searchParams, // URLSearchParams {size: 1}
+      username, // ""
+    };
+
+    // console.log("getUrlInfo result", result);
+
+    return result;
+  };
+
   formatStr = (str: string): string => {
     return (
       str

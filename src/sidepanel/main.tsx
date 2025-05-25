@@ -40,7 +40,7 @@ ReactDOM.createRoot(rootElement).render(
 // 注册监听 Background 消息
 chrome?.runtime?.onMessage?.addListener(async (request, sender, sendResponse) => {
   if (request.type === "onTabsComplete") {
-    const resTabInfo = await ChromeManager.queryTabInfo({});
+    const resTabInfo = await ChromeManager.getActiveTabInfo({});
     if (resTabInfo.id !== request?.tabInfo?.id) {
       return;
     }

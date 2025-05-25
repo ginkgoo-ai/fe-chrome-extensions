@@ -5,6 +5,11 @@ import PilotManager from "@/common/kits/PilotManager";
 import { EventHandler } from "@/types/types";
 import { PilotStatusEnum } from "../types/case";
 
+interface IMessageType {
+  type: string;
+  [key: string]: unknown;
+}
+
 /**
  * @description background事件管理器
  */
@@ -30,7 +35,7 @@ class BackgroundEventManager {
   //   }
   // }
 
-  postConnectMessageByName = (message: any, name: string) => {
+  postConnectMessageByName = (message: IMessageType, name: string) => {
     for (const client of this.connectList) {
       if (client?.port?.name === name) {
         try {
@@ -42,7 +47,7 @@ class BackgroundEventManager {
     }
   };
 
-  postConnectMessage = (message: any) => {
+  postConnectMessage = (message: IMessageType) => {
     const { type } = message || {};
     const arrType = type.split("-");
     // const source = arrType[1];
@@ -141,8 +146,8 @@ class BackgroundEventManager {
       //   tabInfo: tab,
       // });
       // 判断是否存在 pilot
-      const pilotItem = PilotManager.getPilot({ tabId: tab.id });
-      if (pilotItem?.pilotStatus === PilotStatusEnum.OPEN) {
+      const pilotInfo = PilotManager.getPilot({ tabId: tab.id });
+      if (pilotInfo?.pilotStatus === PilotStatusEnum.OPEN) {
         PilotManager.start({ tabInfo: tab });
       }
     }
@@ -157,12 +162,12 @@ class BackgroundEventManager {
         type: "ginkgo-background-all-tab-activated",
         tabInfo: resTabInfo,
       });
-      // const pilotItem = PilotManager.getPilot({ tabId });
-      // console.log("openSidePanel 0", pilotItem?.caseId, !!pilotItem?.caseId);
+      // const pilotInfo = PilotManager.getPilot({ tabId });
+      // console.log("openSidePanel 0", pilotInfo?.caseId, !!pilotInfo?.caseId);
 
       // console.log("openSidePanel 1");
       // await ChromeManager.openSidePanel({
-      //   tabId: !!pilotItem?.caseId ? tabId : -1,
+      //   tabId: !!pilotInfo?.caseId ? tabId : -1,
       // });
     }
   };
@@ -198,9 +203,10 @@ class BackgroundEventManager {
     // const { tabId, url } = details || {};
   };
 
-  onConnectCommon = (message: any, port: chrome.runtime.Port) => {
+  onConnectCommon = async (message: any, port: chrome.runtime.Port) => {
     // port.postMessage({ message: "Background script received your message!" });
     const { type, ...otherInfo } = message || {};
+    const { tabInfo } = otherInfo || {};
     const arrType = type.split("-");
     // const source = arrType[1];
     const target = arrType[2];
@@ -218,13 +224,21 @@ class BackgroundEventManager {
         this.postConnectMessage(messageNew);
         break;
       }
+      case "ginkgo-page-background-tab-update":
+      case "ginkgo-sidepanel-background-tab-update": {
+        const { tabId, updateProperties } = message || {};
+
+        ChromeManager.updateTab(tabId, updateProperties);
+        break;
+      }
       case "ginkgo-page-all-case-start":
       case "ginkgo-sidepanel-all-case-start": {
-        const pilotItem = PilotManager.getPilot({ caseId: otherInfo.caseId });
-        if (!!pilotItem) {
+        const pilotInfo = PilotManager.getPilot({ caseId: otherInfo.caseId });
+
+        if (!!pilotInfo) {
           PilotManager.start({
-            caseId: pilotItem.caseId,
-            tabInfo: pilotItem.tabInfo,
+            caseId: pilotInfo.caseId,
+            tabInfo: pilotInfo.tabInfo,
           });
         } else {
           PilotManager.open(otherInfo);
@@ -236,8 +250,26 @@ class BackgroundEventManager {
         PilotManager.stop(otherInfo);
         break;
       }
+      case "ginkgo-page-background-case-query":
       case "ginkgo-sidepanel-background-case-query": {
-        PilotManager.queryPilot(otherInfo);
+        const { caseId: caseIdMsg, tabId: tabIdMsg } = message || {};
+        console.log("onConnectCommon", { message, otherInfo });
+
+        const pilotInfo = PilotManager.getPilot({
+          caseId: caseIdMsg,
+          tabId: tabIdMsg,
+        });
+        this.postConnectMessage({
+          type: `ginkgo-background-all-case-update`,
+          pilotInfo,
+        });
+        break;
+      }
+      case "ginkgo-sidepanel-sidepanel-cookies-query": {
+        const resCookies = await ChromeManager.getSyncCookiesCore(tabInfo);
+
+        messageNew.cookiesInfo = resCookies;
+        this.postConnectMessage(messageNew);
         break;
       }
       default: {
