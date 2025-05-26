@@ -1,4 +1,80 @@
+import { v4 as uuidv4 } from "uuid";
+import GlobalManager from "@/common/kits/GlobalManager";
 import "./index.less";
+
+let port: chrome.runtime.Port | null = null;
+
+const handleMessage = (event: MessageEvent) => {
+  const message = event.data;
+  const { type, ...otherInfo } = message;
+  const [_, source, target] = type.split("-");
+  // console.log("[Ginkgo] ContentScript handleMessage", event, type, type.startsWith("ginkgo-page-"));
+
+  // 如果是自身来源的消息，才会转发
+  if (source === "page") {
+    switch (type) {
+      default: {
+        if (port?.name) {
+          try {
+            port?.postMessage(message);
+          } catch (error) {
+            console.debug("[Ginkgo] ContentScript postMessage error", error);
+          }
+        }
+        break;
+      }
+    }
+  }
+};
+
+const handleConnectMessage = (message: any, port: chrome.runtime.Port) => {
+  // console.log("[Ginkgo] ContentScript handleConnectMessage", message, window.location.origin);
+  const { type, scope } = message;
+  const [_, source, target] = type.split("-");
+
+  if (!scope || scope.includes(port.name)) {
+    // 如果有指定送达范围，则只送达指定范围
+    switch (type) {
+      default: {
+        window.postMessage(message, window.location.origin);
+        break;
+      }
+    }
+  }
+  // if (target === "background") {
+  //   port?.postMessage(message);
+  // }
+};
+
+window.addEventListener("load", () => {
+  try {
+    // 仅白名单网站才会注入脚本
+    if (!GlobalManager.g_whiteList.includes(window.location.origin)) {
+      console.log("[Ginkgo] fe-chrome-extensions ignore");
+      return;
+    }
+
+    console.log("[Ginkgo] fe-chrome-extensions load");
+
+    // 注册监听页面事件
+    window.addEventListener("message", handleMessage);
+
+    // 注册监听background事件
+    port = chrome.runtime.connect({ name: `ginkgo-page-${uuidv4()}` });
+    port.onMessage.addListener(handleConnectMessage);
+  } catch (error) {
+    console.debug("[Ginkgo] Error in load event:", error);
+  }
+});
+
+// 添加页面卸载前的清理逻辑
+window.addEventListener("beforeunload", () => {
+  window.removeEventListener("message", handleMessage);
+});
+
+// window.addEventListener("unload", () => {
+//   window.removeEventListener("message", handleMessage);
+// });
 
 // function Content(): JSX.Element {
 //   const [isShowModalVisible, setShowModalVisible] = useState(false);

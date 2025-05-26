@@ -1,5 +1,6 @@
 /*global chrome*/
 // manifest.json的Permissions配置需添加declarativeContent权限
+import { v4 as uuidv4 } from "uuid";
 import BackgroundEventManager from "@/common/kits/BackgroundEventManager";
 
 chrome.runtime.onInstalled.addListener((): void => {
@@ -50,3 +51,20 @@ chrome.tabs.onRemoved.addListener(BackgroundEventManager.onTabsRemoved);
 chrome.commands.onCommand.addListener(BackgroundEventManager.onCommandsCommand);
 
 // chrome.webRequest.onCompleted.addListener(BackgroundEventManager.onWebRequestCompleted, { urls: ["<all_urls>"] });
+
+chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
+  port.onDisconnect.addListener((port) => {
+    console.log("[Ginkgo] Background port.onDisconnect", port);
+    BackgroundEventManager.connectList = BackgroundEventManager.connectList.filter((item) => {
+      return item.port?.name !== port.name;
+    });
+  });
+
+  BackgroundEventManager.connectList.push({
+    port,
+  });
+
+  port.onMessage.addListener((message) => {
+    BackgroundEventManager.onConnectCommon(message, port);
+  });
+});

@@ -35,7 +35,7 @@ interface ITabInfoType {
 export interface IAppInfoStateType {
   x_themeValue: string;
   x_versionInfo: VersionInfo;
-  x_tabActivated: ITabInfoType;
+  x_tabActivated: chrome.tabs.Tab;
 }
 
 interface Action {

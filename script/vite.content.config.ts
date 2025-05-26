@@ -8,7 +8,7 @@ export default defineConfig({
   build: {
     outDir: CRX_CONTENT_OUTDIR,
     lib: {
-      entry: [path.resolve(__dirname, "./src/content/index.tsx")],
+      entry: [path.resolve(__dirname, "../src/content/index.tsx")],
       // content script不支持ES6，因此不用使用es模式，需要改为cjs模式
       formats: ["cjs"],
       // 设置生成文件的文件名
@@ -29,7 +29,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(__dirname, "../src"),
     },
   },
   // 解决react代码中包含process.env.NODE_ENV导致无法使用的问题

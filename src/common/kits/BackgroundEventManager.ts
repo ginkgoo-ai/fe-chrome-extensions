@@ -1,7 +1,14 @@
 /*global chrome*/
 import ChromeManager from "@/common/kits/ChromeManager";
 import FetchManager from "@/common/kits/FetchManager";
+import PilotManager from "@/common/kits/PilotManager";
 import { EventHandler } from "@/types/types";
+import { PilotStatusEnum } from "../types/case";
+
+interface IMessageType {
+  type: string;
+  [key: string]: unknown;
+}
 
 /**
  * @description background事件管理器
@@ -9,12 +16,78 @@ import { EventHandler } from "@/types/types";
 class BackgroundEventManager {
   static instance: BackgroundEventManager | null = null;
 
+  connectList: {
+    // uuid: string;
+    port: chrome.runtime.Port;
+  }[] = [];
+
   static getInstance(): BackgroundEventManager {
     if (!this.instance) {
       this.instance = new BackgroundEventManager();
+      this.instance.connectList = [];
+      // this.instance.portSelf = chrome.runtime.connect({ name: `ginkgo-background-${uuidv4()}` });
+      // this.instance.portSelf.onMessage.addListener(async (message: any, port: chrome.runtime.Port) => {
+      //   // console.log("[Ginkgo] ContentScript handleConnectMessage", message, window.location.origin);
+      //   const { type, ...otherInfo } = message;
+      //   const [_, source, target] = type.split("-");
+
+      //   if (target === "background" || target === "all") {
+      //     switch (type) {
+      //       case "ginkgo-background-all-tab-activated": {
+      //         const { tabInfo } = otherInfo || {};
+      //         const pilotInfo = PilotManager.getPilot({ tabId: tabInfo.id });
+      //         console.log("openSidePanel 0", pilotInfo?.caseId, !!pilotInfo?.caseId);
+
+      //         console.log("openSidePanel 1");
+      //         await ChromeManager.openSidePanel({
+      //           tabId: !!pilotInfo?.caseId ? tabInfo.id : -1,
+      //         });
+      //         break;
+      //       }
+      //       default: {
+      //         break;
+      //       }
+      //     }
+      //   }
+      // });
     }
     return this.instance;
   }
+
+  // cleanDisconnectedPort(port: chrome.runtime.Port): void {
+  //   if (this.connectMap[port.name]) {
+  //     delete this.connectMap[port.name];
+  //   }
+  // }
+
+  postConnectMessageByName = (message: IMessageType, name: string) => {
+    for (const client of this.connectList) {
+      if (client?.port?.name === name) {
+        try {
+          client?.port?.postMessage(message);
+        } catch (error) {
+          console.debug("[Debug] Port disconnected, cleaning up:", client);
+        }
+      }
+    }
+  };
+
+  postConnectMessage = (message: IMessageType) => {
+    const { type } = message || {};
+    const [_, source, target] = type.split("-");
+
+    for (const client of this.connectList) {
+      const clientName = client?.port?.name?.split("-")[1];
+      if (target === clientName || target === "all") {
+        try {
+          // console.log("[Debug] BackgroundEventManager postConnectMessage", client, message);
+          client?.port?.postMessage(message);
+        } catch (error) {
+          console.debug("[Debug] Port disconnected, cleaning up:", client);
+        }
+      }
+    }
+  };
 
   onMessage: EventHandler = (request, sender, sendResponse) => {
     const { type } = request || {};
@@ -23,7 +96,7 @@ class BackgroundEventManager {
     switch (type) {
       case "console": {
         const { msg } = request || {};
-        console.log("BackgroundEventManager console", msg);
+        // console.log("BackgroundEventManager console", msg);
         sendResponse(true);
         return true;
       }
@@ -40,7 +113,7 @@ class BackgroundEventManager {
       case "sendRequest": {
         const { config } = request || {};
         FetchManager?.sendRequest(config).then((res: any) => {
-          console.log("BackgroundEventManager sendRequest", { config, res });
+          // console.log("BackgroundEventManager sendRequest", { config, res });
           sendResponse(res);
         });
         return true;
@@ -59,6 +132,14 @@ class BackgroundEventManager {
         });
         return true;
       }
+      // case "updateSidePanel": {
+      //   console.log("openSidePanel 2");
+      //   const { tabInfo } = request || {};
+      //   chrome.sidePanel.open({
+      //     tabId: tabInfo.id,
+      //   });
+      //   return true;
+      // }
       default: {
         sendResponse(true);
         return true;
@@ -78,40 +159,47 @@ class BackgroundEventManager {
     return true;
   };
 
-  async onTabsUpdated(tabId: number, changeInfo: Record<string, any>, tab: chrome.tabs.Tab): Promise<void> {
+  onTabsUpdated = async (tabId: number, changeInfo: Record<string, any>, tab: chrome.tabs.Tab) => {
     if (changeInfo?.status === "complete") {
       // dosomething on tab updated
       // console.log("BackgroundEventManager onTabsUpdated 1", tab);
-      // await chrome.sidePanel.setOptions({
-      //   tabId: tab.id,
-      //   path: "index.html",
-      //   enabled: true,
+      // 发送 tab 完成事件
+      // this.postConnectMessage({
+      //   type: "ginkgo-background-all-tab-complete",
+      //   tabInfo: tab,
       // });
-      // console.log("BackgroundEventManager onTabsUpdated 2", tab);
-      await ChromeManager.sendMessageRuntime({
-        type: "onTabsComplete",
-        tabInfo: tab,
-      });
+      // 判断是否存在 pilot
+      const pilotInfo = PilotManager.getPilot({ tabId: tab.id });
+      if (pilotInfo?.pilotStatus === PilotStatusEnum.OPEN) {
+        PilotManager.start({ tabInfo: tab });
+      }
     }
-  }
+  };
 
-  async onTabsActivated(activeInfo: { tabId: number; windowId: number }): Promise<void> {
+  onTabsActivated = async (activeInfo: { tabId: number; windowId: number }) => {
+    const { tabId, windowId } = activeInfo || {};
     // 获取当前激活的 tab 的 HTML 内容
-    if (activeInfo.tabId) {
-      const resTabInfo = await ChromeManager.getTabInfo(activeInfo.tabId);
-      await ChromeManager.sendMessageRuntime({
-        type: "onTabsComplete",
+    if (tabId) {
+      const resTabInfo = await ChromeManager.getTabInfo(tabId);
+      this.postConnectMessage({
+        type: "ginkgo-background-all-tab-activated",
         tabInfo: resTabInfo,
       });
+      // const pilotInfo = PilotManager.getPilot({ tabId });
+      // console.log("openSidePanel 0", pilotInfo?.caseId, !!pilotInfo?.caseId);
+
+      // console.log("openSidePanel 1");
+      // await ChromeManager.openSidePanel({
+      //   tabId: !!pilotInfo?.caseId ? tabId : -1,
+      // });
     }
-  }
+  };
 
-  onTabsRemoved(tabId: number, removeInfo: { windowId: number; isWindowClosing: boolean }): void {
-    // dosomething on tab removed
-    // console.log("BackgroundEventManager onTabsRemoved", { tabId, removeInfo });
-  }
+  onTabsRemoved = (tabId: number, removeInfo: { windowId: number; isWindowClosing: boolean }) => {
+    PilotManager.delete({ tabId });
+  };
 
-  async onContextMenusClick(menuInfo: any, tabInfo: chrome.tabs.Tab): Promise<void> {
+  onContextMenusClick = (menuInfo: any, tabInfo: chrome.tabs.Tab) => {
     const { menuItemId } = menuInfo || {};
 
     switch (menuItemId) {
@@ -119,23 +207,112 @@ class BackgroundEventManager {
         break;
       }
     }
-  }
+  };
 
-  async onCommandsCommand(command: string): Promise<void> {
-    console.log("User triggered command: " + command);
+  onCommandsCommand = (command: string) => {
+    // console.log("User triggered command: " + command);
 
     switch (command) {
       default: {
         break;
       }
     }
-  }
+    return true;
+  };
 
-  onWebRequestCompleted(details: any): void {
+  onWebRequestCompleted = (details: any) => {
     // console.debug("请求 URL:", details.url);
     // console.debug("请求 detail:", details);
     // const { tabId, url } = details || {};
-  }
+  };
+
+  onConnectCommon = async (message: any, port: chrome.runtime.Port) => {
+    const { type, ...otherInfo } = message || {};
+    const [_, source, target] = type.split("-");
+    const typeNew = type.replace(/ginkgo-([^-]+)-/, "ginkgo-background-");
+    const messageNew = {
+      ...(message || {}),
+      type: typeNew,
+    };
+
+    console.log("onConnectCommon", type, otherInfo);
+
+    switch (type) {
+      case "ginkgo-page-page-register": {
+        messageNew.scope = [port.name];
+        messageNew.version = chrome.runtime.getManifest().version;
+        this.postConnectMessage(messageNew);
+        break;
+      }
+      case "ginkgo-page-background-tab-update":
+      case "ginkgo-sidepanel-background-tab-update": {
+        const { tabId, updateProperties } = otherInfo || {};
+
+        ChromeManager.updateTab(tabId, updateProperties);
+        break;
+      }
+      case "ginkgo-page-all-case-start":
+      case "ginkgo-sidepanel-all-case-start": {
+        const { caseId: caseIdMsg, fill_data: fill_dataMsg } = otherInfo || {};
+        const pilotInfo = PilotManager.getPilot({ caseId: caseIdMsg });
+
+        if (!!pilotInfo) {
+          PilotManager.start({
+            caseId: pilotInfo.caseId,
+            tabInfo: pilotInfo.tabInfo,
+          });
+        } else {
+          PilotManager.open({
+            caseId: caseIdMsg,
+            fill_data: fill_dataMsg,
+          });
+        }
+        break;
+      }
+      case "ginkgo-page-all-case-stop":
+      case "ginkgo-sidepanel-all-case-stop": {
+        const { caseId: caseIdMsg } = otherInfo || {};
+
+        PilotManager.stop({ caseId: caseIdMsg });
+        break;
+      }
+      case "ginkgo-page-background-case-query":
+      case "ginkgo-sidepanel-background-case-query": {
+        const { caseId: caseIdMsg, tabId: tabIdMsg } = otherInfo || {};
+
+        const pilotInfo = PilotManager.getPilot({
+          caseId: caseIdMsg,
+          tabId: tabIdMsg,
+        });
+        this.postConnectMessage({
+          type: `ginkgo-background-all-case-update`,
+          pilotInfo,
+        });
+        break;
+      }
+      case "ginkgo-sidepanel-sidepanel-cookies-query": {
+        const { tabInfo } = otherInfo || {};
+        const resCookies = await ChromeManager.getSyncCookiesCore(tabInfo);
+
+        messageNew.cookiesInfo = resCookies;
+        this.postConnectMessage(messageNew);
+        break;
+      }
+      case "ginkgo-page-background-sidepanel-open":
+      case "ginkgo-sidepanel-background-sidepanel-open": {
+        const { options } = otherInfo || {};
+        console.log("background-sidepanel-open", options);
+        await ChromeManager.openSidePanel(options as chrome.sidePanel.OpenOptions);
+        break;
+      }
+      default: {
+        console.log("[Ginkgo] BackgroundEventManager onConnectCommon", port, message);
+        break;
+      }
+    }
+
+    return true;
+  };
 }
 
 export default BackgroundEventManager.getInstance();
