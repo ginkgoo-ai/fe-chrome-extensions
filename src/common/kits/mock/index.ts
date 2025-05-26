@@ -145,6 +145,50 @@ export const mock_pilotManager_profile: IProfileType = {
 };
 
 export const mock_pilotManager_actionList: Record<string, { actions: IActionItemType[] }> = {
+  "Skilled Worker visa": {
+    actions: [
+      {
+        selector: "a[href='https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/sort/start/skilled_worker_out_uk']",
+        type: "click",
+      },
+      {
+        selector: "a[href='/start/skilled-worker-ooc']",
+        type: "click",
+      },
+    ],
+  },
+  "Apply from outside the UK": {
+    actions: [
+      {
+        selector: "a[href='https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/sort/start/skilled_worker_out_uk']",
+        type: "click",
+      },
+    ],
+  },
+  "Where are you planning to live?": {
+    actions: [
+      {
+        selector: "input[id='out-of-crown-dependency']",
+        type: "click",
+      },
+      {
+        selector: "button[id='continue-button']",
+        type: "click",
+      },
+    ],
+  },
+  "Do you have a current EU, EEA or Swiss passport?": {
+    actions: [
+      {
+        selector: "input[id='not-eea-applicable']",
+        type: "click",
+      },
+      {
+        selector: "input[id='continue-button']",
+        type: "click",
+      },
+    ],
+  },
   "Your location": {
     actions: [
       {

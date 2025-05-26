@@ -97,7 +97,8 @@ class HTMLManager {
         ?.value?.trim() ||
       "";
 
-    console.log("cleanHtml", h1);
+    // console.log("cleanHtml", h1);
+
     return { root, rootHtml, main, mainHtml, h1, h1Text };
   }
 

@@ -1,6 +1,5 @@
 import md5 from "blueimp-md5";
 import dayjs from "dayjs";
-import { URL } from "url";
 import { MESSAGE } from "@/common/config/message";
 import BackgroundEventManager from "@/common/kits/BackgroundEventManager";
 import ChromeManager from "@/common/kits/ChromeManager";
@@ -39,7 +38,7 @@ interface ISelectorResult {
 class PilotManager {
   static instance: PilotManager | null = null;
 
-  IS_MOCK = true;
+  IS_MOCK = false;
 
   DELAY_MOCK_ANALYSIS = 2000;
   DELAY_STEP = 2000;
@@ -47,7 +46,7 @@ class PilotManager {
   REPEAT_MAX = 5;
 
   caseUrlMap: Record<string, string> = {
-    "demo": "https://visas-immigration.service.gov.uk/your-location",
+    "demo": "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk",
   };
 
   pilotMap: Map<string, IPilotType> = new Map();
@@ -225,9 +224,9 @@ class PilotManager {
     }
 
     const resCookies = await ChromeManager.getSyncCookiesCore(tabInfo);
-
-    console.log("queryCookies", resCookies);
     const { cookiesStr } = resCookies || {};
+
+    // console.log("queryCookies", resCookies);
 
     if (cookiesStr) {
       this.updatePilotMap({
@@ -272,7 +271,7 @@ class PilotManager {
       });
     }
 
-    console.log("queryDom", resHtmlInfo);
+    // console.log("queryDom", resHtmlInfo);
 
     return { result: true };
   };
