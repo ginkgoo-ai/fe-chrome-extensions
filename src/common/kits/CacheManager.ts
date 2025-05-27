@@ -33,7 +33,7 @@ class CacheManager {
    * @example
    * const res = await CacheManager.getSyncStorage(['c_syncKey']) || {}
    **/
-  async getSyncStorageChrome(params?: string[]): Promise<Record<string, string | number | boolean>> {
+  async getSyncStorageChrome(params?: string[]): Promise<Record<string, unknown>> {
     const res = await ChromeManager.getSyncStorageCore(params);
     return res;
   }

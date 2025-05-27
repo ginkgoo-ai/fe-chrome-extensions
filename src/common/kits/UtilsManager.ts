@@ -306,6 +306,15 @@ class UtilsManager implements UtilsManagerType {
         .trim()
     );
   };
+
+  navigateTo = (url: string, params?: Record<string, string>) => {
+    const [html, _] = window.location.href.split("#");
+    const path = this.router2url(url, params);
+    const href = `${html}#${path}`;
+
+    console.log("navigateTo", href, html, path);
+    window.location.href = href;
+  };
 }
 
 export default UtilsManager.getInstance();

@@ -418,7 +418,7 @@ class PilotManager {
   };
 
   main = async (params: { caseId: string; tabInfo: chrome.tabs.Tab }) => {
-    const { caseId = "caseId-123456", tabInfo } = params || {};
+    const { caseId = "", tabInfo } = params || {};
     const pilotInfo = this.getPilot({ caseId });
 
     while (!!pilotInfo?.timer) {
@@ -495,6 +495,7 @@ class PilotManager {
   start = (params: { caseId?: string; tabInfo: chrome.tabs.Tab }) => {
     const { caseId = "", tabInfo } = params || {};
     let pilotInfo = this.getPilot({ tabId: tabInfo.id });
+
     if (!pilotInfo) {
       pilotInfo = this.genPilot({
         caseId,

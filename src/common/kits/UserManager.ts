@@ -2,24 +2,25 @@ import CacheManager from "@/common/kits/CacheManager";
 import ChromeManager from "@/common/kits/ChromeManager";
 
 /**
- * @description 持久化管理器
+ * @description
  */
-class MemberManager {
+class UserManager {
   // header = `cache`; // 管理字段前缀
   // tailer = "deadtime"; // 管理字段后缀
 
-  private static instance: MemberManager | null = null;
+  private static instance: UserManager | null = null;
 
-  static getInstance(): MemberManager {
+  static getInstance(): UserManager {
     if (!this.instance) {
-      this.instance = new MemberManager();
+      this.instance = new UserManager();
     }
     return this.instance;
   }
 
   async getToken(): Promise<string> {
     const res = await CacheManager.getSyncStorageChrome(["token"]);
-    return res["token"] as string;
+    const result = (res["token"] || "") as string;
+    return result;
   }
 
   async setToken(params: string): Promise<void> {
@@ -27,9 +28,10 @@ class MemberManager {
     return res;
   }
 
-  async getMemberInfo(): Promise<Record<string, string>> {
-    const res = await CacheManager.getSyncStorageChrome(["memberInfo"]);
-    return res["memberInfo"] as unknown as Record<string, string>;
+  async getUserInfo(): Promise<Record<string, string>> {
+    // const res = await CacheManager.getSyncStorageChrome(["memberInfo"]);
+    // return res["memberInfo"] as unknown as Record<string, string>;
+    return {};
   }
 
   async setMemberInfo(params: Record<string, string>): Promise<void> {
@@ -47,12 +49,13 @@ class MemberManager {
     return onError?.(false);
   }
 
-  async checkLogin(onSuccess?: (isLogin: boolean) => unknown, onError?: (isLogin: boolean) => unknown): Promise<unknown> {
+  async checkLogin(): Promise<boolean> {
     const token = await this.getToken();
-    if (token) {
-      return onSuccess?.(true);
-    }
-    return this.login(onSuccess, onError);
+    // if (token) {
+    //   return onSuccess?.(true);
+    // }
+    // return this.login(onSuccess, onError);
+    return true;
   }
 
   async logout(): Promise<void> {
@@ -61,4 +64,4 @@ class MemberManager {
   }
 }
 
-export default MemberManager.getInstance();
+export default UserManager.getInstance();

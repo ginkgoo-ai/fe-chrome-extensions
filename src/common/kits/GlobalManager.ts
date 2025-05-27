@@ -28,7 +28,7 @@ class GlobalManager {
       this.instance.g_NEXT_TICK_DELAY = 100;
       this.instance.g_isDev = import.meta.env.MODE === "development";
       this.instance.g_isMac = navigator?.platform?.toUpperCase()?.indexOf("MAC") >= 0;
-      this.instance.g_whiteList = ["http://localhost:3000", "https://local.slatecast.dev"];
+      this.instance.g_whiteList = ["https://legal-dashboard.up.railway.app", "http://localhost:3000"];
       this.instance.g_backgroundPort = null;
       this.instance.g_backgroundPortUuid = "";
     }

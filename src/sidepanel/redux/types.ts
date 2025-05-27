@@ -1,7 +1,7 @@
 import { IAppInfoStateType } from "./reducers/appInfo";
-import { IPilotInfoStateType } from "./reducers/pilotInfo";
+import { IUserInfoStateType } from "./reducers/userInfo";
 
 export interface IRootStateType {
   appInfo: IAppInfoStateType;
-  pilotInfo: IPilotInfoStateType;
+  userInfo: IUserInfoStateType;
 }

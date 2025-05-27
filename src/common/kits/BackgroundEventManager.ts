@@ -235,7 +235,7 @@ class BackgroundEventManager {
       type: typeNew,
     };
 
-    console.log("onConnectCommon", type, otherInfo);
+    // console.log("onConnectCommon", type, otherInfo);
 
     switch (type) {
       case "ginkgo-page-page-register": {
@@ -253,7 +253,7 @@ class BackgroundEventManager {
       }
       case "ginkgo-page-all-case-start":
       case "ginkgo-sidepanel-all-case-start": {
-        const { caseId: caseIdMsg, fill_data: fill_dataMsg } = otherInfo || {};
+        const { caseId: caseIdMsg = "caseId-123456", fill_data: fill_dataMsg } = otherInfo || {};
         const pilotInfo = PilotManager.getPilot({ caseId: caseIdMsg });
 
         if (!!pilotInfo) {

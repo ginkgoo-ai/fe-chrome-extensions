@@ -4,7 +4,8 @@ import UtilsManager from "@/common/kits/UtilsManager";
 
 const getAssistent = async (config = {}) => {
   const { headers = {}, query = {}, body = {}, ...otherConfig } = config || {};
-  const url = "http://192.168.31.147:6011/assistant"; // Bruce
+  const url = "https://api-ginkgoo.up.railway.app/api/assistant";
+  // const url = "http://192.168.31.147:6011/assistant"; // Bruce
   // const url = "http://192.168.31.205:6011/assistant"; // David
   // const url = "http://localhost:6011/assistant";
 
