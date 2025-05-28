@@ -28,6 +28,7 @@ const authToken = async (config = {}) => {
   const url = `${GlobalManager.g_API_CONFIG.authServerUrl}${GinkgoApi.authToken}`;
 
   const res = await FetchManager.fetchAPI({
+    // background: true,
     method: "POST",
     url,
     headers: {
@@ -49,6 +50,7 @@ const getAssistent = async (config = {}) => {
   // const url = "http://localhost:6011/assistant";
 
   const res = await FetchManager.fetchAPI({
+    // background: true,
     method: "POST",
     url,
     headers: {
@@ -65,6 +67,7 @@ const queryUserInfo = async (config = {}) => {
   const url = `${GlobalManager.g_API_CONFIG.apiServerUrl}${GinkgoApi.userInfo}`;
 
   const res = await FetchManager.fetchAPI({
+    // background: true,
     method: "GET",
     url,
     headers: {

@@ -10,7 +10,6 @@ class GlobalManager {
     authServerUrl: string;
     apiServerUrl: string;
     clientId: string;
-    redirectUri: string;
     scope: string;
     responseType: string;
   };
@@ -32,9 +31,8 @@ class GlobalManager {
       this.instance.g_API_CONFIG = {
         authServerUrl: "https://auth-ginkgoo.up.railway.app", // import.meta.env.VITE_OAUTH2_AUTH_SERVER_URL || "http://localhost:9000",
         apiServerUrl: "https://api-ginkgoo.up.railway.app/api",
-        clientId: import.meta.env.VITE_OAUTH2_CLIENT_ID || "ginkgoo-web-client",
-        redirectUri: "", // window?.location?.origin + "/oauth2_callback",
-        scope: import.meta.env.VITE_OAUTH2_SCOPE || "openid profile email",
+        clientId: "ginkgoo-web-client", // import.meta.env.VITE_OAUTH2_CLIENT_ID || "ginkgoo-web-client",
+        scope: "openid profile email", // import.meta.env.VITE_OAUTH2_SCOPE || "openid profile email",
         responseType: "code",
       };
 

@@ -1,8 +1,8 @@
 import CacheManager from "@/common/kits/CacheManager";
-import ChromeManager from "@/common/kits/ChromeManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import Api from "@/common/kits/api";
 import { IUserInfoType } from "@/common/types/user.d";
+import UtilsManager from "./UtilsManager";
 
 /**
  * @description
@@ -61,49 +61,108 @@ class UserManager {
   buildAuthorizationUrl = async () => {
     // 生成PKCE参数
     const pkce = await this.generatePKCE();
-
     // 生成state参数用于防CSRF
-    const state = this.generateRandomString(32);
+    const oauthState = this.generateRandomString(32);
 
     // 存储验证器和state
     // sessionStorage.setItem("codeVerifier", pkce.codeVerifier);
-    // sessionStorage.setItem("oauthState", state);
+    // sessionStorage.setItem("oauthState", oauthState);
 
     // 构建授权URL并跳转
-    const params = new URLSearchParams({
+    const params: Record<string, string> = {
       client_id: GlobalManager.g_API_CONFIG.clientId,
       redirect_uri: chrome.identity.getRedirectURL(), // GlobalManager.g_API_CONFIG.redirectUri,
       response_type: GlobalManager.g_API_CONFIG.responseType,
       scope: GlobalManager.g_API_CONFIG.scope,
       code_challenge: pkce.codeChallenge,
       code_challenge_method: pkce.codeChallengeMethod,
-    });
+    };
 
-    if (state) {
-      params.append("state", state);
+    if (oauthState) {
+      params["state"] = oauthState;
     }
 
-    return `${GlobalManager.g_API_CONFIG.authServerUrl}/oauth2/authorize?${params.toString()}`;
+    console.log("buildAuthorizationUrl redirect_uri", chrome.identity.getRedirectURL());
+    console.log(
+      "buildAuthorizationUrl redirectUri",
+      UtilsManager.router2url(`${GlobalManager.g_API_CONFIG.authServerUrl}/oauth2/authorize`, params)
+    );
+
+    return {
+      redirectUri: UtilsManager.router2url(`${GlobalManager.g_API_CONFIG.authServerUrl}/oauth2/authorize`, params),
+      codeVerifier: pkce.codeVerifier,
+      oauthState: oauthState,
+    };
   };
 
   // 使用refresh token获取新的access token
-  queryTokenByRefreshAccess = async (
-    refreshToken: string
+  queryTokenByRefreshAccess = async (params: {
+    refresh_token: string;
+  }): Promise<{
+    access_token: string;
+    refresh_token: string;
+    id_token: string;
+  } | null> => {
+    const { refresh_token } = params || {};
+    const resToken = await this.queryToken({
+      grant_type: "refresh_token",
+      refresh_token,
+    });
+
+    return resToken;
+  };
+
+  //
+  queryTokenByCode = async (params: {
+    redirect_uri: string;
+    code: string;
+    code_verifier: string;
+  }): Promise<{
+    access_token: string;
+    refresh_token: string;
+    id_token: string;
+  } | null> => {
+    const { code, redirect_uri, code_verifier } = params || {};
+    const resToken = await this.queryToken({
+      grant_type: "authorization_code",
+      redirect_uri,
+      code,
+      code_verifier,
+    });
+
+    return resToken;
+  };
+
+  queryToken = async (
+    params:
+      | {
+          grant_type: string;
+          refresh_token: string;
+        }
+      | {
+          grant_type: string;
+          redirect_uri: string;
+          code: string;
+          code_verifier: string;
+        }
   ): Promise<{
     access_token: string;
     refresh_token: string;
     id_token: string;
   } | null> => {
-    const resAssistent = await Api.Ginkgo.authToken({
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
+    const resToken = await Api.Ginkgo.authToken({
+      body: {
         client_id: GlobalManager.g_API_CONFIG.clientId,
-        refresh_token: refreshToken,
-      }),
+        ...params,
+      },
     });
 
-    console.log("queryTokenByRefreshAccess", resAssistent);
-    return resAssistent;
+    console.log("queryToken", resToken);
+
+    await this.setTokens(resToken);
+
+    await this.queryUserInfo();
+    return resToken;
   };
 
   parseJWT = (token: string) => {
@@ -182,7 +241,7 @@ class UserManager {
   };
 
   login = async (onSuccess?: (isLogin: boolean) => unknown, onError?: (isLogin: boolean) => unknown): Promise<void> => {
-    const token = await ChromeManager.launchWebAuthFlow();
+    // const token = await ChromeManager.launchWebAuthFlow();
     // TODO: 登录成功后，获取用户信息
     // if (token) {
     //   await this.setAccessToken(token);
@@ -202,10 +261,8 @@ class UserManager {
       const refreshToken = await this.getRefreshToken();
       if (refreshToken) {
         // 有 refreshToken
-        const newTokens = await this.queryTokenByRefreshAccess(refreshToken);
+        const newTokens = await this.queryTokenByRefreshAccess({ refresh_token: refreshToken });
         if (newTokens) {
-          await this.setTokens(newTokens);
-          await this.queryUserInfo();
           return true;
         }
       }

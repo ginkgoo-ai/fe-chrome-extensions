@@ -210,11 +210,11 @@ class UtilsManager {
     return newObj; // 返回新对象
   };
 
-  router2Params = (strRouter: string, options?: Record<string, unknown>): Record<string, unknown> => {
+  router2Params = (strRouter: string, options?: Record<string, unknown>): { path: string; params: Record<string, string> } => {
     const { decode = true } = options || {};
     const strRouterTmp = strRouter || "";
     let strResultPath = strRouterTmp;
-    const objResultParam: Record<string, unknown> = {};
+    const objResultParam: Record<string, string> = {};
 
     const nIndexPath = strRouterTmp.indexOf("?");
     if (nIndexPath >= 0) {
@@ -316,6 +316,10 @@ class UtilsManager {
 
     console.log("navigateTo", href, html, path);
     window.location.href = href;
+  };
+
+  navigateBack = () => {
+    window.history.back();
   };
 }
 

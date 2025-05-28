@@ -29,38 +29,66 @@ class ChromeManager {
     ];
   };
 
-  launchWebAuthFlow = async (): Promise<string> => {
-    // const redirectUrl = chrome.identity.getRedirectURL();
-    // const clientId = "Ov23liKuW50Tuz2cptS9";
-    // const authUrl = UtilsManager.router2url("https://github.com/login/oauth/authorize", {
-    //   client_id: clientId,
-    //   // response_type: "token",
-    //   redirect_uri: encodeURIComponent(redirectUrl),
-    // });
+  launchWebAuthFlowBak = async (): Promise<{
+    redirectUri: string;
+    code: string;
+    codeVerifier: string;
+    oauthState: string;
+  }> => {
+    const { redirectUri, codeVerifier, oauthState } = await UserManager.buildAuthorizationUrl();
 
-    const url = await UserManager.buildAuthorizationUrl();
+    const resWin = await this.createWindows({
+      url: redirectUri,
+      type: "popup", // "normal" | "popup" | "panel"
+      width: 800,
+      height: 600,
+    });
 
-    console.log("launchWebAuthFlow", url);
+    console.log("launchWebAuthFlow", resWin);
+
+    return {
+      redirectUri,
+      code: "",
+      codeVerifier,
+      oauthState,
+    };
+  };
+
+  launchWebAuthFlow = async (): Promise<{
+    redirectUri: string;
+    code: string;
+    codeVerifier: string;
+    oauthState: string;
+  }> => {
+    const { redirectUri, codeVerifier, oauthState } = await UserManager.buildAuthorizationUrl();
 
     try {
       const responseUrl = await chrome.identity.launchWebAuthFlow({
-        url,
+        url: redirectUri,
         interactive: true,
         // abortOnLoadForNonInteractive: false,
         // timeoutMsForNonInteractive: 10000
       });
 
-      console.log("launchWebAuthFlow", responseUrl);
-
       const responseParams = UtilsManager.router2Params(responseUrl || "", {
         decode: false,
       });
-      const { code = "" } = responseParams.params as Record<string, string>;
+      const { code = "" } = responseParams.params;
 
-      return code;
+      return {
+        redirectUri,
+        code,
+        codeVerifier,
+        oauthState,
+      };
     } catch (error) {
       console.debug("[Debug] ChromeManager launchWebAuthFlow error", error);
-      return "";
+      return {
+        redirectUri,
+        code: "",
+        codeVerifier,
+        oauthState,
+      };
     }
   };
 
@@ -70,6 +98,14 @@ class ChromeManager {
   //   console.log("ChromeManager removeCachedAuthToken", res);
   //   return res;
   // }
+
+  createWindows = async (createData: chrome.windows.CreateData) => {
+    return new Promise((resolve) => {
+      chrome.windows.create(createData, (win) => {
+        resolve(win);
+      });
+    });
+  };
 
   openOptionsPage = async (): Promise<void> => {
     return new Promise((resolve) => {

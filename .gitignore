@@ -7,5 +7,7 @@ build
 yarn.lock
 
 # build
+key.pem
 _build_*
 fe-chrome-extensions-v*
+*.crx
