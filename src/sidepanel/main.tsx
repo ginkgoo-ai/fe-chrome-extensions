@@ -5,8 +5,6 @@ import { v4 as uuidv4 } from "uuid";
 import ChromeManager from "@/common/kits/ChromeManager";
 import EventManager from "@/common/kits/EventManager";
 import GlobalManager from "@/common/kits/GlobalManager";
-import UserManager from "@/common/kits/UserManager";
-import UtilsManager from "@/common/kits/UtilsManager";
 import "@/common/styles/frame.less";
 import SidePanel from "@/sidepanel";
 import configStore from "@/sidepanel/redux/store";
@@ -78,21 +76,6 @@ const main = async () => {
       }
     }
   });
-
-  // console.log("[MVP] main 0");
-  // if (await UserManager.checkLogin()) {
-  //   console.log("[MVP] main 1");
-  //   // 获取用户信息并更新到Redux
-  //   const userInfo = await UserManager.getUserInfo();
-  //   store.dispatch({
-  //     type: "UPDATE_USER_INFO",
-  //     payload: userInfo,
-  //   });
-  // } else {
-  //   console.log("[MVP] main 2");
-  //   // 跳转到登录页面
-  //   UtilsManager.navigateTo("/login");
-  // }
 };
 
 main();

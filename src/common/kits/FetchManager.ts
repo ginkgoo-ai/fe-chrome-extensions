@@ -1,6 +1,6 @@
 import ChromeManager from "@/common/kits/ChromeManager";
 import Api from "@/common/kits/api";
-import { RequestConfig } from "@/types/types";
+import { IRequestConfigType } from "@/common/types/fetch.d";
 
 /**
  * @description 接口请求管理器
@@ -32,7 +32,7 @@ class FetchManager {
    * @param {object} config.formData: 请求数据 放到body上 是否以formData格式提交（用于上传文件）
    * @returns
    */
-  async sendRequest(config: RequestConfig): Promise<any> {
+  async sendRequest(config: IRequestConfigType): Promise<any> {
     let result = null;
     try {
       // const defaultConfig = {
@@ -111,7 +111,7 @@ class FetchManager {
     return result;
   }
 
-  async sendRequestToBackground(config: RequestConfig): Promise<any> {
+  async sendRequestToBackground(config: IRequestConfigType): Promise<any> {
     const res = await ChromeManager.sendMessageRuntime({
       type: "sendRequest",
       config,
@@ -119,20 +119,25 @@ class FetchManager {
     return res;
   }
 
-  async fetchAPI(config: RequestConfig = { url: "" }): Promise<any> {
+  async fetchAPI(config: IRequestConfigType = { url: "" }): Promise<any> {
     const { background, orz2, ...otherConfig } = config || {};
     const isLocal = otherConfig.url?.includes("//localhost:");
     let result = null;
-    if (orz2 && !isLocal) {
-      result = await Api.Orz2.postPorter({ background, body: otherConfig });
-    } else {
-      if (background) {
-        // [适用于build环境的content script]委托background script发起请求，此种方式只能传递普通json数据，不能传递函数及file类型数据。
-        result = await this.sendRequestToBackground(otherConfig);
+
+    try {
+      if (orz2 && !isLocal) {
+        result = await Api.Orz2.postPorter({ background, body: otherConfig });
       } else {
-        // [适用于popup及开发环境的content script]发起请求
-        result = await this.sendRequest(otherConfig);
+        if (background) {
+          // [适用于build环境的content script]委托background script发起请求，此种方式只能传递普通json数据，不能传递函数及file类型数据。
+          result = await this.sendRequestToBackground(otherConfig);
+        } else {
+          // [适用于popup及开发环境的content script]发起请求
+          result = await this.sendRequest(otherConfig);
+        }
       }
+    } catch (e) {
+      console.debug("[Debug] fetchAPI Error", e);
     }
 
     return result;

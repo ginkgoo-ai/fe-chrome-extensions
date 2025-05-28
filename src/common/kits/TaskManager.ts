@@ -1,4 +1,4 @@
-import { Task, TaskCallback } from "@/types/types";
+import { Task, TaskCallback } from "@/common/types/task.d";
 
 /**
  * @description 耗时任务管理器

@@ -16,7 +16,7 @@ export default function MKPageCore(props: {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   const checkAuth = async () => {
-    const isLoggedIn = await UserManager.checkLogin();
+    const isLoggedIn = await UserManager.checkAuth();
     setIsAuthenticated(isLoggedIn);
   };
 

@@ -1,11 +1,10 @@
 import { message } from "antd";
 import GlobalManager from "@/common/kits/GlobalManager";
-import { UtilsManagerType } from "@/types/types";
 
 /**
  * @description 工具方法管理器
  */
-class UtilsManager implements UtilsManagerType {
+class UtilsManager {
   static instance: UtilsManager | null = null;
 
   static getInstance(): UtilsManager {
@@ -308,7 +307,10 @@ class UtilsManager implements UtilsManagerType {
   };
 
   navigateTo = (url: string, params?: Record<string, string>) => {
-    const [html, _] = window.location.href.split("#");
+    if (!window) {
+      return;
+    }
+    const [html, _] = window?.location?.href?.split("#") || [];
     const path = this.router2url(url, params);
     const href = `${html}#${path}`;
 

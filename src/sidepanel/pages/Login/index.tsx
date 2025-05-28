@@ -1,9 +1,9 @@
 import { Button, Input } from "antd";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import ChromeManager from "@/common/kits/ChromeManager";
 import imgLogo from "@/resource/oss/assets/app.webp";
 import "./index.less";
-
 
 export default function Login() {
   const navigate = useNavigate();
@@ -12,7 +12,8 @@ export default function Login() {
 
   // 登录
   const handleLoginClick = () => {
-    navigate("/home");
+    // navigate("/home");
+    ChromeManager.launchWebAuthFlow();
   };
 
   return (

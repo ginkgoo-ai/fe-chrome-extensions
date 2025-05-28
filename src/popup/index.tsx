@@ -3,8 +3,8 @@ import en_US from "antd/locale/en_US";
 import { useSelector } from "react-redux";
 import { RouterProvider } from "react-router-dom";
 import Config from "@/common/kits/config";
-import { IRootStateType } from "@/popup/redux/types";
 import { globalRouters } from "@/popup/router";
+import { IRootStateType } from "@/popup/types/redux.d";
 import "./index.less";
 import "./styles/iconfont.css";
 

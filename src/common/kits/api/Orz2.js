@@ -58,83 +58,16 @@ const getActiveState = async (config = {}) => {
   return res;
 };
 
-/**
- * 登录用户信息
- * @property {string} code.required - 登录code
- */
 const postLoginMemberInfo = async (config = {}) => {
-  const { headers = {}, query = {}, body = {}, ...otherConfig } = config || {};
-  const url = "https://www.orz2.online/api/smart/v1/member/postLoginMemberInfo";
-  const { urlAndQuery, token, t, k, requestid } = await getOrz2Headers({ url, query, body });
-
-  const res = await FetchManager.fetchAPI({
-    method: "POST",
-    url: urlAndQuery,
-    headers: {
-      ...defaultHeaders,
-      authorization: token ? `Bearer ${token}` : "",
-      requestid,
-      t,
-      k,
-      ...headers,
-    },
-    body,
-    ...otherConfig,
-  });
-  return res;
+  return {};
 };
 
-/**
- * 透传跨域接口
- */
 const postPorter = async (config = {}) => {
-  const { headers = {}, query = {}, body = {}, ...otherConfig } = config || {};
-  const url = "https://www.orz2.online/api/smart/v1/tool/postPorter";
-  const { urlAndQuery, token, t, k, requestid } = await getOrz2Headers({ url, query, body });
-
-  const res = await FetchManager.fetchAPI({
-    method: "POST",
-    url: urlAndQuery,
-    headers: {
-      ...defaultHeaders,
-      authorization: token ? `Bearer ${token}` : "",
-      requestid,
-      t,
-      k,
-      ...headers,
-    },
-    body,
-    ...otherConfig,
-  });
-  return res;
+  return {};
 };
 
-/**
- * 发送聊天相关
- * @property {string} config.body.model.required - 使用模型 'ZHIPU'
- * @property {string} config.body.message.required - 消息内容
- * @property {boolean} config.body.streaming - 是否流式
- */
 const postChatMessage = async (config = {}) => {
-  const { headers = {}, query = {}, body = {}, ...otherConfig } = config || {};
-  const url = "https://www.orz2.online/api/smart/v1/langchain/postChatMessage";
-  const { urlAndQuery, token, t, k, requestid } = await getOrz2Headers({ url, query, body });
-
-  const res = await FetchManager.fetchAPI({
-    method: "POST",
-    url: urlAndQuery,
-    headers: {
-      ...defaultHeaders,
-      authorization: token ? `Bearer ${token}` : "",
-      requestid,
-      t,
-      k,
-      ...headers,
-    },
-    body,
-    ...otherConfig,
-  });
-  return res;
+  return {};
 };
 
 export default {

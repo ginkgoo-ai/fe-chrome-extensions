@@ -40,7 +40,7 @@ export default function MKHeader(props: MKHeaderProps): JSX.Element {
               //   fontWeight: "bold",
               // }}
               onClick={() => {
-                window.history.back();
+                window?.history?.back();
               }}
             />
           </div>

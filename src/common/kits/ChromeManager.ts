@@ -2,6 +2,7 @@
 import { message } from "antd";
 import BackgroundEventManager from "@/common/kits/BackgroundEventManager";
 import GlobalManager from "@/common/kits/GlobalManager";
+import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Mock from "@/common/kits/mock";
 
@@ -29,24 +30,27 @@ class ChromeManager {
   };
 
   launchWebAuthFlow = async (): Promise<string> => {
-    const redirectUrl = chrome.identity.getRedirectURL();
-    const clientId = "Ov23liKuW50Tuz2cptS9";
-    const authUrl = UtilsManager.router2url("https://github.com/login/oauth/authorize", {
-      client_id: clientId,
-      // response_type: "token",
-      redirect_uri: encodeURIComponent(redirectUrl),
-    });
+    // const redirectUrl = chrome.identity.getRedirectURL();
+    // const clientId = "Ov23liKuW50Tuz2cptS9";
+    // const authUrl = UtilsManager.router2url("https://github.com/login/oauth/authorize", {
+    //   client_id: clientId,
+    //   // response_type: "token",
+    //   redirect_uri: encodeURIComponent(redirectUrl),
+    // });
 
-    console.log("authUrl", authUrl);
-    console.log("redirectUrl", redirectUrl);
+    const url = await UserManager.buildAuthorizationUrl();
+
+    console.log("launchWebAuthFlow", url);
 
     try {
       const responseUrl = await chrome.identity.launchWebAuthFlow({
-        url: authUrl,
+        url,
         interactive: true,
         // abortOnLoadForNonInteractive: false,
         // timeoutMsForNonInteractive: 10000
       });
+
+      console.log("launchWebAuthFlow", responseUrl);
 
       const responseParams = UtilsManager.router2Params(responseUrl || "", {
         decode: false,
