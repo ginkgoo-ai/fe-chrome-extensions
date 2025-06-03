@@ -1,6 +1,5 @@
 import { Button, Input } from "antd";
 import { message } from "antd";
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import ChromeManager from "@/common/kits/ChromeManager";
 import UserManager from "@/common/kits/UserManager";
@@ -9,14 +8,15 @@ import imgLogo from "@/resource/oss/assets/app.webp";
 import "./index.less";
 
 export default function Login() {
-  const navigate = useNavigate();
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
 
+  const [isLoading, setLoading] = useState<boolean>(false);
+
   // 登录
   const handleLoginClick = async () => {
-    // navigate("/home");
-    const { redirectUri, code, codeVerifier, oauthState } = await ChromeManager.launchWebAuthFlow();
+    setLoading(true);
+    const { redirectUri, code, codeVerifier } = await ChromeManager.launchWebAuthFlow();
     if (code) {
       const res = await UserManager.queryTokenByCode({
         redirect_uri: redirectUri,
@@ -27,6 +27,8 @@ export default function Login() {
         UtilsManager.navigateBack();
       }
     }
+
+    setLoading(false);
 
     message.open({
       content: `There seems to be a little problem.`,
@@ -56,7 +58,7 @@ export default function Login() {
         />
       </div>
       <div className="ipt-con">
-        <Button type="primary" block={true} onClick={handleLoginClick}>
+        <Button type="primary" block={true} loading={isLoading} onClick={handleLoginClick}>
           登录
         </Button>
       </div>

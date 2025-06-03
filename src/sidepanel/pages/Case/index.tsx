@@ -139,7 +139,7 @@ export default function Case() {
     // case
     GlobalManager.g_backgroundPort?.postMessage({
       type: "ginkgo-sidepanel-background-case-query",
-      tabId: x_tabActivated?.tabId,
+      tabId: x_tabActivated?.id,
     });
 
     // Profile
@@ -165,7 +165,7 @@ export default function Case() {
 
   useEffect(() => {
     init();
-  }, [x_tabActivated?.tabId]);
+  }, [x_tabActivated?.id]);
 
   const refreshProfileInfo = async () => {
     // const resMemberInfo = await UserManager.getToken(); // getMemberInfo();

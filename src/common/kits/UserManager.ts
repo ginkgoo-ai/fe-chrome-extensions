@@ -58,11 +58,18 @@ class UserManager {
     };
   };
 
-  buildAuthorizationUrl = async () => {
+  buildAuthorizationUrl = async (): Promise<{
+    authorizationUrl: string;
+    redirectUri: string;
+    codeVerifier: string;
+    oauthState: string;
+  }> => {
     // 生成PKCE参数
     const pkce = await this.generatePKCE();
     // 生成state参数用于防CSRF
     const oauthState = this.generateRandomString(32);
+
+    const redirect_uri = chrome.identity.getRedirectURL(); // GlobalManager.g_API_CONFIG.redirectUri,
 
     // 存储验证器和state
     // sessionStorage.setItem("codeVerifier", pkce.codeVerifier);
@@ -71,7 +78,7 @@ class UserManager {
     // 构建授权URL并跳转
     const params: Record<string, string> = {
       client_id: GlobalManager.g_API_CONFIG.clientId,
-      redirect_uri: chrome.identity.getRedirectURL(), // GlobalManager.g_API_CONFIG.redirectUri,
+      redirect_uri,
       response_type: GlobalManager.g_API_CONFIG.responseType,
       scope: GlobalManager.g_API_CONFIG.scope,
       code_challenge: pkce.codeChallenge,
@@ -82,14 +89,18 @@ class UserManager {
       params["state"] = oauthState;
     }
 
-    console.log("buildAuthorizationUrl redirect_uri", chrome.identity.getRedirectURL());
-    console.log(
-      "buildAuthorizationUrl redirectUri",
-      UtilsManager.router2url(`${GlobalManager.g_API_CONFIG.authServerUrl}/oauth2/authorize`, params)
-    );
+    const authorizationUrl = UtilsManager.router2url(`${GlobalManager.g_API_CONFIG.authServerUrl}/oauth2/authorize`, params); //"https://immersivetranslate.com/accounts/login?from=plugin";
+
+    console.log("buildAuthorizationUrl authorizationUrl", authorizationUrl);
+    // console.log("buildAuthorizationUrl redirect_uri", chrome.identity.getRedirectURL());
+    // console.log(
+    //   "buildAuthorizationUrl redirectUri",
+    //   UtilsManager.router2url(`${GlobalManager.g_API_CONFIG.authServerUrl}/oauth2/authorize`, params)
+    // );
 
     return {
-      redirectUri: UtilsManager.router2url(`${GlobalManager.g_API_CONFIG.authServerUrl}/oauth2/authorize`, params),
+      authorizationUrl,
+      redirectUri: redirect_uri,
       codeVerifier: pkce.codeVerifier,
       oauthState: oauthState,
     };
@@ -150,19 +161,25 @@ class UserManager {
     refresh_token: string;
     id_token: string;
   } | null> => {
+    const body = {
+      client_id: GlobalManager.g_API_CONFIG.clientId,
+      ...params,
+    };
+
     const resToken = await Api.Ginkgo.authToken({
-      body: {
-        client_id: GlobalManager.g_API_CONFIG.clientId,
-        ...params,
-      },
+      body,
     });
 
-    console.log("queryToken", resToken);
+    console.log("queryToken 1", body);
+    console.log("queryToken 2", resToken);
 
-    await this.setTokens(resToken);
+    if (resToken) {
+      await this.setTokens(resToken);
+      await this.queryUserInfo();
+      return resToken;
+    }
 
-    await this.queryUserInfo();
-    return resToken;
+    return null;
   };
 
   parseJWT = (token: string) => {

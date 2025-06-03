@@ -49,7 +49,7 @@ const handleConnectMessage = (message: any, port: chrome.runtime.Port) => {
 window.addEventListener("load", () => {
   try {
     // 仅白名单网站才会注入脚本
-    if (!GlobalManager.g_whiteList.includes(window.location.origin)) {
+    if (!GlobalManager.g_whiteListForRegister.includes(window.location.origin)) {
       console.log("[Ginkgo] fe-chrome-extensions ignore");
       return;
     }

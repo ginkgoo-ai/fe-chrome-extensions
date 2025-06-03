@@ -175,15 +175,30 @@ class BackgroundEventManager {
     }
   };
 
-  onTabsActivated = async (activeInfo: { tabId: number; windowId: number }) => {
+  onTabsActivated = async (activeInfo: chrome.tabs.TabActiveInfo) => {
     const { tabId, windowId } = activeInfo || {};
     // 获取当前激活的 tab 的 HTML 内容
     if (tabId) {
       const resTabInfo = await ChromeManager.getTabInfo(tabId);
+      // const resWindowInfo = await ChromeManager.getWindowInfo(windowId);
+
       this.postConnectMessage({
         type: "ginkgo-background-all-tab-activated",
         tabInfo: resTabInfo,
       });
+
+      // 判断是否是单点登录页面，是则调整窗口大小
+      if (ChromeManager.whiteListForAuth.some((whiteUrl) => resTabInfo.url?.startsWith(whiteUrl))) {
+        if (ChromeManager.whiteListForAuthRunning) {
+          await ChromeManager.updateWindow(windowId, {
+            width: 300,
+            height: 600,
+          });
+        }
+        ChromeManager.whiteListForAuthRunning = false;
+      }
+
+      // 打开侧边栏
       // const pilotInfo = PilotManager.getPilot({ tabId });
       // console.log("openSidePanel 0", pilotInfo?.caseId, !!pilotInfo?.caseId);
 
