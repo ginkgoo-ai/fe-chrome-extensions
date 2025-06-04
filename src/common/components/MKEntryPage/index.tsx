@@ -71,7 +71,7 @@ export default function MKEntryPage(props: { entryList: any }) {
     const { info } = item || {};
     const { topStart, leftStart } = objSurface || {};
     const { url } = info || {};
-    console.log("handleAppClick", objSurface, info);
+    // console.log("handleAppClick", objSurface, info);
     navigate(url);
     updateOutletPosition({
       top: topStart,

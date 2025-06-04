@@ -10,6 +10,7 @@ class GlobalManager {
   g_API_CONFIG!: {
     authServerUrl: string;
     apiServerUrl: string;
+    userServerUrl: string;
     clientId: string;
     scope: string;
     responseType: string;
@@ -32,24 +33,28 @@ class GlobalManager {
       this.instance = new GlobalManager();
       this.instance.g_NEXT_TICK_DELAY = 100;
       this.instance.g_API_CONFIG = {
-        authServerUrl: "https://auth-ginkgoo.up.railway.app", // import.meta.env.VITE_OAUTH2_AUTH_SERVER_URL || "http://localhost:9000",
-        apiServerUrl: "https://api-ginkgoo.up.railway.app/api",
-        clientId: "ginkgoo-web-client", // import.meta.env.VITE_OAUTH2_CLIENT_ID || "ginkgoo-web-client",
-        scope: "openid profile email", // import.meta.env.VITE_OAUTH2_SCOPE || "openid profile email",
+        authServerUrl: "https://auth.ginkgoo.dev",
+        apiServerUrl: "https://api.ginkgoo.dev/api",
+        userServerUrl: "https://api.ginkgoo.dev",
+        clientId: "ginkgoo-web-client",
+        scope: "openid profile email",
         responseType: "code",
       };
-
-      this.instance.g_whiteListForRegister = ["https://legal-dashboard.up.railway.app", "http://localhost:3000"];
 
       this.instance.g_cacheSync = {};
       this.instance.g_package_json = packageJson;
       this.instance.g_webenv = import.meta.env.PROD ? "prod" : "dev";
       this.instance.g_version = this.instance.g_package_json.version;
-      this.instance.g_versionInfo = {}; // src/popup/pages/Entry/index.tsx init
+      this.instance.g_versionInfo = {}; // init in src/popup/pages/Entry/index.tsx
       this.instance.g_isDev = import.meta.env.MODE === "development";
       this.instance.g_isMac = navigator?.platform?.toUpperCase()?.indexOf("MAC") >= 0;
       this.instance.g_backgroundPort = null;
       this.instance.g_backgroundPortUuid = "";
+
+      this.instance.g_whiteListForRegister = [
+        "https://legal-dashboard.ginkgoo.dev", // Saas 页面
+        "http://localhost:3000", // 开发页面
+      ];
     }
     return this.instance;
   }

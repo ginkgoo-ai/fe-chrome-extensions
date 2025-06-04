@@ -16,7 +16,7 @@ const genGinkgoHeaders = async (params) => {
   const accessToken = await UserManager.getAccessToken();
 
   return {
-    "Authorization": accessToken ? "" : `Bearer ${accessToken}`,
+    "Authorization": `Bearer ${accessToken}`,
     "Content-Type": "application/json;charset=UTF-8",
     "request-id": uuidV4(),
     ...headers,
@@ -32,18 +32,21 @@ const authToken = async (config = {}) => {
     method: "POST",
     url,
     headers: {
-      ...(await genGinkgoHeaders({ headers })),
+      "request-id": uuidV4(),
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body,
+    body: new URLSearchParams(body),
     ...otherConfig,
   });
   return res;
 };
 
 const getAssistent = async (config = {}) => {
-  const { headers = {}, query = {}, body = {}, ...otherConfig } = config || {};
+  const { headers: headersConfig = {}, query = {}, body = {}, ...otherConfig } = config || {};
   const url = `${GlobalManager.g_API_CONFIG.apiServerUrl}${GinkgoApi.assistant}`;
+  const headers = {
+    ...(await genGinkgoHeaders({ headersConfig })),
+  };
   // const url = "https://api-ginkgoo.up.railway.app/assistant";
   // const url = "http://192.168.31.147:6011/assistant"; // Bruce
   // const url = "http://192.168.31.205:6011/assistant"; // David
@@ -53,9 +56,7 @@ const getAssistent = async (config = {}) => {
     // background: true,
     method: "POST",
     url,
-    headers: {
-      ...(await genGinkgoHeaders({ headers })),
-    },
+    headers,
     body,
     ...otherConfig,
   });
@@ -63,17 +64,18 @@ const getAssistent = async (config = {}) => {
 };
 
 const queryUserInfo = async (config = {}) => {
-  const { headers = {}, query = {}, body = {}, ...otherConfig } = config || {};
-  const url = `${GlobalManager.g_API_CONFIG.apiServerUrl}${GinkgoApi.userInfo}`;
+  const { headers: headersConfig = {}, query = {}, body = {}, ...otherConfig } = config || {};
+  const url = `${GlobalManager.g_API_CONFIG.userServerUrl}${GinkgoApi.userInfo}`;
+  const headers = {
+    ...(await genGinkgoHeaders({ headersConfig })),
+  };
+  // console.log("queryUserInfo", headers);
 
   const res = await FetchManager.fetchAPI({
     // background: true,
     method: "GET",
     url,
-    headers: {
-      ...(await genGinkgoHeaders({ headers })),
-    },
-    body,
+    headers,
     ...otherConfig,
   });
   return res;

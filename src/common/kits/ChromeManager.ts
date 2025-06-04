@@ -50,7 +50,7 @@ class ChromeManager {
       height: 600,
     });
 
-    console.log("launchWebAuthFlow", resWin);
+    // console.log("launchWebAuthFlow", resWin);
 
     return {
       code: "",
@@ -110,6 +110,8 @@ class ChromeManager {
         // timeoutMsForNonInteractive: 10000
       });
       this.whiteListForAuthRunning = false;
+
+      // console.log("launchWebAuthFlow", responseUrl);
 
       const responseParams = UtilsManager.router2Params(responseUrl || "", {
         decode: false,

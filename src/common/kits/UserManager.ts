@@ -1,8 +1,9 @@
 import CacheManager from "@/common/kits/CacheManager";
+import ChromeManager from "@/common/kits/ChromeManager";
 import GlobalManager from "@/common/kits/GlobalManager";
+import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { IUserInfoType } from "@/common/types/user.d";
-import UtilsManager from "./UtilsManager";
 
 /**
  * @description
@@ -91,7 +92,7 @@ class UserManager {
 
     const authorizationUrl = UtilsManager.router2url(`${GlobalManager.g_API_CONFIG.authServerUrl}/oauth2/authorize`, params); //"https://immersivetranslate.com/accounts/login?from=plugin";
 
-    console.log("buildAuthorizationUrl authorizationUrl", authorizationUrl);
+    // console.log("buildAuthorizationUrl authorizationUrl", authorizationUrl);
     // console.log("buildAuthorizationUrl redirect_uri", chrome.identity.getRedirectURL());
     // console.log(
     //   "buildAuthorizationUrl redirectUri",
@@ -170,10 +171,7 @@ class UserManager {
       body,
     });
 
-    console.log("queryToken 1", body);
-    console.log("queryToken 2", resToken);
-
-    if (resToken) {
+    if (!!resToken) {
       await this.setTokens(resToken);
       await this.queryUserInfo();
       return resToken;
@@ -230,6 +228,7 @@ class UserManager {
 
   setTokens = async (tokens: Record<string, string>): Promise<void> => {
     const res = await CacheManager.setSyncStorageChrome(tokens);
+
     return res;
   };
 
@@ -240,7 +239,7 @@ class UserManager {
 
   queryUserInfo = async () => {
     const res = await Api.Ginkgo.queryUserInfo();
-    console.log("queryUserInfo", res);
+
     this.userInfo = res;
   };
 
@@ -257,15 +256,21 @@ class UserManager {
     return res;
   };
 
-  login = async (onSuccess?: (isLogin: boolean) => unknown, onError?: (isLogin: boolean) => unknown): Promise<void> => {
-    // const token = await ChromeManager.launchWebAuthFlow();
-    // TODO: 登录成功后，获取用户信息
-    // if (token) {
-    //   await this.setAccessToken(token);
-    //   return onSuccess?.(true);
-    // }
-    // return onError?.(false);
-    return;
+  login = async (): Promise<boolean> => {
+    const { redirectUri, code, codeVerifier } = await ChromeManager.launchWebAuthFlow();
+    if (code) {
+      const res = await this.queryTokenByCode({
+        redirect_uri: redirectUri,
+        code,
+        code_verifier: codeVerifier,
+      });
+
+      if (res) {
+        return true;
+      }
+    }
+
+    return false;
   };
 
   checkAuth = async (): Promise<boolean> => {

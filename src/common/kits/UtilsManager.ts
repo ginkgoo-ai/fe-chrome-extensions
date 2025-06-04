@@ -240,18 +240,19 @@ class UtilsManager {
     };
   };
 
-  router2url = (strPath: string, objParams: Record<string, unknown> = {}): string => {
+  router2url = (strPath: string, objParams: Record<string, string> = {}, options?: Record<string, unknown>): string => {
+    const { decode = true } = options || {};
+    const arrParams = [];
     let strResult = strPath;
-    let isFirstParam = !strPath.includes("?");
+
+    if (strResult) {
+      strResult += strPath.includes("?") ? "&" : "?";
+    }
 
     for (const key in objParams) {
-      if (isFirstParam) {
-        strResult += `?${key}=${objParams[key]}`;
-        isFirstParam = false;
-      } else {
-        strResult += `&${key}=${objParams[key]}`;
-      }
+      arrParams.push(`${key}=${decode ? encodeURIComponent(objParams[key]) : objParams[key]}`);
     }
+    strResult += arrParams.join("&");
 
     return strResult;
   };

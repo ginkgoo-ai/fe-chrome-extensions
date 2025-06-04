@@ -16,19 +16,13 @@ export default function Login() {
   // 登录
   const handleLoginClick = async () => {
     setLoading(true);
-    const { redirectUri, code, codeVerifier } = await ChromeManager.launchWebAuthFlow();
-    if (code) {
-      const res = await UserManager.queryTokenByCode({
-        redirect_uri: redirectUri,
-        code,
-        code_verifier: codeVerifier,
-      });
-      if (res) {
-        UtilsManager.navigateBack();
-      }
-    }
-
+    const resLogin = await UserManager.login();
     setLoading(false);
+
+    if (resLogin) {
+      UtilsManager.navigateBack();
+      return;
+    }
 
     message.open({
       content: `There seems to be a little problem.`,

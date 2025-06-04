@@ -1,4 +1,5 @@
 import ChromeManager from "@/common/kits/ChromeManager";
+import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { IRequestConfigType } from "@/common/types/fetch.d";
 
@@ -52,14 +53,11 @@ class FetchManager {
 
       // 判断是否有params参数, 如果有，则需要拼接到url上
       if (otherConfig.params) {
-        let str = new URLSearchParams(otherConfig.params).toString();
-        if (str) {
-          url.includes("?") ? (url += "&" + str) : (url += "?" + str);
-        }
+        url = UtilsManager.router2url(url, otherConfig.params);
       }
 
       // 判断是否有data参数，如果有，则需要设置给body，否则不需要设置
-      if (otherConfig.body) {
+      if (otherConfig.body && otherConfig.headers?.["Content-Type"]?.includes("application/json")) {
         otherConfig.body = JSON.stringify(otherConfig.body);
       }
 
