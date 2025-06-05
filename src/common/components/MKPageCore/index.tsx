@@ -1,8 +1,9 @@
 import { LoadingOutlined } from "@ant-design/icons";
 import { Spin } from "antd";
-import { Navigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import UserManager from "@/common/kits/UserManager";
+import UtilsManager from "@/common/kits/UtilsManager";
 import "./index.less";
 
 /**
@@ -14,17 +15,24 @@ export default function MKPageCore(props: {
   children: React.ReactNode;
 }) {
   const { renderPageHeader, renderPageFooter, children } = props || {};
-
+  const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   const checkAuth = async () => {
-    const isLoggedIn = await UserManager.checkAuth();
-    setIsAuthenticated(isLoggedIn);
+    const isAuthenticatedTmp = await UserManager.isAuth();
+    if (isAuthenticatedTmp) {
+      setIsAuthenticated(isAuthenticatedTmp);
+    } else {
+      UtilsManager.redirectTo("/entry");
+    }
   };
 
   useEffect(() => {
+    if (location.pathname === "/entry") {
+      return;
+    }
     checkAuth();
-  }, []);
+  }, [location.pathname]);
 
   if (isAuthenticated === null) {
     // 正在检查登录状态
@@ -35,13 +43,11 @@ export default function MKPageCore(props: {
     );
   }
 
-  return isAuthenticated ? (
+  return (
     <div className="m-k-page-core-wrap flex min-h-full flex-col justify-start">
       <div className="flex-0">{renderPageHeader?.()}</div>
       <div className="page-core-content flex h-0 flex-1 flex-col overflow-y-auto">{children}</div>
       <div className="flex-0">{renderPageFooter?.()}</div>
     </div>
-  ) : (
-    <Navigate to="/login" />
   );
 }
