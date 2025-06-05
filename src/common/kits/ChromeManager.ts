@@ -2,6 +2,7 @@
 import { message } from "antd";
 import BackgroundEventManager from "@/common/kits/BackgroundEventManager";
 import GlobalManager from "@/common/kits/GlobalManager";
+import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Mock from "@/common/kits/mock";
 
@@ -11,9 +12,13 @@ import Mock from "@/common/kits/mock";
 class ChromeManager {
   private static instance: ChromeManager | null = null;
 
+  whiteListForAuth!: string[];
+
   static getInstance(): ChromeManager {
     if (!this.instance) {
       this.instance = new ChromeManager();
+
+      this.instance.whiteListForAuth = [GlobalManager.g_API_CONFIG.authServerUrl];
     }
     return this.instance;
   }
@@ -28,35 +33,101 @@ class ChromeManager {
     ];
   };
 
-  launchWebAuthFlow = async (): Promise<string> => {
-    const redirectUrl = chrome.identity.getRedirectURL();
-    const clientId = "Ov23liKuW50Tuz2cptS9";
-    const authUrl = UtilsManager.router2url("https://github.com/login/oauth/authorize", {
-      client_id: clientId,
-      // response_type: "token",
-      redirect_uri: encodeURIComponent(redirectUrl),
+  launchWebAuthFlowBak = async (): Promise<{
+    code: string;
+    redirectUri: string;
+    codeVerifier: string;
+    oauthState: string;
+  }> => {
+    const { authorizationUrl, redirectUri, codeVerifier, oauthState } = await UserManager.buildAuthorizationUrl();
+
+    const resWin = await this.createWindow({
+      url: authorizationUrl,
+      type: "popup", // "normal" | "popup" | "panel"
+      width: 800,
+      height: 600,
     });
 
-    console.log("authUrl", authUrl);
-    console.log("redirectUrl", redirectUrl);
+    // console.log("launchWebAuthFlow", resWin);
+
+    return {
+      code: "",
+      redirectUri,
+      codeVerifier,
+      oauthState,
+    };
+  };
+
+  // launchWebAuthFlowCore = async (authorizationUrl: string): Promise<string | undefined> => {
+  //   return new Promise(async (resolve, rejected) => {
+  //     const beforeWindows = await chrome.windows.getAll();
+  //     chrome.identity
+  //       .launchWebAuthFlow({
+  //         url: authorizationUrl,
+  //         interactive: true,
+  //         // abortOnLoadForNonInteractive: false,
+  //         // timeoutMsForNonInteractive: 10000
+  //       })
+  //       .then((responseUrl) => {
+  //         resolve(responseUrl);
+  //       })
+  //       .catch((error) => {
+  //         rejected(error);
+  //       });
+
+  //     const afterWindows = await chrome.windows.getAll();
+  //     const newWindow = afterWindows.find((afterWin) => {
+  //       return !beforeWindows.some((beforeWin) => {
+  //         return beforeWin.id === afterWin.id;
+  //       });
+  //     });
+
+  //     if (newWindow?.id) {
+  //       await chrome.windows.update(newWindow.id, {
+  //         width: 800,
+  //         height: 600,
+  //       });
+  //     }
+  //   });
+  // };
+
+  launchWebAuthFlow = async (): Promise<{
+    code: string;
+    redirectUri: string;
+    codeVerifier: string;
+    oauthState: string;
+  }> => {
+    const { authorizationUrl, redirectUri, codeVerifier, oauthState } = await UserManager.buildAuthorizationUrl();
 
     try {
       const responseUrl = await chrome.identity.launchWebAuthFlow({
-        url: authUrl,
+        url: authorizationUrl,
         interactive: true,
         // abortOnLoadForNonInteractive: false,
         // timeoutMsForNonInteractive: 10000
       });
 
+      // console.log("launchWebAuthFlow", responseUrl);
+
       const responseParams = UtilsManager.router2Params(responseUrl || "", {
         decode: false,
       });
-      const { code = "" } = responseParams.params as Record<string, string>;
+      const { code = "" } = responseParams.params;
 
-      return code;
+      return {
+        code,
+        redirectUri,
+        codeVerifier,
+        oauthState,
+      };
     } catch (error) {
       console.debug("[Debug] ChromeManager launchWebAuthFlow error", error);
-      return "";
+      return {
+        code: "",
+        redirectUri,
+        codeVerifier,
+        oauthState,
+      };
     }
   };
 
@@ -297,6 +368,47 @@ class ChromeManager {
     });
   };
 
+  getWindowInfo = async (windowId: number): Promise<chrome.windows.Window> => {
+    return new Promise((resolve) => {
+      if (GlobalManager.g_isDev) {
+        message.open({
+          content: `获取窗口: ${windowId}`,
+          type: "info",
+        });
+        resolve({
+          id: windowId,
+          focused: true,
+          top: 0,
+          left: 0,
+          width: 800,
+          height: 600,
+          type: "normal",
+          state: "normal",
+        } as chrome.windows.Window);
+      } else {
+        chrome.windows.get(windowId, (window) => {
+          resolve(window);
+        });
+      }
+    });
+  };
+
+  createWindow = async (createData: chrome.windows.CreateData) => {
+    return new Promise((resolve) => {
+      chrome.windows.create(createData, (window?: chrome.windows.Window): void => {
+        resolve(window);
+      });
+    });
+  };
+
+  updateWindow = async (windowId: number, updateInfo: chrome.windows.UpdateInfo) => {
+    return new Promise((resolve) => {
+      chrome.windows.update(windowId, updateInfo, (window: chrome.windows.Window): void => {
+        resolve(window);
+      });
+    });
+  };
+
   executeScript = async (
     tab: chrome.tabs.Tab,
     params: Record<string, unknown>
@@ -367,7 +479,7 @@ class ChromeManager {
           case "test": {
             chrome.scripting.executeScript(
               {
-                target: { tabId: tab.id },
+                target: { tabId: tab.id! },
                 func: (cbParams) => {
                   console.log("handleExecuteScript test", cbParams);
                   return true;
@@ -388,7 +500,7 @@ class ChromeManager {
           case "console": {
             chrome.scripting.executeScript(
               {
-                target: { tabId: tab.id },
+                target: { tabId: tab.id! },
                 func: (cbParams: any) => {
                   const { consoleText } = cbParams || {};
                   console.log(consoleText);
@@ -410,7 +522,7 @@ class ChromeManager {
           case "setLocalStorage": {
             chrome.scripting.executeScript(
               {
-                target: { tabId: tab.id },
+                target: { tabId: tab.id! },
                 func: (cbParams: any) => {
                   const { storageInfo, isNeedReload } = cbParams || {};
                   storageInfo &&
@@ -439,7 +551,7 @@ class ChromeManager {
           case "getLocalStorage": {
             chrome.scripting.executeScript(
               {
-                target: { tabId: tab.id },
+                target: { tabId: tab.id! },
                 func: (cbParams: any) => {
                   const { storageKey } = cbParams || {};
                   const result =
@@ -469,7 +581,7 @@ class ChromeManager {
           case "querySelectors": {
             chrome.scripting.executeScript(
               {
-                target: { tabId: tab.id },
+                target: { tabId: tab.id! },
                 func: (cbParams: any) => {
                   const result: Record<string, unknown>[] = [];
                   const { selectors = [] } = cbParams || {};
@@ -507,7 +619,7 @@ class ChromeManager {
           case "queryHtmlInfo": {
             chrome.scripting.executeScript(
               {
-                target: { tabId: tab.id },
+                target: { tabId: tab.id! },
                 func: () => {
                   return document.documentElement.outerHTML;
                 },
@@ -526,7 +638,7 @@ class ChromeManager {
           case "actionDom": {
             chrome.scripting.executeScript(
               {
-                target: { tabId: tab.id },
+                target: { tabId: tab.id! },
                 func: async (cbParams: any) => {
                   const { action = {} } = cbParams || {};
 
@@ -573,7 +685,7 @@ class ChromeManager {
           case "actionDomBulk": {
             chrome.scripting.executeScript(
               {
-                target: { tabId: tab.id },
+                target: { tabId: tab.id! },
                 func: async (cbParams: any) => {
                   let count = 0;
                   const { btnClassName = [], spanClassName = ".Button-label", spanText = "", actions = [] } = cbParams || {};

@@ -1,41 +1,15 @@
 import { produce } from "immer";
-import { SET_THEME_VALUE, SET_VERSION_INFO, UPDATE_TAB_ACTIVATED } from "@/options/redux/constants/appInfo";
+import { SET_THEME_VALUE, SET_VERSION_INFO, UPDATE_TAB_ACTIVATED } from "@/sidepanel/redux/constants/appInfo";
 
 interface VersionInfo {
   isDebug: boolean;
   version: string;
 }
 
-interface ITabInfoType {
-  active: boolean;
-  audible: boolean;
-  autoDiscardable: boolean;
-  discarded: boolean;
-  favIconUrl: string;
-  frozen: boolean;
-  groupId: number;
-  height: number;
-  highlighted: boolean;
-  id: number;
-  incognito: boolean;
-  index: number;
-  lastAccessed: number;
-  mutedInfo: {
-    muted: boolean;
-  };
-  pinned: boolean;
-  selected: boolean;
-  status: string;
-  title: string;
-  url: string;
-  width: number;
-  windowId: number;
-}
-
 export interface IAppInfoStateType {
   x_themeValue: string;
   x_versionInfo: VersionInfo;
-  x_tabActivated: ITabInfoType;
+  x_tabActivated: chrome.tabs.Tab | null;
 }
 
 interface Action {
@@ -48,14 +22,8 @@ const INITIAL_STATE: IAppInfoStateType = {
   x_versionInfo: {
     isDebug: false,
     version: "",
-    tabList: [
-      {
-        key: "/home",
-        label: "home",
-      },
-    ],
   },
-  x_tabActivated: {},
+  x_tabActivated: null,
 };
 
 const appInfoReducer = produce((draft: IAppInfoStateType, action: Action) => {

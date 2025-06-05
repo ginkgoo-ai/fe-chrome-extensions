@@ -1,4 +1,4 @@
-import { SET_THEME_VALUE, SET_VERSION_INFO, UPDATE_TAB_ACTIVATED } from "@/options/redux/constants/appInfo";
+import { SET_THEME_VALUE, SET_VERSION_INFO, UPDATE_TAB_ACTIVATED } from "@/sidepanel/redux/constants/appInfo";
 
 const appInfoActions = (dispatch: any) => {
   const actions = {

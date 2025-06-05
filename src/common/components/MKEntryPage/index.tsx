@@ -4,7 +4,7 @@ import MKButton from "@/common/components/MKButton";
 import Config from "@/common/kits/config";
 import useActions from "@/common/kits/hooks/useActions";
 import appInfoActions from "@/popup/redux/actions/appInfo";
-import { IRootStateType } from "@/sidepanel/redux/types";
+import { IRootStateType } from "@/sidepanel/types/redux.d";
 import "./index.less";
 
 // width: 260px = 300px - 20px * 2;
@@ -71,7 +71,7 @@ export default function MKEntryPage(props: { entryList: any }) {
     const { info } = item || {};
     const { topStart, leftStart } = objSurface || {};
     const { url } = info || {};
-    console.log("handleAppClick", objSurface, info);
+    // console.log("handleAppClick", objSurface, info);
     navigate(url);
     updateOutletPosition({
       top: topStart,

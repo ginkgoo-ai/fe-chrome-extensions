@@ -1,6 +1,4 @@
-import { Config, EntryList, ThemeInfo, ThemeInfoDefault } from "@/types/types";
-
-const themeInfoDefault: ThemeInfoDefault = {
+const themeInfoDefault = {
   DEFAULT: {
     customStyle: {
       "--color-primary": "#ec6d2d",
@@ -8,7 +6,7 @@ const themeInfoDefault: ThemeInfoDefault = {
   },
 };
 
-const entryListDefault: EntryList[] = [
+const entryListDefault = [
   {
     appList: [
       {
@@ -43,7 +41,7 @@ const entryListDefault: EntryList[] = [
   },
 ];
 
-const config: Config = {
+const config = {
   themeInfoDefault,
   entryListDefault,
 };

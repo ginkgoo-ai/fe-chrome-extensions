@@ -1,4 +1,4 @@
-import { ClearOutlined, CopyOutlined, MehOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
+import { ClearOutlined, CopyOutlined, MehOutlined } from "@ant-design/icons";
 import { Alert, App, Descriptions, DescriptionsProps, Drawer, StepProps, Steps, Tag, Tooltip, message } from "antd";
 import classnames from "classnames";
 import { useSelector } from "react-redux";
@@ -6,16 +6,16 @@ import { v4 as uuidV4 } from "uuid";
 import { useEffect, useRef, useState } from "react";
 import MKButton from "@/common/components/MKButton";
 import MKModuleSupport from "@/common/components/MKModuleSupport";
+import MKPageCore from "@/common/components/MKPageCore";
 import { MESSAGE } from "@/common/config/message";
 import ChromeManager from "@/common/kits/ChromeManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import HTMLManager from "@/common/kits/HTMLManager";
-import MemberManager from "@/common/kits/MemberManager";
 import { useActions } from "@/common/kits/hooks/useActions";
 import { useEventManager } from "@/common/kits/hooks/useEventManager";
-import { IActionItemType, IStepItemType, PilotStatusEnum } from "@/common/types/case";
+import { IActionItemType, IStepItemType, PilotStatusEnum } from "@/common/types/case.d";
 import appInfoActions from "@/sidepanel/redux/actions/appInfo";
-import { IRootStateType } from "@/sidepanel/redux/types";
+import { IRootStateType } from "@/sidepanel/types/redux.d";
 import { IProfileType, profileMock } from "./config/mock";
 import "./index.less";
 
@@ -139,7 +139,7 @@ export default function Case() {
     // case
     GlobalManager.g_backgroundPort?.postMessage({
       type: "ginkgo-sidepanel-background-case-query",
-      tabId: x_tabActivated.tabId,
+      tabId: x_tabActivated?.id,
     });
 
     // Profile
@@ -165,14 +165,18 @@ export default function Case() {
 
   useEffect(() => {
     init();
-  }, []);
+  }, [x_tabActivated?.id]);
 
   const refreshProfileInfo = async () => {
-    const resMemberInfo = await MemberManager.getToken(); // getMemberInfo();
-    setProfileName(resMemberInfo?.toString()?.charAt(0)?.toUpperCase());
+    // const resMemberInfo = await UserManager.getToken(); // getMemberInfo();
+    // setProfileName(resMemberInfo?.toString()?.charAt(0)?.toUpperCase());
   };
 
   const handleBtnStartClick = () => {
+    if (!x_tabActivated) {
+      return;
+    }
+
     try {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgo-sidepanel-all-case-start",
@@ -185,6 +189,10 @@ export default function Case() {
   };
 
   const handleBtnStopClick = () => {
+    if (!x_tabActivated) {
+      return;
+    }
+
     try {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgo-sidepanel-all-case-stop",
@@ -197,19 +205,23 @@ export default function Case() {
   };
 
   const handleBtnProfileClick = async () => {
-    setLoginLoading(true);
-    await MemberManager.checkLogin(
-      async () => {
-        refreshProfileInfo();
-      },
-      async () => {
-        message.open({ type: "error", content: "Login failed" });
-      }
-    );
-    setLoginLoading(false);
+    // setLoginLoading(true);
+    // await UserManager.checkLogin(
+    //   async () => {
+    //     refreshProfileInfo();
+    //   },
+    //   async () => {
+    //     message.open({ type: "error", content: "Login failed" });
+    //   }
+    // );
+    // setLoginLoading(false);
   };
 
   const handleBtnCookiesClick = () => {
+    if (!x_tabActivated) {
+      return;
+    }
+
     console.log("handleBtnCookiesClick");
     GlobalManager.g_backgroundPort?.postMessage({
       type: "ginkgo-sidepanel-sidepanel-cookies-query",
@@ -218,6 +230,10 @@ export default function Case() {
   };
 
   const handleBtnCopyHtmlClick = async () => {
+    if (!x_tabActivated) {
+      return;
+    }
+
     setCopyHtmlLoading(true);
 
     const resQueryHtmlInfo = await ChromeManager.executeScript(x_tabActivated, {
@@ -255,7 +271,7 @@ export default function Case() {
   };
 
   return (
-    <div className="entry-wrap flex h-screen w-screen flex-col">
+    <MKPageCore>
       {/* Header */}
       <div className="flex-0 flex h-10 flex-row items-center justify-between p-4">
         <div className="flex-0 w-5"></div>
@@ -323,6 +339,6 @@ export default function Case() {
       <Drawer open={isDrawerProfileOpen} title="Profile Info" loading={isDrawerProfileLoading} onClose={() => setDrawerProfileOpen(false)}>
         <Descriptions items={profileItems} column={1} />
       </Drawer>
-    </div>
+    </MKPageCore>
   );
 }

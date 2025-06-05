@@ -1,11 +1,10 @@
 import { message } from "antd";
 import GlobalManager from "@/common/kits/GlobalManager";
-import { UtilsManagerType } from "@/types/types";
 
 /**
  * @description 工具方法管理器
  */
-class UtilsManager implements UtilsManagerType {
+class UtilsManager {
   static instance: UtilsManager | null = null;
 
   static getInstance(): UtilsManager {
@@ -211,11 +210,11 @@ class UtilsManager implements UtilsManagerType {
     return newObj; // 返回新对象
   };
 
-  router2Params = (strRouter: string, options?: Record<string, unknown>): Record<string, unknown> => {
+  router2Params = (strRouter: string, options?: Record<string, unknown>): { path: string; params: Record<string, string> } => {
     const { decode = true } = options || {};
     const strRouterTmp = strRouter || "";
     let strResultPath = strRouterTmp;
-    const objResultParam: Record<string, unknown> = {};
+    const objResultParam: Record<string, string> = {};
 
     const nIndexPath = strRouterTmp.indexOf("?");
     if (nIndexPath >= 0) {
@@ -241,18 +240,19 @@ class UtilsManager implements UtilsManagerType {
     };
   };
 
-  router2url = (strPath: string, objParams: Record<string, unknown> = {}): string => {
+  router2url = (strPath: string, objParams: Record<string, string> = {}, options?: Record<string, unknown>): string => {
+    const { decode = true } = options || {};
+    const arrParams = [];
     let strResult = strPath;
-    let isFirstParam = !strPath.includes("?");
+
+    if (strResult) {
+      strResult += strPath.includes("?") ? "&" : "?";
+    }
 
     for (const key in objParams) {
-      if (isFirstParam) {
-        strResult += `?${key}=${objParams[key]}`;
-        isFirstParam = false;
-      } else {
-        strResult += `&${key}=${objParams[key]}`;
-      }
+      arrParams.push(`${key}=${decode ? encodeURIComponent(objParams[key]) : objParams[key]}`);
     }
+    strResult += arrParams.join("&");
 
     return strResult;
   };
@@ -305,6 +305,22 @@ class UtilsManager implements UtilsManagerType {
         .replace(/&gt;/g, ">")
         .trim()
     );
+  };
+
+  navigateTo = (url: string, params?: Record<string, string>) => {
+    if (!window) {
+      return;
+    }
+    const [html, _] = window?.location?.href?.split("#") || [];
+    const path = this.router2url(url, params);
+    const href = `${html}#${path}`;
+
+    console.log("navigateTo", href, html, path);
+    window.location.href = href;
+  };
+
+  navigateBack = () => {
+    window.history.back();
   };
 }
 

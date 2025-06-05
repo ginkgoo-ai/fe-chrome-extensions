@@ -3,8 +3,8 @@ import en_US from "antd/locale/en_US";
 import { useSelector } from "react-redux";
 import { RouterProvider } from "react-router-dom";
 import Config from "@/common/kits/config";
-import { IRootStateType } from "@/options/redux/types";
 import { globalRouters } from "@/options/router";
+import { IRootStateType } from "@/options/types/redux.d";
 import "./index.less";
 
 export default function Options(): JSX.Element {

@@ -2,8 +2,7 @@
 import ChromeManager from "@/common/kits/ChromeManager";
 import FetchManager from "@/common/kits/FetchManager";
 import PilotManager from "@/common/kits/PilotManager";
-import { EventHandler } from "@/types/types";
-import { PilotStatusEnum } from "../types/case";
+import { PilotStatusEnum } from "@/common/types/case.d";
 
 interface IMessageType {
   type: string;
@@ -89,7 +88,7 @@ class BackgroundEventManager {
     }
   };
 
-  onMessage: EventHandler = (request, sender, sendResponse) => {
+  onMessage = (request: any, sender: any, sendResponse: (response?: any) => void): void => {
     const { type } = request || {};
     // console.debug("BackgroundEventManager onMessage", request);
 
@@ -98,7 +97,7 @@ class BackgroundEventManager {
         const { msg } = request || {};
         // console.log("BackgroundEventManager console", msg);
         sendResponse(true);
-        return true;
+        return;
       }
       case "createTab": {
         const { createProperties, cbName } = request || {};
@@ -108,7 +107,7 @@ class BackgroundEventManager {
           }
           sendResponse(true);
         });
-        return true;
+        return;
       }
       case "sendRequest": {
         const { config } = request || {};
@@ -116,21 +115,21 @@ class BackgroundEventManager {
           // console.log("BackgroundEventManager sendRequest", { config, res });
           sendResponse(res);
         });
-        return true;
+        return;
       }
       case "setSyncStorageChrome": {
         const { cbParams } = request || {};
         ChromeManager.setSyncStorageCore(cbParams).then((res) => {
           sendResponse(res);
         });
-        return true;
+        return;
       }
       case "getSyncStorageChrome": {
         const { cbParams } = request || {};
         ChromeManager.getSyncStorageCore(cbParams).then((res) => {
           sendResponse(res);
         });
-        return true;
+        return;
       }
       // case "updateSidePanel": {
       //   console.log("openSidePanel 2");
@@ -138,16 +137,16 @@ class BackgroundEventManager {
       //   chrome.sidePanel.open({
       //     tabId: tabInfo.id,
       //   });
-      //   return true;
+      //   return;
       // }
       default: {
         sendResponse(true);
-        return true;
+        return;
       }
     }
   };
 
-  onPopupMessage: EventHandler = (request, sender, sendResponse) => {
+  onPopupMessage = (request: any, sender: any, sendResponse: (response?: any) => void): void => {
     const { type } = request || {};
     console.debug("[Debug] BackgroundEventManager onPopupMessage", request);
     switch (type) {
@@ -156,7 +155,7 @@ class BackgroundEventManager {
         break;
       }
     }
-    return true;
+    return;
   };
 
   onTabsUpdated = async (tabId: number, changeInfo: Record<string, any>, tab: chrome.tabs.Tab) => {
@@ -176,15 +175,28 @@ class BackgroundEventManager {
     }
   };
 
-  onTabsActivated = async (activeInfo: { tabId: number; windowId: number }) => {
+  onTabsActivated = async (activeInfo: chrome.tabs.TabActiveInfo) => {
     const { tabId, windowId } = activeInfo || {};
     // 获取当前激活的 tab 的 HTML 内容
     if (tabId) {
       const resTabInfo = await ChromeManager.getTabInfo(tabId);
+      const resWindowInfo = await ChromeManager.getWindowInfo(windowId);
+
       this.postConnectMessage({
         type: "ginkgo-background-all-tab-activated",
         tabInfo: resTabInfo,
       });
+
+      // 判断是否是单点登录页面，是则调整窗口大小
+      if (resWindowInfo?.type === "popup" && ChromeManager.whiteListForAuth.some((whiteUrl) => resTabInfo.url?.startsWith(whiteUrl))) {
+        console.log("resWindowInfo", resWindowInfo);
+        await ChromeManager.updateWindow(windowId, {
+          width: 300,
+          height: 600,
+        });
+      }
+
+      // 打开侧边栏
       // const pilotInfo = PilotManager.getPilot({ tabId });
       // console.log("openSidePanel 0", pilotInfo?.caseId, !!pilotInfo?.caseId);
 
@@ -235,7 +247,7 @@ class BackgroundEventManager {
       type: typeNew,
     };
 
-    console.log("onConnectCommon", type, otherInfo);
+    // console.log("onConnectCommon", type, otherInfo);
 
     switch (type) {
       case "ginkgo-page-page-register": {
@@ -253,7 +265,7 @@ class BackgroundEventManager {
       }
       case "ginkgo-page-all-case-start":
       case "ginkgo-sidepanel-all-case-start": {
-        const { caseId: caseIdMsg, fill_data: fill_dataMsg } = otherInfo || {};
+        const { caseId: caseIdMsg = "caseId-123456", fill_data: fill_dataMsg } = otherInfo || {};
         const pilotInfo = PilotManager.getPilot({ caseId: caseIdMsg });
 
         if (!!pilotInfo) {

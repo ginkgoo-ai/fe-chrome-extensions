@@ -1,18 +1,33 @@
 import { Button, Input } from "antd";
+import { message } from "antd";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import ChromeManager from "@/common/kits/ChromeManager";
+import UserManager from "@/common/kits/UserManager";
+import UtilsManager from "@/common/kits/UtilsManager";
 import imgLogo from "@/resource/oss/assets/app.webp";
 import "./index.less";
 
-
 export default function Login() {
-  const navigate = useNavigate();
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
 
+  const [isLoading, setLoading] = useState<boolean>(false);
+
   // 登录
-  const handleLoginClick = () => {
-    navigate("/home");
+  const handleLoginClick = async () => {
+    setLoading(true);
+    const resLogin = await UserManager.login();
+    setLoading(false);
+
+    if (resLogin) {
+      UtilsManager.navigateBack();
+      return;
+    }
+
+    message.open({
+      content: `There seems to be a little problem.`,
+      type: "error",
+    });
   };
 
   return (
@@ -37,7 +52,7 @@ export default function Login() {
         />
       </div>
       <div className="ipt-con">
-        <Button type="primary" block={true} onClick={handleLoginClick}>
+        <Button type="primary" block={true} loading={isLoading} onClick={handleLoginClick}>
           登录
         </Button>
       </div>
