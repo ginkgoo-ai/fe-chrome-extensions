@@ -11,6 +11,7 @@ import { MESSAGE } from "@/common/config/message";
 import ChromeManager from "@/common/kits/ChromeManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import HTMLManager from "@/common/kits/HTMLManager";
+import UserManager from "@/common/kits/UserManager";
 import { useActions } from "@/common/kits/hooks/useActions";
 import { useEventManager } from "@/common/kits/hooks/useEventManager";
 import { IActionItemType, IStepItemType, PilotStatusEnum } from "@/common/types/case.d";
@@ -168,8 +169,9 @@ export default function Case() {
   }, [x_tabActivated?.id]);
 
   const refreshProfileInfo = async () => {
-    // const resMemberInfo = await UserManager.getToken(); // getMemberInfo();
-    // setProfileName(resMemberInfo?.toString()?.charAt(0)?.toUpperCase());
+    const { first_name = "", last_name = "" } = UserManager.userInfo || {};
+
+    setProfileName(first_name?.toString()?.charAt(0)?.toUpperCase() + last_name?.toString()?.charAt(0)?.toUpperCase());
   };
 
   const handleBtnStartClick = () => {

@@ -268,6 +268,40 @@ class UserManager {
     return res;
   };
 
+  isAuth = async () => {
+    const { access_token } = await this.getTokens();
+
+    return !!this.userInfo && !this.isTokenExpired(access_token);
+  };
+
+  checkAuth = async (): Promise<boolean> => {
+    const { access_token, refresh_token } = await this.getTokens();
+
+    // 如果有用户信息 且 token 未过期
+    if (await this.isAuth()) {
+      return true;
+    }
+
+    // 如果没有用户信息 且 token 未过期
+    if (!this.isTokenExpired(access_token)) {
+      await this.queryUserInfo();
+      if (!!this.userInfo) {
+        return true;
+      }
+    }
+
+    // 如果没有用户信息 且有 refresh_token
+    if (refresh_token) {
+      const newTokens = await this.queryTokenByRefreshAccess({ refresh_token });
+      if (!!newTokens) {
+        return true;
+      }
+    }
+
+    this.clearTokensAndUserInfo();
+    return false;
+  };
+
   login = async (): Promise<boolean> => {
     const { redirectUri, code, codeVerifier } = await ChromeManager.launchWebAuthFlow();
     if (code) {
@@ -282,43 +316,6 @@ class UserManager {
       }
     }
 
-    return false;
-  };
-
-  checkAuth = async (): Promise<boolean> => {
-    const { access_token, refresh_token } = await this.getTokens();
-
-    console.log("checkAuth 0", access_token, refresh_token);
-
-    // 如果有用户信息 且 token 未过期
-    if (!!this.userInfo && !this.isTokenExpired(access_token)) {
-      console.log("checkAuth 1", this.userInfo, access_token);
-      return true;
-    }
-
-    // 如果没有用户信息 且 token 未过期
-    if (!this.isTokenExpired(access_token)) {
-      console.log("checkAuth 5", access_token);
-      await this.queryUserInfo();
-      console.log("checkAuth 6", this.userInfo);
-      if (!!this.userInfo) {
-        return true;
-      }
-    }
-
-    // 如果没有用户信息 且有 refresh_token
-    if (refresh_token) {
-      console.log("checkAuth 2", refresh_token);
-      const newTokens = await this.queryTokenByRefreshAccess({ refresh_token });
-      if (!!newTokens) {
-        console.log("checkAuth 3", newTokens);
-        return true;
-      }
-    }
-
-    console.log("checkAuth 4");
-
-    this.clearTokensAndUserInfo();
     return false;
   };
 

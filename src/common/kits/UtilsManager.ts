@@ -319,6 +319,18 @@ class UtilsManager {
     window.location.href = href;
   };
 
+  redirectTo = (url: string, params?: Record<string, string>) => {
+    if (!window) {
+      return;
+    }
+    const [html, _] = window?.location?.href?.split("#") || [];
+    const path = this.router2url(url, params);
+    const href = `${html}#${path}`;
+
+    console.log("redirectTo", href, html, path);
+    window.location.replace(href);
+  };
+
   navigateBack = () => {
     window.history.back();
   };
