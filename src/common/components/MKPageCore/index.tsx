@@ -1,3 +1,5 @@
+import { LoadingOutlined } from "@ant-design/icons";
+import { Spin } from "antd";
 import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import UserManager from "@/common/kits/UserManager";
@@ -26,7 +28,11 @@ export default function MKPageCore(props: {
 
   if (isAuthenticated === null) {
     // 正在检查登录状态
-    return null;
+    return (
+      <div className="m-k-page-core-wrap flex min-h-full flex-col items-center justify-center">
+        <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} delay={500} />
+      </div>
+    );
   }
 
   return isAuthenticated ? (

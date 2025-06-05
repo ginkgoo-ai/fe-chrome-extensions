@@ -214,20 +214,31 @@ class UserManager {
 
   getRefreshToken = async (): Promise<string> => {
     const res = await CacheManager.getSyncStorageChrome(["refresh_token"]);
-    const refreshToken = (res["refresh_token"] || "") as string;
+    const refreshToken = res["refresh_token"] || "";
 
     return refreshToken;
   };
 
   getAccessToken = async (): Promise<string> => {
     const res = await CacheManager.getSyncStorageChrome(["access_token"]);
-    const accessToken = (res["access_token"] || "") as string;
+    const accessToken = res["access_token"] || "";
 
     return accessToken;
   };
 
+  getTokens = async (): Promise<Record<string, string>> => {
+    const res = await CacheManager.getSyncStorageChrome(["access_token", "refresh_token", "id_token"]);
+
+    return res;
+  };
+
   setTokens = async (tokens: Record<string, string>): Promise<void> => {
-    const res = await CacheManager.setSyncStorageChrome(tokens);
+    const tokensReal = {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      id_token: tokens.id_token,
+    };
+    const res = await CacheManager.setSyncStorageChrome(tokensReal);
 
     return res;
   };
@@ -240,7 +251,8 @@ class UserManager {
   queryUserInfo = async () => {
     const res = await Api.Ginkgo.queryUserInfo();
 
-    this.userInfo = res;
+    this.setUserInfo(res);
+    return res;
   };
 
   getUserInfo = async (): Promise<IUserInfoType | null> => {
@@ -274,23 +286,39 @@ class UserManager {
   };
 
   checkAuth = async (): Promise<boolean> => {
-    const accessToken = await this.getAccessToken();
+    const { access_token, refresh_token } = await this.getTokens();
 
-    // 检查token是否过期，如果过期则尝试刷新
-    if (!this.isTokenExpired(accessToken) && !!this.userInfo) {
+    console.log("checkAuth 0", access_token, refresh_token);
+
+    // 如果有用户信息 且 token 未过期
+    if (!!this.userInfo && !this.isTokenExpired(access_token)) {
+      console.log("checkAuth 1", this.userInfo, access_token);
       return true;
-    } else {
-      const refreshToken = await this.getRefreshToken();
-      if (refreshToken) {
-        // 有 refreshToken
-        const newTokens = await this.queryTokenByRefreshAccess({ refresh_token: refreshToken });
-        if (newTokens) {
-          return true;
-        }
-      }
-      this.clearTokensAndUserInfo();
     }
 
+    // 如果没有用户信息 且 token 未过期
+    if (!this.isTokenExpired(access_token)) {
+      console.log("checkAuth 5", access_token);
+      await this.queryUserInfo();
+      console.log("checkAuth 6", this.userInfo);
+      if (!!this.userInfo) {
+        return true;
+      }
+    }
+
+    // 如果没有用户信息 且有 refresh_token
+    if (refresh_token) {
+      console.log("checkAuth 2", refresh_token);
+      const newTokens = await this.queryTokenByRefreshAccess({ refresh_token });
+      if (!!newTokens) {
+        console.log("checkAuth 3", newTokens);
+        return true;
+      }
+    }
+
+    console.log("checkAuth 4");
+
+    this.clearTokensAndUserInfo();
     return false;
   };
 

@@ -65,7 +65,7 @@ const getAssistent = async (config = {}) => {
 
 const queryUserInfo = async (config = {}) => {
   const { headers: headersConfig = {}, query = {}, body = {}, ...otherConfig } = config || {};
-  const url = `${GlobalManager.g_API_CONFIG.userServerUrl}${GinkgoApi.userInfo}`;
+  const url = `${GlobalManager.g_API_CONFIG.authServerUrl}${GinkgoApi.userInfo}`;
   const headers = {
     ...(await genGinkgoHeaders({ headersConfig })),
   };

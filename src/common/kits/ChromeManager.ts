@@ -12,14 +12,12 @@ import Mock from "@/common/kits/mock";
 class ChromeManager {
   private static instance: ChromeManager | null = null;
 
-  whiteListForAuthRunning!: boolean;
   whiteListForAuth!: string[];
 
   static getInstance(): ChromeManager {
     if (!this.instance) {
       this.instance = new ChromeManager();
 
-      this.instance.whiteListForAuthRunning = false;
       this.instance.whiteListForAuth = [GlobalManager.g_API_CONFIG.authServerUrl];
     }
     return this.instance;
@@ -102,14 +100,12 @@ class ChromeManager {
     const { authorizationUrl, redirectUri, codeVerifier, oauthState } = await UserManager.buildAuthorizationUrl();
 
     try {
-      this.whiteListForAuthRunning = true;
       const responseUrl = await chrome.identity.launchWebAuthFlow({
         url: authorizationUrl,
         interactive: true,
         // abortOnLoadForNonInteractive: false,
         // timeoutMsForNonInteractive: 10000
       });
-      this.whiteListForAuthRunning = false;
 
       // console.log("launchWebAuthFlow", responseUrl);
 
@@ -125,7 +121,6 @@ class ChromeManager {
         oauthState,
       };
     } catch (error) {
-      this.whiteListForAuthRunning = false;
       console.debug("[Debug] ChromeManager launchWebAuthFlow error", error);
       return {
         code: "",
