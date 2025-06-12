@@ -38,7 +38,7 @@ interface ISelectorResult {
 class PilotManager {
   static instance: PilotManager | null = null;
 
-  IS_MOCK = false;
+  IS_MOCK = true;
 
   DELAY_MOCK_ANALYSIS = 2000;
   DELAY_STEP = 2000;
