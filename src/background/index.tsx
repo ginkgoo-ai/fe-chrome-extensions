@@ -54,7 +54,10 @@ chrome.commands.onCommand.addListener(BackgroundEventManager.onCommandsCommand);
 
 chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
   port.onDisconnect.addListener((port) => {
-    console.log("[Ginkgo] Background port.onDisconnect", port);
+    if (chrome.runtime.lastError) {
+      console.log("[Ginkgo] Background port.onDisconnect lastError:", chrome.runtime.lastError.message);
+    }
+    // console.log("[Ginkgo] Background port.onDisconnect", port);
     BackgroundEventManager.connectList = BackgroundEventManager.connectList.filter((item) => {
       return item.port?.name !== port.name;
     });
@@ -65,6 +68,13 @@ chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
   });
 
   port.onMessage.addListener((message) => {
-    BackgroundEventManager.onConnectCommon(message, port);
+    try {
+      BackgroundEventManager.onConnectCommon(message, port);
+    } catch (error) {
+      console.log("[Ginkgo] Background onConnectCommon error:", error);
+      if (chrome.runtime.lastError) {
+        console.log("[Ginkgo] Background onConnectCommon lastError:", chrome.runtime.lastError.message);
+      }
+    }
   });
 });
