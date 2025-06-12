@@ -23,6 +23,11 @@ const mainGinkgo = () => {
               // 断线重连
               if (String(error).includes("Attempting to use a disconnected port")) {
                 connectBackground();
+                return;
+              }
+              if (String(error).includes("Extension context invalidated")) {
+                window.postMessage({ type: "ginkgo-content-page-invalidated" }, window.location.origin);
+                return;
               }
             }
           }
