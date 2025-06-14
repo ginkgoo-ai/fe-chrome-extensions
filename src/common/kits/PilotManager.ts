@@ -7,7 +7,7 @@ import HTMLManager from "@/common/kits/HTMLManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { mock_pilotManager_actionList } from "@/common/kits/mock";
-import { ActionResultType, IActionItemType, IStepItemType, PilotStatusEnum } from "@/common/types/case.d";
+import { ActionResultType, IActionItemType, IStepItemType, PilotStatusEnum } from "@/common/types/case";
 
 interface IPilotType {
   caseId: string;

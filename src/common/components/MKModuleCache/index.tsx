@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import MKButton from "@/common/components/MKButton";
 import CacheManager from "@/common/kits/CacheManager";
 import GlobalManager from "@/common/kits/GlobalManager";
-import { IRootStateType } from "@/sidepanel/types/redux.d";
+import { IRootStateType } from "@/sidepanel/types/redux";
 import "./index.less";
 
 interface GlobalManagerType {

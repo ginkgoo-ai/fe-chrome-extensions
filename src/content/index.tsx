@@ -8,7 +8,7 @@ const mainGinkgo = () => {
   const handleMessage = (event: MessageEvent) => {
     const message = event.data;
     const { type, ...otherInfo } = message;
-    const [_, source, target] = type.split("-");
+    const [_, source, target] = type?.split("-");
     // console.log("[Ginkgo] ContentScript handleMessage", event, type, type.startsWith("ginkgo-page-"));
 
     // 如果是自身来源的消息，才会转发
@@ -40,7 +40,7 @@ const mainGinkgo = () => {
   const handleConnectMessage = (message: any, port: chrome.runtime.Port) => {
     // console.log("[Ginkgo] ContentScript handleConnectMessage", message, window.location.origin);
     const { type, scope } = message;
-    const [_, source, target] = type.split("-");
+    const [_, source, target] = type?.split("-");
 
     if (!scope || scope.includes(port.name)) {
       // 如果有指定送达范围，则只送达指定范围

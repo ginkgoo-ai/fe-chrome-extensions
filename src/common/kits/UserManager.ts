@@ -3,7 +3,7 @@ import ChromeManager from "@/common/kits/ChromeManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
-import { IUserInfoType } from "@/common/types/user.d";
+import { IUserInfoType } from "@/common/types/user";
 
 /**
  * @description

@@ -14,6 +14,7 @@
     "preview": "vite preview -c ./script/vite.popup.config.js"
   },
   "dependencies": {
+    "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "antd": "^5.25.1",
     "autoprefixer": "^10.4.17",
     "blueimp-md5": "^2.19.0",

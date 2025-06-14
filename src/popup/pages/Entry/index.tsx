@@ -13,7 +13,7 @@ import Config from "@/common/kits/config";
 import useActions from "@/common/kits/hooks/useActions";
 import useSyncStorageChromeState from "@/common/kits/hooks/useSyncStorageChromeState";
 import appInfoActions from "@/popup/redux/actions/appInfo";
-import { IRootStateType } from "@/popup/types/redux.d";
+import { IRootStateType } from "@/popup/types/redux";
 import versionInfo from "@/resource/oss/version.json";
 import "./index.less";
 

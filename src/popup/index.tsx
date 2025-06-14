@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { RouterProvider } from "react-router-dom";
 import Config from "@/common/kits/config";
 import { globalRouters } from "@/popup/router";
-import { IRootStateType } from "@/popup/types/redux.d";
+import { IRootStateType } from "@/popup/types/redux";
 import "./index.less";
 import "./styles/iconfont.css";
 

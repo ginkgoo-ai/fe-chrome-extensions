@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { RouterProvider } from "react-router-dom";
 import Config from "@/common/kits/config";
 import { globalRouters } from "@/sidepanel/router";
-import { IRootStateType } from "@/sidepanel/types/redux.d";
+import { IRootStateType } from "@/sidepanel/types/redux";
 import "./index.less";
 
 export default function SidePanel(): JSX.Element {

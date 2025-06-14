@@ -1,3 +1,4 @@
+import "@ant-design/v5-patch-for-react-19";
 import { message } from "antd";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";

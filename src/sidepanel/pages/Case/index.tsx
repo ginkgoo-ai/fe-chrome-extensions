@@ -14,9 +14,9 @@ import HTMLManager from "@/common/kits/HTMLManager";
 import UserManager from "@/common/kits/UserManager";
 import { useActions } from "@/common/kits/hooks/useActions";
 import { useEventManager } from "@/common/kits/hooks/useEventManager";
-import { IActionItemType, IStepItemType, PilotStatusEnum } from "@/common/types/case.d";
+import { IActionItemType, IStepItemType, PilotStatusEnum } from "@/common/types/case";
 import appInfoActions from "@/sidepanel/redux/actions/appInfo";
-import { IRootStateType } from "@/sidepanel/types/redux.d";
+import { IRootStateType } from "@/sidepanel/types/redux";
 import { IProfileType, profileMock } from "./config/mock";
 import "./index.less";
 

@@ -2,7 +2,7 @@
 import ChromeManager from "@/common/kits/ChromeManager";
 import FetchManager from "@/common/kits/FetchManager";
 import PilotManager from "@/common/kits/PilotManager";
-import { PilotStatusEnum } from "@/common/types/case.d";
+import { PilotStatusEnum } from "@/common/types/case";
 
 interface IMessageType {
   type: string;
@@ -28,7 +28,7 @@ class BackgroundEventManager {
       // this.instance.portSelf.onMessage.addListener(async (message: any, port: chrome.runtime.Port) => {
       //   // console.log("[Ginkgo] ContentScript handleConnectMessage", message, window.location.origin);
       //   const { type, ...otherInfo } = message;
-      //   const [_, source, target] = type.split("-");
+      //   const [_, source, target] = type?.split("-");
 
       //   if (target === "background" || target === "all") {
       //     switch (type) {
@@ -73,7 +73,7 @@ class BackgroundEventManager {
 
   postConnectMessage = (message: IMessageType) => {
     const { type } = message || {};
-    const [_, source, target] = type.split("-");
+    const [_, source, target] = type?.split("-");
 
     for (const client of this.connectList) {
       const clientName = client?.port?.name?.split("-")[1];
@@ -240,7 +240,7 @@ class BackgroundEventManager {
 
   onConnectCommon = async (message: any, port: chrome.runtime.Port) => {
     const { type, ...otherInfo } = message || {};
-    const [_, source, target] = type.split("-");
+    const [_, source, target] = type?.split("-");
     const typeNew = type.replace(/ginkgo-([^-]+)-/, "ginkgo-background-");
     const messageNew = {
       ...(message || {}),

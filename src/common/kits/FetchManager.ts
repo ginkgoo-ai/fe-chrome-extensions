@@ -1,7 +1,7 @@
 import ChromeManager from "@/common/kits/ChromeManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
-import { IRequestConfigType } from "@/common/types/fetch.d";
+import { IRequestConfigType } from "@/common/types/fetch";
 
 /**
  * @description 接口请求管理器
