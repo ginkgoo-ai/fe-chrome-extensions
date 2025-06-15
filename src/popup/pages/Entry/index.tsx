@@ -1,17 +1,18 @@
 /*global chrome*/
 import { useSelector } from "react-redux";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import "swiper/css";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useEffect, useState } from "react";
 import MKEntryPage from "@/common/components/MKEntryPage";
 import MKHeader from "@/common/components/MKHeader";
+import useActions from "@/common/hooks/useActions";
+import { usePageParams } from "@/common/hooks/usePageParams";
+import useSyncStorageChromeState from "@/common/hooks/useSyncStorageChromeState";
 import CacheManager from "@/common/kits/CacheManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import Api from "@/common/kits/api";
 import Config from "@/common/kits/config";
-import useActions from "@/common/kits/hooks/useActions";
-import useSyncStorageChromeState from "@/common/kits/hooks/useSyncStorageChromeState";
 import appInfoActions from "@/popup/redux/actions/appInfo";
 import { IRootStateType } from "@/popup/types/redux";
 import versionInfo from "@/resource/oss/version.json";
@@ -32,7 +33,7 @@ export default function Entry(): JSX.Element {
 
   const { x_themeValue, x_outletInfo } = useSelector((state: IRootStateType) => state.appInfo);
 
-  const location = useLocation();
+  const { location, pathRouter, paramsRouter } = usePageParams();
   const navigate = useNavigate();
 
   const { setThemeValue, setVersionInfo, updateOutletPosition } = useActions(appInfoActions);

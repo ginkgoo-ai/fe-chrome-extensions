@@ -6,15 +6,16 @@ import { v4 as uuidV4 } from "uuid";
 import { useEffect, useRef, useState } from "react";
 import MKButton from "@/common/components/MKButton";
 import MKModuleSupport from "@/common/components/MKModuleSupport";
-import MKPageCore from "@/common/components/MKPageCore";
 import { MESSAGE } from "@/common/config/message";
+import { useActions } from "@/common/hooks/useActions";
+import { useEventManager } from "@/common/hooks/useEventManager";
 import ChromeManager from "@/common/kits/ChromeManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import HTMLManager from "@/common/kits/HTMLManager";
 import UserManager from "@/common/kits/UserManager";
-import { useActions } from "@/common/kits/hooks/useActions";
-import { useEventManager } from "@/common/kits/hooks/useEventManager";
 import { IActionItemType, IStepItemType, PilotStatusEnum } from "@/common/types/case";
+import SPPageCore from "@/sidepanel/components/SPPageCore";
+import SPPageHeader from "@/sidepanel/components/SPPageHeader";
 import appInfoActions from "@/sidepanel/redux/actions/appInfo";
 import { IRootStateType } from "@/sidepanel/types/redux";
 import { IProfileType, profileMock } from "./config/mock";
@@ -124,7 +125,7 @@ export default function Case() {
               progressDot
               direction="vertical"
               current={itemStep.actioncurrent}
-              items={itemStep.actionlist.map((itemAction, indexAction) => calcActionItem(itemAction, indexStep, indexAction))}
+              items={itemStep.actionlist?.map((itemAction, indexAction) => calcActionItem(itemAction, indexStep, indexAction))}
             />
           </div>
         ),
@@ -134,39 +135,39 @@ export default function Case() {
     return result;
   };
 
-  const init = async () => {
-    const resTabInfo = await ChromeManager.getActiveTabInfo({});
-    updateTabActivated(resTabInfo);
-    // case
-    GlobalManager.g_backgroundPort?.postMessage({
-      type: "ginkgo-sidepanel-background-case-query",
-      tabId: x_tabActivated?.id,
-    });
+  // const init = async () => {
+  //   const resTabInfo = await ChromeManager.getActiveTabInfo({});
+  //   updateTabActivated(resTabInfo);
+  //   // case
+  //   GlobalManager.g_backgroundPort?.postMessage({
+  //     type: "ginkgo-sidepanel-background-case-query",
+  //     tabId: x_tabActivated?.id,
+  //   });
 
-    // Profile
-    refreshProfileInfo();
-    setProfileItems(
-      Object.keys(profileMock).map((key, index) => {
-        const item = profileMock[key as keyof IProfileType];
-        return {
-          key: index,
-          label: item.label,
-          children: Array.isArray(item.value)
-            ? item.value
-                .filter((itemValue) => !itemValue.hidden)
-                .map((itemValue) => {
-                  return itemValue.value;
-                })
-                .join(", ")
-            : item.value,
-        };
-      })
-    );
-  };
+  //   // Profile
+  //   refreshProfileInfo();
+  //   setProfileItems(
+  //     Object.keys(profileMock).map((key, index) => {
+  //       const item = profileMock[key as keyof IProfileType];
+  //       return {
+  //         key: index,
+  //         label: item.label,
+  //         children: Array.isArray(item.value)
+  //           ? item.value
+  //               .filter((itemValue) => !itemValue.hidden)
+  //               .map((itemValue) => {
+  //                 return itemValue.value;
+  //               })
+  //               .join(", ")
+  //           : item.value,
+  //       };
+  //     })
+  //   );
+  // };
 
-  useEffect(() => {
-    init();
-  }, [x_tabActivated?.id]);
+  // useEffect(() => {
+  //   init();
+  // }, [x_tabActivated?.id]);
 
   const refreshProfileInfo = async () => {
     const { first_name = "", last_name = "" } = UserManager.userInfo || {};
@@ -273,17 +274,11 @@ export default function Case() {
   };
 
   return (
-    <MKPageCore>
-      {/* Header */}
-      <div className="flex-0 flex h-10 flex-row items-center justify-between p-4">
-        <div className="flex-0 w-5"></div>
-        <div className="flex-1 whitespace-nowrap text-center font-bold">{TITLE_PAGE}</div>
-        <div className="flex-0 w-5">
-          <MKButton type="primary" shape="circle" loading={isLoginLoading} onClick={handleBtnProfileClick}>
-            {isLoginLoading ? "" : profileName}
-          </MKButton>
-        </div>
-      </div>
+    <SPPageCore
+      renderPageHeader={() => {
+        return <SPPageHeader title="CaseDetail" />;
+      }}
+    >
       {/* Status */}
       <div className="flex-0 flex flex-col gap-2 border-b border-solid border-gray-200 p-4">
         <div className="flex flex-row gap-2">
@@ -341,6 +336,6 @@ export default function Case() {
       <Drawer open={isDrawerProfileOpen} title="Profile Info" loading={isDrawerProfileLoading} onClose={() => setDrawerProfileOpen(false)}>
         <Descriptions items={profileItems} column={1} />
       </Drawer>
-    </MKPageCore>
+    </SPPageCore>
   );
 }

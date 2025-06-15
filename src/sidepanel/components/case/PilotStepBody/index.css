@@ -1,0 +1,12 @@
+.border-bottom {
+  position: relative;
+}
+
+.border-bottom::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -12px;
+  border-bottom: 1px dashed #d8dff5;
+}

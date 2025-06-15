@@ -265,17 +265,23 @@ class BackgroundEventManager {
       }
       case "ginkgo-page-all-case-start":
       case "ginkgo-sidepanel-all-case-start": {
-        const { caseId: caseIdMsg = "caseId-123456", fill_data: fill_dataMsg } = otherInfo || {};
-        const pilotInfo = PilotManager.getPilot({ caseId: caseIdMsg });
+        const {
+          caseId: caseIdMsg = "caseId-123456",
+          workflowId: workflowIdMsg = "workflowId-123456",
+          fill_data: fill_dataMsg,
+        } = otherInfo || {};
+        const pilotInfo = PilotManager.getPilot({ caseId: caseIdMsg, workflowId: workflowIdMsg });
 
         if (!!pilotInfo) {
           PilotManager.start({
             caseId: pilotInfo.caseId,
+            workflowId: pilotInfo.workflowId,
             tabInfo: pilotInfo.tabInfo,
           });
         } else {
           PilotManager.open({
             caseId: caseIdMsg,
+            workflowId: workflowIdMsg,
             fill_data: fill_dataMsg,
           });
         }
@@ -298,6 +304,31 @@ class BackgroundEventManager {
         });
         this.postConnectMessage({
           type: `ginkgo-background-all-case-update`,
+          pilotInfo,
+        });
+        break;
+      }
+      case "ginkgo-page-background-polit-query":
+      case "ginkgo-sidepanel-background-polit-query": {
+        const { tabId: tabIdMsg, caseId: caseIdMsg, workflowId: workflowIdMsg } = otherInfo || {};
+
+        const pilotInfo = PilotManager.getPilot({
+          tabId: tabIdMsg,
+          caseId: caseIdMsg,
+          workflowId: workflowIdMsg,
+        });
+        console.log(
+          "polit-query===",
+          PilotManager.pilotMap,
+          {
+            tabId: tabIdMsg,
+            caseId: caseIdMsg,
+            workflowId: workflowIdMsg,
+          },
+          pilotInfo
+        );
+        this.postConnectMessage({
+          type: `ginkgo-background-all-polit-query`,
           pilotInfo,
         });
         break;

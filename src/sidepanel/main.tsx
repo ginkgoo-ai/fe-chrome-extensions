@@ -40,21 +40,21 @@ const main = async () => {
   );
 
   // 注册监听 Background 消息
-  chrome?.runtime?.onMessage?.addListener(async (request, sender, sendResponse) => {
-    if (request.type === "onTabsComplete") {
-      const resTabInfo = await ChromeManager.getActiveTabInfo({});
-      if (resTabInfo.id !== request?.tabInfo?.id) {
-        return;
-      }
-      // 可以将 HTML 内容存储到 Redux store 中
-      store.dispatch({
-        type: "UPDATE_TAB_ACTIVATED",
-        payload: resTabInfo,
-      });
-    }
-    sendResponse(true);
-    return true;
-  });
+  // chrome?.runtime?.onMessage?.addListener(async (request, sender, sendResponse) => {
+  //   if (request.type === "onTabsComplete") {
+  //     const resTabInfo = await ChromeManager.getActiveTabInfo({});
+  //     if (resTabInfo.id !== request?.tabInfo?.id) {
+  //       return;
+  //     }
+  //     // 可以将 HTML 内容存储到 Redux store 中
+  //     // store.dispatch({
+  //     //   type: "UPDATE_TAB_ACTIVATED",
+  //     //   payload: resTabInfo,
+  //     // });
+  //   }
+  //   sendResponse(true);
+  //   return true;
+  // });
 
   // 注册监听 Background 消息
   GlobalManager.g_backgroundPort = chrome?.runtime?.connect?.({ name: `ginkgo-sidepanel-${uuidv4()}` });

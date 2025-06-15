@@ -1,0 +1,9 @@
+.pilot-step-body-form-wrap .ant-radio-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.pilot-step-body-form-wrap .ant-radio {
+  margin-top: 2px;
+  margin-bottom: auto;
+}

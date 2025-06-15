@@ -1,13 +1,16 @@
 import { Button, Input } from "antd";
 import { message } from "antd";
 import { useState } from "react";
-import ChromeManager from "@/common/kits/ChromeManager";
+import { usePageParams } from "@/common/hooks/usePageParams";
 import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import imgLogo from "@/resource/oss/assets/app.webp";
 import "./index.less";
 
 export default function Login() {
+  const { location, pathRouter, paramsRouter } = usePageParams();
+  const { track = "" } = paramsRouter || {};
+
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
 
@@ -20,7 +23,11 @@ export default function Login() {
     setLoading(false);
 
     if (resLogin) {
-      UtilsManager.navigateBack();
+      if (track) {
+        UtilsManager.redirectTo(track);
+      } else {
+        UtilsManager.navigateBack();
+      }
       return;
     }
 

@@ -11,6 +11,7 @@ import { ActionResultType, IActionItemType, IStepItemType, PilotStatusEnum } fro
 
 interface IPilotType {
   caseId: string;
+  workflowId: string;
   fill_data: Record<string, unknown>;
   tabInfo: chrome.tabs.Tab;
   timer: NodeJS.Timeout | null;
@@ -62,16 +63,24 @@ class PilotManager {
     return pilot;
   };
 
-  getPilot = (params: { caseId?: string; tabId?: number }): IPilotType | undefined => {
-    const { caseId, tabId } = params || {};
+  getPilot = (params: { tabId?: number; caseId?: string; workflowId?: string }): IPilotType | undefined => {
+    const { caseId, tabId, workflowId } = params || {};
+
+    if (!tabId && !caseId && !workflowId) {
+      return void 0;
+    }
 
     return Array.from(this.pilotMap.values()).find((pilot) => {
+      // 如果提供了 tabId，则必须匹配
+      if (tabId && pilot.tabInfo?.id !== tabId) {
+        return false;
+      }
       // 如果提供了 caseId
       if (caseId && pilot.caseId !== caseId) {
         return false;
       }
-      // 如果提供了 tabId，则必须匹配
-      if (tabId && pilot.tabInfo?.id !== tabId) {
+      // 如果提供了 caseId
+      if (workflowId && pilot.workflowId !== workflowId) {
         return false;
       }
       // 所有条件都满足
@@ -462,8 +471,8 @@ class PilotManager {
     }
   };
 
-  open = async (params: { caseId: string; fill_data: Record<string, unknown> }) => {
-    const { caseId, fill_data } = params || {};
+  open = async (params: { caseId: string; workflowId: string; fill_data: Record<string, unknown> }) => {
+    const { caseId, workflowId, fill_data } = params || {};
 
     const tabInfo = await ChromeManager.createTab({
       url: this.caseUrlMap[caseId] || this.caseUrlMap.demo,
@@ -471,6 +480,7 @@ class PilotManager {
     });
     const pilotInfo = {
       caseId,
+      workflowId,
       fill_data,
       tabInfo,
       timer: null,
@@ -492,13 +502,14 @@ class PilotManager {
     });
   };
 
-  start = (params: { caseId?: string; tabInfo: chrome.tabs.Tab }) => {
-    const { caseId = "", tabInfo } = params || {};
+  start = (params: { caseId?: string; workflowId?: string; tabInfo: chrome.tabs.Tab }) => {
+    const { caseId = "", workflowId, tabInfo } = params || {};
     let pilotInfo = this.getPilot({ tabId: tabInfo.id });
 
     if (!pilotInfo) {
       pilotInfo = this.genPilot({
         caseId,
+        workflowId,
         fill_data: {},
         tabInfo,
         timer: null,

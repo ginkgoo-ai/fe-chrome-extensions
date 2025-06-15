@@ -245,7 +245,7 @@ class UtilsManager {
     const arrParams = [];
     let strResult = strPath;
 
-    if (strResult) {
+    if (strResult && Object.values(objParams)?.length > 0) {
       strResult += strPath.includes("?") ? "&" : "?";
     }
 
@@ -327,7 +327,13 @@ class UtilsManager {
     const path = this.router2url(url, params);
     const href = `${html}#${path}`;
 
-    console.log("redirectTo", href, html, path);
+    console.log("redirectTo", href, window?.location?.href);
+    // if (window?.location?.href !== href) {
+    //   window.location.replace(href);
+    //   return true;
+    // } else {
+    //   return false;
+    // }
     window.location.replace(href);
   };
 

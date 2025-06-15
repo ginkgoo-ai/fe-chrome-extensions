@@ -1,4 +1,22 @@
 import { StepProps } from "antd";
+import { IOcrFileType } from "@/common/types/file";
+
+export enum CaseStreamStatusEnum {
+  INIT = "INIT",
+  STREAMING = "STREAMING",
+  ERROR = "ERROR",
+  DONE = "DONE",
+}
+
+export enum CaseStatusEnum {
+  ANALYZING = "ANALYZING",
+  PROGRESS = "PROGRESS",
+  READY = "READY",
+  AUTO_FILLING = "AUTO_FILLING",
+  HOLD = "HOLD",
+  FINAL_REVIEW = "FINAL_REVIEW",
+  DEFAULT = "DEFAULT",
+}
 
 export enum PilotStatusEnum {
   INIT = "INIT",
@@ -11,9 +29,45 @@ export enum PilotStatusEnum {
   MANUAL = "MANUAL",
   NOT_SUPPORT = "NOT_SUPPORT",
   COMING_SOON = "COMING_SOON",
+  PAUSE = "PAUSE",
+  COMPLETED = "COMPLETED",
 }
 
-export type ActionResultType = "success" | "notFound" | "";
+export enum PilotModeEnum {
+  NOT_INSTALL = "NOT_INSTALL",
+  PREPARING = "PREPARING",
+  READY = "READY",
+  RUNNING = "RUNNING",
+}
+
+export enum StepModeEnum {
+  ACTION = "ACTION",
+  FORM = "FORM",
+  DECLARATION = "DECLARATION",
+}
+
+export type ActionResultType = "success" | "notFound" | "manual";
+
+export interface IProfileVaultDocumentType extends IOcrFileType {
+  metadataForFrontList: Record<string, string>[];
+}
+
+export interface ICaseItemType {
+  id: string;
+  title: string;
+  caseType: string;
+  documents?: IOcrFileType[];
+  status: CaseStatusEnum;
+  createdAt: string;
+  updatedAt: string;
+  caseStatusForFront?: {
+    colorBackground: string;
+    colorText: string;
+    text: string;
+  };
+  timestamp: number;
+  [key: string]: unknown;
+}
 
 export interface IAddressItemType {
   hidden?: boolean;
@@ -39,6 +93,17 @@ export interface IActionItemType {
   actiontimestamp?: string;
 }
 
+export interface IFormItemType {
+  name: string;
+  label: string;
+  value: string;
+  type: "input" | "radio" | "checkbox";
+  options?: {
+    label: string;
+    value: string;
+  };
+}
+
 export interface IStepActionType {
   actioncurrent?: number;
   actionresult?: "success" | "error";
@@ -47,7 +112,25 @@ export interface IStepActionType {
 }
 
 export interface IStepItemType extends StepProps {
+  mode: StepModeEnum;
   descriptionText: string;
-  actioncurrent: number;
-  actionlist: IActionItemType[];
+  actioncurrent?: number;
+  actionlist?: IActionItemType[];
+  formList?: IFormItemType[];
+}
+
+export interface IPilotType {
+  caseId: string;
+  fill_data: Record<string, unknown>;
+  tabInfo: {
+    [key: string]: unknown;
+  };
+  timer: NodeJS.Timeout | null;
+  pilotStatus: PilotStatusEnum;
+  stepListCurrent: number;
+  stepListItems: IStepItemType[];
+  repeatHash: string;
+  repeatCurrent: number;
+  pdfUrl: string;
+  cookiesStr: string;
 }
