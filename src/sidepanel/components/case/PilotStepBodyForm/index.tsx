@@ -31,6 +31,10 @@ function PurePilotStepBodyForm(props: PilotStepBodyFormProps) {
       {itemStep?.data?.form_data?.map((itemQuestion, indexQuestion) => {
         const type = itemQuestion?.question?.answer.type; // itemQuestion?.question?.answer.type;
 
+        if (!(itemQuestion?.question?.answer?.data?.length > 0)) {
+          return null;
+        }
+
         return (
           <Form.Item
             key={`pilot-step-body-form-${indexQuestion}`}

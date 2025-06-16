@@ -266,25 +266,49 @@ class BackgroundEventManager {
       case "ginkgo-page-all-case-start":
       case "ginkgo-sidepanel-all-case-start": {
         const {
+          url: urlMsg = "https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/SKILLED_WORK/3434-4632-5724-0670/",
           caseId: caseIdMsg = "caseId-123456",
           workflowId: workflowIdMsg = "workflowId-123456",
           fill_data: fill_dataMsg,
         } = otherInfo || {};
-        const pilotInfo = PilotManager.getPilot({ caseId: caseIdMsg, workflowId: workflowIdMsg });
 
-        if (!!pilotInfo) {
+        const resTabs = await ChromeManager.queryTabs({
+          url: urlMsg,
+        });
+        const tabInfo = resTabs?.[0];
+
+        console.log("ginkgo-sidepanel-all-case-start", tabInfo);
+
+        if (tabInfo) {
           PilotManager.start({
-            caseId: pilotInfo.caseId,
-            workflowId: pilotInfo.workflowId,
-            tabInfo: pilotInfo.tabInfo,
-          });
-        } else {
-          PilotManager.open({
             caseId: caseIdMsg,
             workflowId: workflowIdMsg,
+            tabInfo: tabInfo,
             fill_data: fill_dataMsg,
           });
+        } else {
+          this.postConnectMessage({
+            type: `ginkgo-background-all-toast`,
+            content: "No matching page found.",
+          });
         }
+
+        // const pilotInfo = PilotManager.getPilot({ caseId: caseIdMsg, workflowId: workflowIdMsg });
+
+        // if (!!pilotInfo) {
+        //   PilotManager.start({
+        //     caseId: pilotInfo.caseId,
+        //     workflowId: pilotInfo.workflowId,
+        //     tabInfo: pilotInfo.tabInfo,
+        //     fill_data: fill_dataMsg,
+        //   });
+        // } else {
+        //   PilotManager.open({
+        //     caseId: caseIdMsg,
+        //     workflowId: workflowIdMsg,
+        //     fill_data: fill_dataMsg,
+        //   });
+        // }
         break;
       }
       case "ginkgo-page-all-case-stop":
@@ -317,6 +341,8 @@ class BackgroundEventManager {
           caseId: caseIdMsg,
           workflowId: workflowIdMsg,
         });
+
+        console.log("ginkgo-sidepanel-background-polit-query", PilotManager.pilotMap, pilotInfo);
 
         this.postConnectMessage({
           type: `ginkgo-background-all-polit-query`,

@@ -57,7 +57,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
                 <IconStepDeclaration size={16} />
               ) : (
                 <>
-                  {itemStep.status === "DONE" ? <Check size={16} color="#00ff00" /> : null}
+                  {itemStep.status === "COMPLETED_SUCCESS" ? <Check size={16} color="#00ff00" /> : null}
                   {itemStep.status === "ACTIVE" ? <IconLoading size={16} className="animate-spin" /> : null}
                   {itemStep.status === "PENDING" ? <IconStepDot size={16} /> : null}
                 </>

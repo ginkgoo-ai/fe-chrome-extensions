@@ -21,8 +21,8 @@ export const GinkgoApi = {
   workflowsProcessForm: "/workflows/:workflowId/process-form",
 };
 
-const IS_MOCK = true;
-const LOCAL_BASE_URL = "http://192.168.31.205:6011/"; // David
+const IS_MOCK = false;
+const LOCAL_BASE_URL = "http://192.168.31.205:6011"; // David
 const baseUrl = LOCAL_BASE_URL || GlobalManager.g_API_CONFIG.apiServerUrl;
 
 const genGinkgoHeaders = async (params?: { headers?: Record<string, string> }) => {
@@ -74,7 +74,7 @@ const queryUserInfo = async () => {
 
 const getWorkflowList = async (params: IGetWorkflowListType): Promise<IWorkflowType> => {
   const { workflowId = "" } = params;
-  const url = `${baseUrl}${GinkgoApi.workflowsProcessForm}`.replace(":workflowId", workflowId);
+  const url = `${baseUrl}${GinkgoApi.workflows}`.replace(":workflowId", workflowId);
   const headers = {
     ...(await genGinkgoHeaders()),
   };
@@ -94,7 +94,7 @@ const getWorkflowList = async (params: IGetWorkflowListType): Promise<IWorkflowT
   return res;
 };
 
-const getWorkflowStepData = async (params: IGetWorkflowStepDataType): Promise<IWorkflowStepDataType> => {
+const getWorkflowStepData = async (params: IGetWorkflowStepDataType): Promise<{ step_key: string; data: IWorkflowStepDataType }> => {
   const { workflowId = "", stepKey = "" } = params;
   const url = `${baseUrl}${GinkgoApi.workflowsStep}`.replace(":workflowId", workflowId).replace(":stepKey", stepKey);
   const headers = {

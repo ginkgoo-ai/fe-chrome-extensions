@@ -21,30 +21,37 @@ export default function CaseDetail() {
   useEventManager("ginkgo-message", (message) => {
     // console.log('🚀 ~ useEventManager ~ data:', message);
 
-    const { type: typeMsg, pilotInfo: pilotInfoMsg } = message;
-    if (typeMsg === "ginkgo-background-all-case-update") {
-      const { steps: stepsMsg } = pilotInfoMsg || {};
+    const { type: typeMsg, pilotInfo: pilotInfoMsg } = message || {};
 
-      // pilotInfoMsg && (pilotInfoMsg.pilotStatus = PilotStatusEnum.COMPLETED);
+    switch (typeMsg) {
+      case "ginkgo-background-all-case-update": {
+        const { steps: stepsMsg } = pilotInfoMsg || {};
 
-      setPilotInfo(pilotInfoMsg);
-      // setStepListCurrent(stepListCurrentMsg);
-      if (stepsMsg?.length > 0) {
-        setStepListItems(stepsMsg.concat(stepListItemsDeclaration));
+        // pilotInfoMsg && (pilotInfoMsg.pilotStatus = PilotStatusEnum.COMPLETED);
+
+        setPilotInfo(pilotInfoMsg);
+        // setStepListCurrent(stepListCurrentMsg);
+        if (stepsMsg?.length > 0) {
+          setStepListItems(stepsMsg.concat(stepListItemsDeclaration));
+        }
+
+        // if (stepListCurrentMsg >= 0 && stepListItemsMsg?.length > 0 && !!stepListItemsMsg[stepListCurrentMsg]) {
+        //   setTimeout(() => {
+        //     const { actioncurrent, actionlist } = stepListItemsMsg[stepListCurrentMsg] || {};
+        //     if (actioncurrent >= 0 && actionlist?.length > 0) {
+        //       document
+        //         .getElementById(`action-item-${stepListCurrentMsg}-${actioncurrent}`)
+        //         ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        //     } else {
+        //       document.getElementById(`step-item-${stepListCurrentMsg}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        //     }
+        //   }, 40);
+        // }
+        break;
       }
-
-      // if (stepListCurrentMsg >= 0 && stepListItemsMsg?.length > 0 && !!stepListItemsMsg[stepListCurrentMsg]) {
-      //   setTimeout(() => {
-      //     const { actioncurrent, actionlist } = stepListItemsMsg[stepListCurrentMsg] || {};
-      //     if (actioncurrent >= 0 && actionlist?.length > 0) {
-      //       document
-      //         .getElementById(`action-item-${stepListCurrentMsg}-${actioncurrent}`)
-      //         ?.scrollIntoView({ behavior: "smooth", block: "center" });
-      //     } else {
-      //       document.getElementById(`step-item-${stepListCurrentMsg}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-      //     }
-      //   }, 40);
-      // }
+      default: {
+        break;
+      }
     }
   });
 

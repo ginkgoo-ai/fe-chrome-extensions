@@ -277,7 +277,7 @@ class ChromeManager {
     });
   };
 
-  queryAllTabs = async (): Promise<chrome.tabs.Tab[]> => {
+  queryTabs = async (queryInfo: chrome.tabs.QueryInfo): Promise<chrome.tabs.Tab[]> => {
     return new Promise((resolve) => {
       if (GlobalManager.g_isDev) {
         message.open({
@@ -295,7 +295,7 @@ class ChromeManager {
           },
         ] as chrome.tabs.Tab[]);
       } else {
-        chrome.tabs.query({}, (tabs) => {
+        chrome.tabs.query(queryInfo, (tabs) => {
           resolve(tabs);
         });
       }

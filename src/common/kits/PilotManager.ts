@@ -174,14 +174,14 @@ class PilotManager {
       stepKey,
     });
 
-    if (!resWorkflowStepData) {
+    if (!resWorkflowStepData?.data) {
       return { result: false };
     }
 
     const stepsNew = pilotInfo.steps.map((item) => {
       return {
         ...item,
-        data: resWorkflowStepData,
+        data: resWorkflowStepData?.data,
       };
     });
 
@@ -241,6 +241,10 @@ class PilotManager {
     const hash = md5(title + htmlCleansing);
 
     if (hash === pilotInfo?.repeatHash) {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgo-background-all-toast`,
+        content: pilotInfo?.repeatCurrent + 1,
+      });
       await this.updatePilotMap({
         workflowId,
         update: {
@@ -258,6 +262,10 @@ class PilotManager {
     }
 
     if (Number(pilotInfo?.repeatCurrent) > this.REPEAT_MAX) {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgo-background-all-toast`,
+        content: "Repeat Max",
+      });
       // Max
       return { result: false };
     }
@@ -515,15 +523,15 @@ class PilotManager {
     });
   };
 
-  start = async (params: { caseId?: string; workflowId?: string; tabInfo: chrome.tabs.Tab }) => {
-    const { caseId = "", workflowId = "", tabInfo } = params || {};
+  start = async (params: { tabInfo: chrome.tabs.Tab; caseId?: string; workflowId?: string; fill_data?: Record<string, unknown> }) => {
+    const { tabInfo, caseId = "", workflowId = "", fill_data = {} } = params || {};
     let pilotInfo = this.getPilot({ tabId: tabInfo.id });
 
     if (!pilotInfo) {
       pilotInfo = this.genPilot({
         caseId,
         workflowId,
-        fill_data: {},
+        fill_data,
         tabInfo,
         timer: null,
         pilotStatus: PilotStatusEnum.HOLD,
@@ -535,7 +543,7 @@ class PilotManager {
       });
       this.pilotMap.set(workflowId, pilotInfo);
     }
-    pilotInfo.tabInfo = tabInfo; // update tabInfo
+    // pilotInfo.tabInfo = tabInfo; // update tabInfo
 
     const timer = setTimeout(async () => {
       await this.main(pilotInfo);

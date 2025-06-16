@@ -1,16 +1,13 @@
 import { LoadingOutlined } from "@ant-design/icons";
+import { message as messageAntd } from "antd";
 import { Spin } from "antd";
 import { useSelector } from "react-redux";
 import { useEffect, useRef, useState } from "react";
-import useActions from "@/common/hooks/useActions";
-import { useEffectStrictMode } from "@/common/hooks/useEffectStrictMode";
 import { useEventManager } from "@/common/hooks/useEventManager";
 import { usePageParams } from "@/common/hooks/usePageParams";
-import ChromeManager from "@/common/kits/ChromeManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
-import appInfoActions from "@/sidepanel/redux/actions/appInfo";
 import { IRootStateType } from "@/sidepanel/types/redux";
 import "./index.less";
 
@@ -49,6 +46,16 @@ export default function SPPageCore(props: SPPageCoreProps) {
         } else {
           routerCompleted("/case-portal");
         }
+
+        break;
+      }
+      case "ginkgo-background-all-toast": {
+        const { content } = message || {};
+        messageAntd.open({
+          content,
+          type: "info",
+        });
+        console.log("ginkgo-background-all-toast", content);
 
         break;
       }
