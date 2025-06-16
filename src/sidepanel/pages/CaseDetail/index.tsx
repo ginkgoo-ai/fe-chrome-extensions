@@ -1,20 +1,18 @@
-import { produce } from "immer";
-import { cloneDeep } from "lodash";
-import { useState } from "react";
-import { useEffectStrictMode } from "@/common/hooks/useEffectStrictMode";
+import { useEffect, useState } from "react";
 import { useEventManager } from "@/common/hooks/useEventManager";
 import { usePageParams } from "@/common/hooks/usePageParams";
-import Api from "@/common/kits/api";
+import GlobalManager from "@/common/kits/GlobalManager";
 import { IPilotType } from "@/common/types/case";
 import { IWorkflowStepType } from "@/common/types/casePilot";
 import SPPageCore from "@/sidepanel/components/SPPageCore";
 import SPPageHeader from "@/sidepanel/components/SPPageHeader";
 import { PilotStepBody } from "@/sidepanel/components/case/PilotStepBody";
+import { stepListItemsDeclaration } from "@/sidepanel/components/case/PilotStepBody/config";
 import "./index.less";
 
 export default function CaseDetail() {
-  const { location, pathRouter, paramsRouter } = usePageParams();
-  const { caseId, workflowId = "1221f2f4-5311-4e15-b7dd-aecd4f8d9401" } = paramsRouter || {};
+  const { paramsRouter } = usePageParams();
+  const { caseId, workflowId } = paramsRouter || {};
 
   const [pilotInfo, setPilotInfo] = useState<IPilotType | null>(null);
   const [stepListCurrent, setStepListCurrent] = useState<number>(0);
@@ -25,63 +23,49 @@ export default function CaseDetail() {
 
     const { type: typeMsg, pilotInfo: pilotInfoMsg } = message;
     if (typeMsg === "ginkgo-background-all-case-update") {
-      const { stepListCurrent: stepListCurrentMsg, stepListItems: stepListItemsMsg } = pilotInfoMsg || {};
+      const { steps: stepsMsg } = pilotInfoMsg || {};
 
       // pilotInfoMsg && (pilotInfoMsg.pilotStatus = PilotStatusEnum.COMPLETED);
 
       setPilotInfo(pilotInfoMsg);
       // setStepListCurrent(stepListCurrentMsg);
-      // setStepListItems(stepListItemsMsg);
-
-      if (stepListCurrentMsg >= 0 && stepListItemsMsg?.length > 0 && !!stepListItemsMsg[stepListCurrentMsg]) {
-        setTimeout(() => {
-          const { actioncurrent, actionlist } = stepListItemsMsg[stepListCurrentMsg] || {};
-          if (actioncurrent >= 0 && actionlist?.length > 0) {
-            document
-              .getElementById(`action-item-${stepListCurrentMsg}-${actioncurrent}`)
-              ?.scrollIntoView({ behavior: "smooth", block: "center" });
-          } else {
-            document.getElementById(`step-item-${stepListCurrentMsg}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
-        }, 40);
+      if (stepsMsg?.length > 0) {
+        setStepListItems(stepsMsg.concat(stepListItemsDeclaration));
       }
+
+      // if (stepListCurrentMsg >= 0 && stepListItemsMsg?.length > 0 && !!stepListItemsMsg[stepListCurrentMsg]) {
+      //   setTimeout(() => {
+      //     const { actioncurrent, actionlist } = stepListItemsMsg[stepListCurrentMsg] || {};
+      //     if (actioncurrent >= 0 && actionlist?.length > 0) {
+      //       document
+      //         .getElementById(`action-item-${stepListCurrentMsg}-${actioncurrent}`)
+      //         ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      //     } else {
+      //       document.getElementById(`step-item-${stepListCurrentMsg}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      //     }
+      //   }, 40);
+      // }
     }
   });
 
-  const init = async () => {
-    const res = await Api.Ginkgo.getWorkflowList({
+  useEffect(() => {
+    GlobalManager.g_backgroundPort?.postMessage({
+      type: "ginkgo-sidepanel-background-case-query",
+      caseId,
       workflowId,
     });
-
-    if (res) {
-      setStepListItems(res.steps);
-    }
-  };
-
-  useEffectStrictMode(() => {
-    init();
-  }, [workflowId]);
+  }, []);
 
   const handleStepCollapseChange = async (stepKey: string) => {
-    console.log("handleStepCollapseChange", stepKey);
-
-    const res = await Api.Ginkgo.getWorkflowStepData({
-      workflowId,
-      stepKey,
-    });
-
-    setStepListItems((prev) =>
-      cloneDeep(
-        produce(prev, (draft) => {
-          const index = draft.findIndex((item) => {
-            return item.step_key === stepKey;
-          });
-          if (index >= 0) {
-            draft[index].data = res;
-          }
-        })
-      )
-    );
+    try {
+      GlobalManager.g_backgroundPort?.postMessage({
+        type: "ginkgo-sidepanel-background-polit-step-query",
+        workflowId,
+        stepKey,
+      });
+    } catch (error) {
+      console.error("[Ginkgo] Sidepanel handleCardClick error", error);
+    }
   };
 
   return (

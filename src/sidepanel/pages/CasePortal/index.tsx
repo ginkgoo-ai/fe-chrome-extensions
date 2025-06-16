@@ -21,11 +21,13 @@ export default function CasePortal() {
   }, []);
 
   const handleCardClick = (itemCase: ICaseItemType) => {
+    const workflowId = "1221f2f4-5311-4e15-b7dd-aecd4f8d9401";
+
     try {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgo-sidepanel-all-case-start",
         caseId: itemCase.id,
-        workflowId: "",
+        workflowId,
         fill_data: {}, // refFillData.current,
       });
     } catch (error) {
@@ -35,6 +37,7 @@ export default function CasePortal() {
     setTimeout(() => {
       UtilsManager.navigateTo("/case-detail", {
         caseId: itemCase.id,
+        workflowId,
       });
     }, 500);
   };

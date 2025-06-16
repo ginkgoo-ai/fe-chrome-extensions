@@ -21,6 +21,7 @@ export enum CaseStatusEnum {
 export enum PilotStatusEnum {
   INIT = "INIT",
   OPEN = "OPEN",
+  QUERY_WORKFLOW = "QUERY_WORKFLOW",
   QUERY = "QUERY",
   ANALYSIS = "ANALYSIS",
   ACTION = "ACTION",

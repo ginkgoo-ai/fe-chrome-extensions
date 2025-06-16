@@ -7,6 +7,12 @@ export interface IGetWorkflowStepDataType {
   stepKey: string;
 }
 
+export interface IWorkflowsProcessFormType {
+  workflowId: string;
+  message: string;
+  fill_data: Record<string, unknown>;
+}
+
 export interface IWorkflowStepDataFormDataType {
   question: {
     answer: {

@@ -109,7 +109,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
     };
 
     setStepListItemsBody(
-      stepListItems.concat(stepListItemsDeclaration).map((item, index) => {
+      stepListItems.map((item, index) => {
         return {
           key: item.step_key,
           label: renderStepLabel(item, index),

@@ -6,7 +6,7 @@ export interface IRequestConfigType {
   params?: Record<string, any>;
   data?: Record<string, any>;
   query?: Record<string, any>;
-  body?: string | FormData | URLSearchParams | Record<string, string>;
+  body?: string | FormData | URLSearchParams | Record<string, any>;
   formData?: boolean;
   mode?: RequestMode;
   callbackStream?: (data: { done: boolean; decodedValue: string }) => void;

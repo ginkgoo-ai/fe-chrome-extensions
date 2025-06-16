@@ -289,19 +289,20 @@ class BackgroundEventManager {
       }
       case "ginkgo-page-all-case-stop":
       case "ginkgo-sidepanel-all-case-stop": {
-        const { caseId: caseIdMsg } = otherInfo || {};
+        const { workflowId: workflowIdMsg } = otherInfo || {};
 
-        PilotManager.stop({ caseId: caseIdMsg });
+        PilotManager.stop({ workflowId: workflowIdMsg });
         break;
       }
       case "ginkgo-page-background-case-query":
       case "ginkgo-sidepanel-background-case-query": {
-        const { caseId: caseIdMsg, tabId: tabIdMsg } = otherInfo || {};
-
+        const { caseId: caseIdMsg, workflowId: workflowIdMsg, tabId: tabIdMsg } = otherInfo || {};
         const pilotInfo = PilotManager.getPilot({
           caseId: caseIdMsg,
+          workflowId: workflowIdMsg,
           tabId: tabIdMsg,
         });
+
         this.postConnectMessage({
           type: `ginkgo-background-all-case-update`,
           pilotInfo,
@@ -311,25 +312,25 @@ class BackgroundEventManager {
       case "ginkgo-page-background-polit-query":
       case "ginkgo-sidepanel-background-polit-query": {
         const { tabId: tabIdMsg, caseId: caseIdMsg, workflowId: workflowIdMsg } = otherInfo || {};
-
         const pilotInfo = PilotManager.getPilot({
           tabId: tabIdMsg,
           caseId: caseIdMsg,
           workflowId: workflowIdMsg,
         });
-        console.log(
-          "polit-query===",
-          PilotManager.pilotMap,
-          {
-            tabId: tabIdMsg,
-            caseId: caseIdMsg,
-            workflowId: workflowIdMsg,
-          },
-          pilotInfo
-        );
+
         this.postConnectMessage({
           type: `ginkgo-background-all-polit-query`,
           pilotInfo,
+        });
+        break;
+      }
+      case "ginkgo-page-background-polit-step-query":
+      case "ginkgo-sidepanel-background-polit-step-query": {
+        const { workflowId: workflowIdMsg, stepKey: stepKeyMsg } = otherInfo || {};
+
+        PilotManager.queryWorkflowStep({
+          workflowId: workflowIdMsg,
+          stepKey: stepKeyMsg,
         });
         break;
       }

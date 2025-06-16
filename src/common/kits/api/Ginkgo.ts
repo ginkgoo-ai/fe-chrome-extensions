@@ -2,9 +2,14 @@ import { v4 as uuidV4 } from "uuid";
 import FetchManager from "@/common/kits/FetchManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import UserManager from "@/common/kits/UserManager";
-import UtilsManager from "@/common/kits/UtilsManager";
-import { mockGetWorkflowList, mockGetWorkflowStepData } from "@/common/kits/mock/Ginkgo";
-import { IGetWorkflowListType, IGetWorkflowStepDataType, IWorkflowStepDataType, IWorkflowType } from "@/common/types/casePilot";
+import { mockGetWorkflowList, mockGetWorkflowStepData, mockPostWorkflowsProcessForm } from "@/common/kits/mock/Ginkgo";
+import {
+  IGetWorkflowListType,
+  IGetWorkflowStepDataType,
+  IWorkflowStepDataType,
+  IWorkflowType,
+  IWorkflowsProcessFormType,
+} from "@/common/types/casePilot";
 import { IRequestConfigType } from "@/common/types/fetch";
 
 export const GinkgoApi = {
@@ -111,7 +116,7 @@ const getWorkflowStepData = async (params: IGetWorkflowStepDataType): Promise<IW
   return res;
 };
 
-const postWorkflowsProcessForm = async (params: IGetWorkflowListType) => {
+const postWorkflowsProcessForm = async (params: IWorkflowsProcessFormType) => {
   const { workflowId = "", ...body } = params;
   const url = `${baseUrl}${GinkgoApi.workflowsProcessForm}`.replace(":workflowId", workflowId);
   const headers = {
@@ -120,7 +125,7 @@ const postWorkflowsProcessForm = async (params: IGetWorkflowListType) => {
 
   if (IS_MOCK) {
     return new Promise((resolve) => {
-      resolve(mockGetWorkflowList);
+      resolve(mockPostWorkflowsProcessForm);
     });
   }
 

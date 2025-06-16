@@ -37,7 +37,7 @@ export default function SPPageCore(props: SPPageCoreProps) {
 
     switch (typeMsg) {
       case "ginkgo-background-all-polit-query": {
-        console.log("PageCoreSidePanel useEventManager", pilotInfoMsg);
+        // console.log("PageCoreSidePanel useEventManager", pilotInfoMsg);
         if (pilotInfoMsg) {
           const { caseId: caseIdMsg, workflowId: workflowIdMsg } = pilotInfoMsg || {};
           routerCompleted(
