@@ -118,7 +118,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
         };
       })
     );
-  }, [stepListItems]);
+  }, [stepListItems, onContinueFilling]);
 
   return stepListItemsBody && stepListItemsBody.length > 0 ? (
     <div className="relative box-border flex w-full items-center justify-start rounded-lg border border-[#D8DFF5] p-2">

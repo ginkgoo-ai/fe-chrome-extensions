@@ -34,7 +34,7 @@ function PurePilotStepBodyNormal(props: PilotStepBodyNormalProps) {
 
   return (
     <div className="flex flex-col">
-      <PilotStepBodyNormalStep formDataNormal={formDataNormalStep} stepKey={itemStep.step_key} indexStep={indexStep} />
+      <PilotStepBodyNormalStep formDataNormal={formDataNormalStep} indexStep={indexStep} />
       {formDataNormalInterrupt.length > 0 ? (
         <PilotStepBodyNormalInterrupt
           formDataNormal={formDataNormalInterrupt}

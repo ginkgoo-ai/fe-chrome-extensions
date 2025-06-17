@@ -4,12 +4,11 @@ import { IWorkflowStepDataFormDataType } from "@/common/types/casePilot";
 
 interface PilotStepBodyNormalStepProps {
   formDataNormal: IWorkflowStepDataFormDataType[];
-  stepKey: string;
   indexStep: number;
 }
 
 function PurePilotStepBodyNormalStep(props: PilotStepBodyNormalStepProps) {
-  const { formDataNormal, stepKey, indexStep } = props;
+  const { formDataNormal, indexStep } = props;
 
   const calcActionItem = (item: IWorkflowStepDataFormDataType, indexStep: number, indexAction: number) => {
     const label = item.question.data.name;
