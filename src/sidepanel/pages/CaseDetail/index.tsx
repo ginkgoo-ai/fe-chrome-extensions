@@ -7,7 +7,7 @@ import { IWorkflowStepType } from "@/common/types/casePilot";
 import SPPageCore from "@/sidepanel/components/SPPageCore";
 import SPPageHeader from "@/sidepanel/components/SPPageHeader";
 import { PilotStepBody } from "@/sidepanel/components/case/PilotStepBody";
-import { stepListItemsDeclaration } from "@/sidepanel/components/case/PilotStepBody/config";
+import { stepListItemsDeclaration } from "@/sidepanel/pages/CaseDetail/config";
 import "./index.less";
 
 export default function CaseDetail() {
@@ -15,7 +15,6 @@ export default function CaseDetail() {
   const { caseId, workflowId } = paramsRouter || {};
 
   const [pilotInfo, setPilotInfo] = useState<IPilotType | null>(null);
-  const [stepListCurrent, setStepListCurrent] = useState<number>(0);
   const [stepListItems, setStepListItems] = useState<IWorkflowStepType[]>([]);
 
   useEventManager("ginkgo-message", (message) => {
@@ -27,10 +26,7 @@ export default function CaseDetail() {
       case "ginkgo-background-all-case-update": {
         const { steps: stepsMsg } = pilotInfoMsg || {};
 
-        // pilotInfoMsg && (pilotInfoMsg.pilotStatus = PilotStatusEnum.COMPLETED);
-
         setPilotInfo(pilotInfoMsg);
-        // setStepListCurrent(stepListCurrentMsg);
         if (stepsMsg?.length > 0) {
           setStepListItems(stepsMsg.concat(stepListItemsDeclaration));
         }

@@ -22,10 +22,12 @@ export default function CasePortal() {
 
   const handleCardClick = (itemCase: ICaseItemType) => {
     const workflowId = "1221f2f4-5311-4e15-b7dd-aecd4f8d9401";
+    const url = "https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/SKILLED_WORK/3434-4632-5724-0670/";
 
     try {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgo-sidepanel-all-case-start",
+        url,
         caseId: itemCase.id,
         workflowId,
         fill_data: {}, // refFillData.current,

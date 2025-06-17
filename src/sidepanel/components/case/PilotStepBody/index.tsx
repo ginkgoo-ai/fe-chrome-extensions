@@ -9,7 +9,6 @@ import { IWorkflowStepType } from "@/common/types/casePilot";
 import { PilotStepBodyDeclaration } from "@/sidepanel/components/case/PilotStepBodyDeclaration";
 import { PilotStepBodyForm } from "@/sidepanel/components/case/PilotStepBodyForm";
 import { PilotStepBodyStep } from "@/sidepanel/components/case/PilotStepBodyStep";
-import { stepListItemsDeclaration } from "./config";
 import "./index.css";
 
 interface PilotStepBodyProps {

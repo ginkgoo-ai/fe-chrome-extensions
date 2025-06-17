@@ -266,7 +266,7 @@ class BackgroundEventManager {
       case "ginkgo-page-all-case-start":
       case "ginkgo-sidepanel-all-case-start": {
         const {
-          url: urlMsg = "https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/SKILLED_WORK/3434-4632-5724-0670/",
+          url: urlMsg = "url-123456",
           caseId: caseIdMsg = "caseId-123456",
           workflowId: workflowIdMsg = "workflowId-123456",
           fill_data: fill_dataMsg,
@@ -287,8 +287,14 @@ class BackgroundEventManager {
             fill_data: fill_dataMsg,
           });
         } else {
+          // this.postConnectMessage({
+          //   type: `ginkgo-background-all-toast`,
+          //   content: "No matching page found.",
+          // });
           this.postConnectMessage({
-            type: `ginkgo-background-all-toast`,
+            type: `ginkgo-background-all-case-error`,
+            caseId: caseIdMsg,
+            workflowId: workflowIdMsg,
             content: "No matching page found.",
           });
         }

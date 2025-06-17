@@ -36,8 +36,6 @@ interface ISelectorResult {
 class PilotManager {
   static instance: PilotManager | null = null;
 
-  IS_MOCK = true;
-
   DELAY_MOCK_ANALYSIS = 2000;
   DELAY_STEP = 2000;
   DELAY_ACTION = 1000;
@@ -241,10 +239,6 @@ class PilotManager {
     const hash = md5(title + htmlCleansing);
 
     if (hash === pilotInfo?.repeatHash) {
-      BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-toast`,
-        content: pilotInfo?.repeatCurrent + 1,
-      });
       await this.updatePilotMap({
         workflowId,
         update: {

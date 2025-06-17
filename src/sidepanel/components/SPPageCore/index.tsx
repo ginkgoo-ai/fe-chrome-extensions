@@ -59,6 +59,17 @@ export default function SPPageCore(props: SPPageCoreProps) {
 
         break;
       }
+      case "ginkgo-background-all-case-error": {
+        const { content } = message || {};
+        messageAntd.open({
+          content,
+          type: "error",
+        });
+        break;
+      }
+      default: {
+        break;
+      }
     }
   });
 
