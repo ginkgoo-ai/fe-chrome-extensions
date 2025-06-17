@@ -168,10 +168,10 @@ class BackgroundEventManager {
       //   tabInfo: tab,
       // });
       // 判断是否存在 pilot
-      const pilotInfo = PilotManager.getPilot({ tabId: tab.id });
-      if (pilotInfo?.pilotStatus === PilotStatusEnum.OPEN) {
-        PilotManager.start({ tabInfo: tab });
-      }
+      // const pilotInfo = PilotManager.getPilot({ tabId: tab.id });
+      // if (pilotInfo?.pilotStatus === PilotStatusEnum.OPEN) {
+      //   PilotManager.start({ tabInfo: tab });
+      // }
     }
   };
 
@@ -270,34 +270,48 @@ class BackgroundEventManager {
           caseId: caseIdMsg = "caseId-123456",
           workflowId: workflowIdMsg = "workflowId-123456",
           fill_data: fill_dataMsg,
+          actionlistPre: actionlistPreMsg,
         } = otherInfo || {};
 
-        const resTabs = await ChromeManager.queryTabs({
+        console.log("ginkgo-sidepanel-all-case-start actionlistPre", message, otherInfo, actionlistPreMsg);
+
+        PilotManager.start({
           url: urlMsg,
+          caseId: caseIdMsg,
+          workflowId: workflowIdMsg,
+          fill_data: fill_dataMsg,
+          actionlistPre: actionlistPreMsg,
+          // tabInfo: tabInfo,
         });
-        const tabInfo = resTabs?.[0];
 
-        console.log("ginkgo-sidepanel-all-case-start", tabInfo);
+        // let tabInfo = null;
+        // let pilotInfo = PilotManager.getPilot({ caseId: caseIdMsg, workflowId: workflowIdMsg });
 
-        if (tabInfo) {
-          PilotManager.start({
-            caseId: caseIdMsg,
-            workflowId: workflowIdMsg,
-            tabInfo: tabInfo,
-            fill_data: fill_dataMsg,
-          });
-        } else {
-          // this.postConnectMessage({
-          //   type: `ginkgo-background-all-toast`,
-          //   content: "No matching page found.",
-          // });
-          this.postConnectMessage({
-            type: `ginkgo-background-all-case-error`,
-            caseId: caseIdMsg,
-            workflowId: workflowIdMsg,
-            content: "No matching page found.",
-          });
-        }
+        // if (pilotInfo) {
+        //   tabInfo = pilotInfo.tabInfo;
+        // } else {
+        //   const resTabs = await ChromeManager.queryTabs({
+        //     url: urlMsg,
+        //   });
+        //   tabInfo = resTabs?.[0];
+        // }
+
+        // if (tabInfo) {
+        //   PilotManager.start({
+        //     caseId: pilotInfo ? pilotInfo.caseId : caseIdMsg,
+        //     workflowId: pilotInfo ? pilotInfo.workflowId : workflowIdMsg,
+        //     tabInfo: tabInfo,
+        //     fill_data: pilotInfo ? pilotInfo.fill_data : fill_dataMsg,
+        //     actionlistPre: actionlistPreMsg,
+        //   });
+        // } else {
+        //   this.postConnectMessage({
+        //     type: `ginkgo-background-all-case-error`,
+        //     caseId: caseIdMsg,
+        //     workflowId: workflowIdMsg,
+        //     content: "No matching page found.",
+        //   });
+        // }
 
         // const pilotInfo = PilotManager.getPilot({ caseId: caseIdMsg, workflowId: workflowIdMsg });
 
@@ -347,8 +361,6 @@ class BackgroundEventManager {
           caseId: caseIdMsg,
           workflowId: workflowIdMsg,
         });
-
-        console.log("ginkgo-sidepanel-background-polit-query", PilotManager.pilotMap, pilotInfo);
 
         this.postConnectMessage({
           type: `ginkgo-background-all-polit-query`,

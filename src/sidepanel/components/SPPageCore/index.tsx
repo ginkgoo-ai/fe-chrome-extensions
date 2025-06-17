@@ -61,10 +61,12 @@ export default function SPPageCore(props: SPPageCoreProps) {
       }
       case "ginkgo-background-all-case-error": {
         const { content } = message || {};
-        messageAntd.open({
-          content,
-          type: "error",
-        });
+        if (content) {
+          messageAntd.open({
+            content,
+            type: "error",
+          });
+        }
         break;
       }
       default: {
@@ -94,11 +96,6 @@ export default function SPPageCore(props: SPPageCoreProps) {
 
   useEffect(() => {
     const { caseId: caseIdRouter, workflowId: workflowIdRouter } = paramsRouter || {};
-    console.log("send polit-query", {
-      type: "ginkgo-sidepanel-background-polit-query",
-      caseId: caseIdRouter,
-      workflowId: workflowIdRouter,
-    });
 
     try {
       GlobalManager.g_backgroundPort?.postMessage({

@@ -41,12 +41,6 @@ export enum PilotModeEnum {
   RUNNING = "RUNNING",
 }
 
-export enum StepModeEnum {
-  ACTION = "ACTION",
-  FORM = "FORM",
-  DECLARATION = "DECLARATION",
-}
-
 export type ActionResultType = "success" | "notFound" | "manual";
 
 export interface IProfileVaultDocumentType extends IOcrFileType {
@@ -113,7 +107,6 @@ export interface IStepActionType {
 }
 
 export interface IStepItemType extends StepProps {
-  mode: StepModeEnum;
   descriptionText: string;
   actioncurrent?: number;
   actionlist?: IActionItemType[];

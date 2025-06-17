@@ -22,11 +22,13 @@ export interface IWorkflowStepDataFormDataType {
         check: number;
         selector: string;
       }[];
+      selector: string;
       type: string; //'radio';
     };
     data: {
       name: string;
     };
+    type: string; // "interrupt";
   };
 }
 

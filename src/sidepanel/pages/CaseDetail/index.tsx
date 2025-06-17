@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useEventManager } from "@/common/hooks/useEventManager";
 import { usePageParams } from "@/common/hooks/usePageParams";
 import GlobalManager from "@/common/kits/GlobalManager";
-import { IPilotType } from "@/common/types/case";
+import UtilsManager from "@/common/kits/UtilsManager";
+import { IActionItemType, IPilotType } from "@/common/types/case";
 import { IWorkflowStepType } from "@/common/types/casePilot";
 import SPPageCore from "@/sidepanel/components/SPPageCore";
 import SPPageHeader from "@/sidepanel/components/SPPageHeader";
@@ -59,6 +60,10 @@ export default function CaseDetail() {
     });
   }, []);
 
+  const handleBtnBackClick = () => {
+    UtilsManager.navigateBack();
+  };
+
   const handleStepCollapseChange = async (stepKey: string) => {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
@@ -71,13 +76,36 @@ export default function CaseDetail() {
     }
   };
 
+  const handleStepContinueFilling = (params: { actionlistPre: IActionItemType[] }) => {
+    const { actionlistPre } = params || {};
+    const url = "https://visas-immigration.service.gov.uk/next"; // test
+
+    try {
+      GlobalManager.g_backgroundPort?.postMessage({
+        type: "ginkgo-sidepanel-all-case-start",
+        url,
+        caseId,
+        workflowId,
+        fill_data: pilotInfo?.fill_data,
+        actionlistPre,
+      });
+    } catch (error) {
+      console.error("[Ginkgo] Sidepanel handleContinueFilling error", error);
+    }
+  };
+
   return (
     <SPPageCore
       renderPageHeader={() => {
-        return <SPPageHeader title="CaseDetail" />;
+        return <SPPageHeader title={`CaseDetail-${pilotInfo?.pilotStatus}`} onBtnBackClick={handleBtnBackClick} />;
       }}
     >
-      <PilotStepBody pilotInfo={pilotInfo} stepListItems={stepListItems} onCollapseChange={handleStepCollapseChange} />
+      <PilotStepBody
+        pilotInfo={pilotInfo}
+        stepListItems={stepListItems}
+        onCollapseChange={handleStepCollapseChange}
+        onContinueFilling={handleStepContinueFilling}
+      />
     </SPPageCore>
   );
 }

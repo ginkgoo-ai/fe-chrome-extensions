@@ -41,10 +41,6 @@ class PilotManager {
   DELAY_ACTION = 1000;
   REPEAT_MAX = 5;
 
-  caseUrlMap: Record<string, string> = {
-    "demo": "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk",
-  };
-
   pilotMap: Map<string, IPilotType> = new Map();
   private updateLocks: Map<string, boolean> = new Map();
 
@@ -133,7 +129,7 @@ class PilotManager {
       workflowId,
     });
 
-    console.log("queryWorkflowList", resWorkflowList);
+    // console.log("queryWorkflowList", resWorkflowList);
 
     if (!resWorkflowList?.steps) {
       pilotInfo.pilotStatus = PilotStatusEnum.COMING_SOON;
@@ -179,7 +175,7 @@ class PilotManager {
     const stepsNew = pilotInfo.steps.map((item) => {
       return {
         ...item,
-        data: resWorkflowStepData?.data,
+        data: item.step_key === stepKey ? resWorkflowStepData?.data : item.data,
       };
     });
 
@@ -261,6 +257,11 @@ class PilotManager {
         content: "Repeat Max",
       });
       // Max
+      pilotInfo.pilotStatus = PilotStatusEnum.HOLD;
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgo-background-all-case-update`,
+        pilotInfo,
+      });
       return { result: false };
     }
 
@@ -425,16 +426,22 @@ class PilotManager {
     return { result: true };
   };
 
-  main = async (pilotInfo: IPilotType) => {
+  main = async (pilotInfo: IPilotType, actionlistPre?: IActionItemType[]) => {
     const { workflowId, tabInfo } = pilotInfo || {};
 
-    // if (!!pilotInfo?.timer) {
-    //   // 查询 workflow List
-    //   const resQueryWorkflowList = await this.queryWorkflowList({ workflowId });
-    //   if (!pilotInfo?.timer || !resQueryWorkflowList.result) {
-    //     return;
-    //   }
-    // }
+    if (!!pilotInfo?.timer && actionlistPre) {
+      // 执行动作
+      const resExecuteActionList = await this.executeActionList({ workflowId, tabInfo, actionlist: actionlistPre });
+      if (!pilotInfo?.timer || !resExecuteActionList.result) {
+        return;
+      }
+
+      // 等待
+      const resDelayStep = await this.delayStep({ workflowId });
+      if (!pilotInfo?.timer || !resDelayStep.result) {
+        return;
+      }
+    }
 
     // if (0 === 0) {
     //   return;
@@ -491,7 +498,7 @@ class PilotManager {
     const { caseId, workflowId, fill_data } = params || {};
 
     const tabInfo = await ChromeManager.createTab({
-      url: this.caseUrlMap[caseId] || this.caseUrlMap.demo,
+      url: "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk",
       active: false,
     });
     const pilotInfo = {
@@ -517,16 +524,47 @@ class PilotManager {
     });
   };
 
-  start = async (params: { tabInfo: chrome.tabs.Tab; caseId?: string; workflowId?: string; fill_data?: Record<string, unknown> }) => {
-    const { tabInfo, caseId = "", workflowId = "", fill_data = {} } = params || {};
-    let pilotInfo = this.getPilot({ tabId: tabInfo.id });
+  start = async (params: {
+    url?: string;
+    caseId?: string;
+    workflowId?: string;
+    fill_data?: Record<string, unknown>;
+    actionlistPre?: IActionItemType[];
+    tabInfo?: chrome.tabs.Tab;
+  }) => {
+    const { url, caseId = "", workflowId = "", fill_data = {}, actionlistPre, tabInfo } = params || {};
+    // let pilotInfo = this.getPilot({ tabId: tabInfo.id });
 
-    if (!pilotInfo) {
+    console.log("start", actionlistPre);
+
+    const resTabs = await ChromeManager.queryTabs({
+      url,
+    });
+    const tabInfoReal = resTabs?.[0] || tabInfo;
+
+    if (!tabInfoReal) {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgo-background-all-case-error`,
+        caseId,
+        workflowId,
+        content: "No matching page found.",
+      });
+      return;
+    }
+
+    let pilotInfo = this.getPilot({ tabId: tabInfoReal.id });
+
+    if (pilotInfo) {
+      if (pilotInfo.timer) {
+        pilotInfo.repeatCurrent = 0;
+        clearTimeout(pilotInfo.timer);
+      }
+    } else {
       pilotInfo = this.genPilot({
         caseId,
         workflowId,
         fill_data,
-        tabInfo,
+        tabInfo: tabInfoReal,
         timer: null,
         pilotStatus: PilotStatusEnum.HOLD,
         steps: [],
@@ -537,17 +575,19 @@ class PilotManager {
       });
       this.pilotMap.set(workflowId, pilotInfo);
     }
-    // pilotInfo.tabInfo = tabInfo; // update tabInfo
 
-    const timer = setTimeout(async () => {
-      await this.main(pilotInfo);
-      clearTimeout(timer);
+    pilotInfo.timer = setTimeout(async () => {
+      await this.main(pilotInfo, actionlistPre);
+      if (pilotInfo.timer) {
+        pilotInfo.repeatCurrent = 0;
+        clearTimeout(pilotInfo.timer);
+      }
     }, 0);
 
-    await this.updatePilotMap({
-      workflowId: pilotInfo.workflowId,
-      update: { timer, pilotStatus: PilotStatusEnum.HOLD },
-    });
+    // await this.updatePilotMap({
+    //   workflowId: pilotInfo.workflowId,
+    //   update: { pilotStatus: PilotStatusEnum.HOLD },
+    // });
   };
 
   stop = (params: { workflowId: string }) => {

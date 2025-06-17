@@ -1,14 +1,15 @@
 import { Steps, Tooltip } from "antd";
 import { memo } from "react";
-import { IWorkflowStepDataFormDataType, IWorkflowStepType } from "@/common/types/casePilot";
+import { IWorkflowStepDataFormDataType } from "@/common/types/casePilot";
 
-interface PilotStepBodyStepProps {
-  itemStep: IWorkflowStepType;
+interface PilotStepBodyNormalStepProps {
+  formDataNormal: IWorkflowStepDataFormDataType[];
+  stepKey: string;
   indexStep: number;
 }
 
-function PurePilotStepBodyStep(props: PilotStepBodyStepProps) {
-  const { itemStep, indexStep } = props;
+function PurePilotStepBodyNormalStep(props: PilotStepBodyNormalStepProps) {
+  const { formDataNormal, stepKey, indexStep } = props;
 
   const calcActionItem = (item: IWorkflowStepDataFormDataType, indexStep: number, indexAction: number) => {
     const label = item.question.data.name;
@@ -35,15 +36,14 @@ function PurePilotStepBodyStep(props: PilotStepBodyStepProps) {
 
   return (
     <Steps
-      className="border-bottom"
       progressDot
       direction="vertical"
       current={0}
-      items={itemStep?.data?.form_data?.map((itemFormData: IWorkflowStepDataFormDataType, indexFormData: number) => {
+      items={formDataNormal?.map((itemFormData: IWorkflowStepDataFormDataType, indexFormData: number) => {
         return calcActionItem(itemFormData, indexStep, indexFormData);
       })}
     />
   );
 }
 
-export const PilotStepBodyStep = memo(PurePilotStepBodyStep);
+export const PilotStepBodyNormalStep = memo(PurePilotStepBodyNormalStep);

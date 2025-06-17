@@ -4,21 +4,21 @@ import { Check } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { IconLoading, IconStepDeclaration, IconStepDot, IconStepDown } from "@/common/components/ui/icon";
 import { cn } from "@/common/kits";
-import { IPilotType, StepModeEnum } from "@/common/types/case";
+import { IActionItemType, IPilotType } from "@/common/types/case";
 import { IWorkflowStepType } from "@/common/types/casePilot";
 import { PilotStepBodyDeclaration } from "@/sidepanel/components/case/PilotStepBodyDeclaration";
-import { PilotStepBodyForm } from "@/sidepanel/components/case/PilotStepBodyForm";
-import { PilotStepBodyStep } from "@/sidepanel/components/case/PilotStepBodyStep";
+import { PilotStepBodyNormal } from "@/sidepanel/components/case/PilotStepBodyNormal";
 import "./index.css";
 
 interface PilotStepBodyProps {
   pilotInfo: IPilotType | null;
   stepListItems: IWorkflowStepType[];
   onCollapseChange: (key: string) => void;
+  onContinueFilling: (params: { actionlistPre: IActionItemType[] }) => void;
 }
 
 function PurePilotStepBody(props: PilotStepBodyProps) {
-  const { pilotInfo, stepListItems, onCollapseChange } = props;
+  const { pilotInfo, stepListItems, onCollapseChange, onContinueFilling } = props;
 
   const [stepListActiveKeyBody, setStepListActiveKeyBody] = useState<string[]>([]);
   const [stepListItemsBody, setStepListItemsBody] = useState<CollapseProps["items"]>([]);
@@ -27,16 +27,24 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
     // 找出 key 中比 stepListActiveKeyBody 多的元素
     const newKeys = key.filter((k) => !stepListActiveKeyBody.includes(k));
     if (newKeys.length > 0) {
-      // 如果有新增的 key，则调用 onCollapseChange
-      onCollapseChange?.(newKeys[0]);
+      // 展开操作：如果有新增的 key, 且是可展开的项，则调用 onCollapseChange，并展开
+      const newKey = newKeys[0];
+      const newStep = stepListItems.find((item) => {
+        return item.step_key === newKey && ["ACTIVE", "COMPLETED_SUCCESS"].includes(item.status);
+      });
+      if (newStep) {
+        onCollapseChange?.(newKey);
+        setStepListActiveKeyBody(key);
+      }
+    } else {
+      // 收起操作
+      setStepListActiveKeyBody(key);
     }
-    console.log("handleCollapseChange", key);
-    setStepListActiveKeyBody(key);
   };
 
   // update collapse
   useEffect(() => {
-    console.log("PurePilotStepBody", stepListItems);
+    // console.log("PurePilotStepBody", stepListItems);
     if (!stepListItems) {
       return;
     }
@@ -89,20 +97,13 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
         return null;
       }
 
-      let itemStepMode = StepModeEnum.ACTION;
-      if (itemStep.step_key === "Declaration") {
-        itemStepMode = StepModeEnum.DECLARATION;
-      } else {
-        itemStepMode = StepModeEnum.FORM;
-      }
-
       return (
         <div className="border-bottom">
-          {{
-            [StepModeEnum.ACTION]: <PilotStepBodyStep itemStep={itemStep} indexStep={indexStep} />,
-            [StepModeEnum.FORM]: <PilotStepBodyForm itemStep={itemStep} indexStep={indexStep} />,
-            [StepModeEnum.DECLARATION]: <PilotStepBodyDeclaration pilotInfo={pilotInfo} />,
-          }[itemStepMode] || null}
+          {itemStep.step_key === "Declaration" ? (
+            <PilotStepBodyDeclaration pilotInfo={pilotInfo} />
+          ) : (
+            <PilotStepBodyNormal itemStep={itemStep} indexStep={indexStep} onContinueFilling={onContinueFilling} />
+          )}
         </div>
       );
     };
@@ -118,36 +119,6 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
       })
     );
   }, [stepListItems]);
-
-  // useEffect(() => {
-  //   setStepListActiveKeyBody(prev => {
-  //     const prevArray = Array.isArray(prev) ? prev : [prev];
-  //     const strStepListCurrent = String(stepListCurrent);
-
-  //     return prevArray.includes(strStepListCurrent)
-  //       ? prevArray
-  //       : [...prevArray, strStepListCurrent];
-  //   });
-
-  //   // setStepListCurrentBody(stepListCurrent);
-  // }, [stepListCurrent]);
-
-  // const handleBtnDownloadClick = async () => {
-  //   console.log('handleBtnDownloadClick', pilotInfo);
-  //   if (pilotInfo?.pdfUrl && pilotInfo?.cookiesStr) {
-  //     const headers = new AxiosHeaders();
-  //     // headers.set('Accept', 'application/octet-stream');
-  //     headers.set('withCredentials', true);
-  //     headers.set('Cookie', pilotInfo.cookiesStr);
-
-  //     const resDownloadCustomFile = await downloadCustomFile({
-  //       url: pilotInfo.pdfUrl,
-  //       headers,
-  //     });
-
-  //     // await saveBlob({ blobPart: resDownloadCustomFile });
-  //   }
-  // };
 
   return stepListItemsBody && stepListItemsBody.length > 0 ? (
     <div className="relative box-border flex w-full items-center justify-start rounded-lg border border-[#D8DFF5] p-2">

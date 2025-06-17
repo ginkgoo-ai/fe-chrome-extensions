@@ -22,7 +22,9 @@ export default function CasePortal() {
 
   const handleCardClick = (itemCase: ICaseItemType) => {
     const workflowId = "1221f2f4-5311-4e15-b7dd-aecd4f8d9401";
-    const url = "https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/SKILLED_WORK/3434-4632-5724-0670/";
+    const url = "https://visas-immigration.service.gov.uk/next"; // test
+    // const url = "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk"; // start
+    // const url = "https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/SKILLED_WORK/3434-4632-5724-0670/"; // uk
 
     try {
       GlobalManager.g_backgroundPort?.postMessage({

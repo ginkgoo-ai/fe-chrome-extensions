@@ -21,7 +21,7 @@ export const GinkgoApi = {
   workflowsProcessForm: "/workflows/:workflowId/process-form",
 };
 
-const IS_MOCK = false;
+const IS_MOCK = true;
 const LOCAL_BASE_URL = "http://192.168.31.205:6011"; // David
 const baseUrl = LOCAL_BASE_URL || GlobalManager.g_API_CONFIG.apiServerUrl;
 
