@@ -1,33 +1,12 @@
 import md5 from "blueimp-md5";
+import { cloneDeep } from "lodash";
 import BackgroundEventManager from "@/common/kits/BackgroundEventManager";
 import ChromeManager from "@/common/kits/ChromeManager";
 import HTMLManager from "@/common/kits/HTMLManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
-import { IActionItemType, PilotStatusEnum } from "@/common/types/case";
-import { IWorkflowStepType } from "@/common/types/casePilot";
-
-interface IPilotType {
-  caseId: string;
-  workflowId: string;
-  fill_data: Record<string, unknown>;
-  tabInfo: chrome.tabs.Tab;
-  timer: NodeJS.Timeout | null;
-  pilotStatus: PilotStatusEnum;
-  steps: IWorkflowStepType[];
-  repeatHash: string;
-  repeatCurrent: number;
-  pdfUrl: string;
-  cookiesStr: string;
-}
-
-interface IStepResultType {
-  result: boolean;
-}
-
-interface ISelectorResult {
-  [key: string]: unknown;
-}
+import { IActionItemType } from "@/common/types/case";
+import { IPilotType, ISelectorResult, IStepResultType, PilotStatusEnum } from "@/common/types/casePilot";
 
 /**
  * @description 处理HTML管理器
@@ -143,6 +122,8 @@ class PilotManager {
     await this.updatePilotMap({
       workflowId,
       update: {
+        progress_file_id: resWorkflowList?.progress_file_id,
+        dummy_data_usage: resWorkflowList?.dummy_data_usage,
         steps: resWorkflowList?.steps,
       },
     });
@@ -254,7 +235,8 @@ class PilotManager {
     if (Number(pilotInfo?.repeatCurrent) > this.REPEAT_MAX) {
       BackgroundEventManager.postConnectMessage({
         type: `ginkgo-background-all-toast`,
-        content: "Repeat Max",
+        typeToast: "info",
+        contentToast: "Repeat Max",
       });
       // Max
       pilotInfo.pilotStatus = PilotStatusEnum.HOLD;
@@ -426,72 +408,105 @@ class PilotManager {
     return { result: true };
   };
 
+  uploadAndBindPDF = async (params: { workflowId: string; pdfUrl: string; cookiesStr: string }) => {
+    const { workflowId, pdfUrl, cookiesStr } = params || {};
+
+    const resFilesThirdPart = await Api.Ginkgo.postFilesThirdPart({
+      thirdPartUrl: pdfUrl,
+      cookie: cookiesStr,
+    });
+
+    // console.log("uploadPdf", resFilesThirdPart);
+    if (!resFilesThirdPart?.id) {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgo-background-all-toast`,
+        typeToast: "error",
+        contentToast: "Upload PDF failed.",
+      });
+      return;
+    }
+
+    const resWorkflowsUploadProgressFile = await Api.Ginkgo.postWorkflowsUploadProgressFile({
+      workflowId,
+      fileId: resFilesThirdPart.id,
+    });
+
+    console.log("resWorkflowsUploadProgressFile", resWorkflowsUploadProgressFile);
+  };
+
   main = async (pilotInfo: IPilotType, actionlistPre?: IActionItemType[]) => {
     const { workflowId, tabInfo } = pilotInfo || {};
+    const timerSource = cloneDeep(pilotInfo?.timer);
 
-    if (!!pilotInfo?.timer && actionlistPre) {
+    if (timerSource === pilotInfo?.timer && actionlistPre) {
       // 执行动作
       const resExecuteActionList = await this.executeActionList({ workflowId, tabInfo, actionlist: actionlistPre });
-      if (!pilotInfo?.timer || !resExecuteActionList.result) {
+      if (timerSource === pilotInfo?.timer || !resExecuteActionList.result) {
         return;
       }
 
       // 等待
       const resDelayStep = await this.delayStep({ workflowId });
-      if (!pilotInfo?.timer || !resDelayStep.result) {
+      if (timerSource === pilotInfo?.timer || !resDelayStep.result) {
         return;
       }
     }
 
-    // if (0 === 0) {
-    //   return;
-    // }
-
-    while (!!pilotInfo?.timer) {
+    while (timerSource === pilotInfo?.timer) {
+      console.log("main 0");
       // 查询 workflow List
       const resQueryWorkflowList = await this.queryWorkflowList({ workflowId });
-      if (!pilotInfo?.timer || !resQueryWorkflowList.result) {
-        return;
+      if (timerSource !== pilotInfo?.timer || !resQueryWorkflowList.result) {
+        break;
       }
 
+      console.log("main 1");
       // 查询页面
       const resQueryHtmlInfo = await this.queryHtmlInfo({ workflowId, tabInfo });
-      if (!pilotInfo?.timer || !resQueryHtmlInfo.result) {
+      if (timerSource !== pilotInfo?.timer || !resQueryHtmlInfo.result) {
         break;
       }
 
+      console.log("main 2");
       // 查询cookies
       const resQueryCookies = await this.queryCookies({ workflowId, tabInfo });
-      if (!pilotInfo?.timer || !resQueryCookies.result) {
+      if (timerSource !== pilotInfo?.timer || !resQueryCookies.result) {
         break;
       }
 
+      console.log("main 3");
       // 查询pdf Url
       const resQueryDom = await this.queryDom({ workflowId, tabInfo });
-      if (!pilotInfo?.timer || !resQueryDom.result) {
+      if (timerSource !== pilotInfo?.timer || !resQueryDom.result) {
         break;
       }
 
+      console.log("main 4");
       // 分析页面
       const { title, htmlCleansing } = resQueryHtmlInfo;
       const resQueryActionList = await this.queryActionList({ workflowId, htmlCleansing });
-      if (!pilotInfo?.timer || !resQueryActionList.result) {
+      if (timerSource !== pilotInfo?.timer || !resQueryActionList.result) {
         break;
       }
 
+      console.log("main 5");
       // 执行动作
       const { actionlist } = resQueryActionList;
       const resExecuteActionList = await this.executeActionList({ workflowId, tabInfo, actionlist });
-      if (!pilotInfo?.timer || !resExecuteActionList.result) {
+      if (timerSource !== pilotInfo?.timer || !resExecuteActionList.result) {
         break;
       }
 
+      console.log("main 6");
       // 等待
       const resDelayStep = await this.delayStep({ workflowId });
-      if (!pilotInfo?.timer || !resDelayStep.result) {
+      if (timerSource !== pilotInfo?.timer || !resDelayStep.result) {
         break;
       }
+
+      console.log("main 7");
     }
+    console.log("main 8");
   };
 
   open = async (params: { caseId: string; workflowId: string; fill_data: Record<string, unknown> }) => {
@@ -505,6 +520,8 @@ class PilotManager {
       caseId,
       workflowId,
       fill_data,
+      progress_file_id: "",
+      dummy_data_usage: [],
       tabInfo,
       timer: null,
       pilotStatus: PilotStatusEnum.OPEN,
@@ -564,6 +581,8 @@ class PilotManager {
         caseId,
         workflowId,
         fill_data,
+        progress_file_id: "",
+        dummy_data_usage: [],
         tabInfo: tabInfoReal,
         timer: null,
         pilotStatus: PilotStatusEnum.HOLD,
@@ -579,10 +598,13 @@ class PilotManager {
     pilotInfo.timer = setTimeout(async () => {
       await this.main(pilotInfo, actionlistPre);
       if (pilotInfo.timer) {
-        pilotInfo.repeatCurrent = 0;
-        clearTimeout(pilotInfo.timer);
+        await this.stop({ workflowId });
       }
     }, 0);
+
+    if (tabInfoReal.id) {
+      ChromeManager.updateTab(tabInfoReal.id, { active: true });
+    }
 
     // await this.updatePilotMap({
     //   workflowId: pilotInfo.workflowId,
@@ -590,24 +612,38 @@ class PilotManager {
     // });
   };
 
-  stop = (params: { workflowId: string }) => {
-    // 实现你的任务逻辑
+  stop = async (params: { workflowId: string }) => {
     const { workflowId } = params || {};
     const pilotInfo = this.pilotMap.get(workflowId);
 
-    if (pilotInfo) {
-      if (pilotInfo.timer) {
-        clearTimeout(pilotInfo.timer);
-        pilotInfo.timer = null;
-      }
+    console.log("stop", workflowId, pilotInfo);
 
-      // 会覆盖报错状态
-      pilotInfo.pilotStatus = PilotStatusEnum.HOLD;
-      pilotInfo.repeatHash = "";
-      pilotInfo.repeatCurrent = 0;
-      BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-case-update`,
-        pilotInfo,
+    if (!pilotInfo) {
+      return;
+    }
+
+    if (pilotInfo?.timer) {
+      console.log("stop 1");
+      clearTimeout(pilotInfo.timer);
+      pilotInfo.timer = null;
+    }
+
+    console.log("stop 2");
+    // 会覆盖报错状态
+    pilotInfo.pilotStatus = PilotStatusEnum.HOLD;
+    pilotInfo.repeatHash = "";
+    pilotInfo.repeatCurrent = 0;
+    BackgroundEventManager.postConnectMessage({
+      type: `ginkgo-background-all-case-update`,
+      pilotInfo,
+    });
+
+    // 上传 pdf 文件 Cookie ，以及将文件 fileId 同 workflow 绑定
+    if (pilotInfo?.pdfUrl && pilotInfo.cookiesStr) {
+      await this.uploadAndBindPDF({
+        workflowId,
+        pdfUrl: pilotInfo?.pdfUrl,
+        cookiesStr: pilotInfo.cookiesStr,
       });
     }
 

@@ -2,7 +2,6 @@
 import ChromeManager from "@/common/kits/ChromeManager";
 import FetchManager from "@/common/kits/FetchManager";
 import PilotManager from "@/common/kits/PilotManager";
-import { PilotStatusEnum } from "@/common/types/case";
 
 interface IMessageType {
   type: string;
@@ -275,7 +274,7 @@ class BackgroundEventManager {
 
         console.log("ginkgo-sidepanel-all-case-start actionlistPre", message, otherInfo, actionlistPreMsg);
 
-        PilotManager.start({
+        await PilotManager.start({
           url: urlMsg,
           caseId: caseIdMsg,
           workflowId: workflowIdMsg,
@@ -334,6 +333,8 @@ class BackgroundEventManager {
       case "ginkgo-page-all-case-stop":
       case "ginkgo-sidepanel-all-case-stop": {
         const { workflowId: workflowIdMsg } = otherInfo || {};
+
+        console.log("ginkgo-sidepanel-all-case-stop", workflowIdMsg);
 
         PilotManager.stop({ workflowId: workflowIdMsg });
         break;

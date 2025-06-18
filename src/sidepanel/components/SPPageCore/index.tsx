@@ -35,7 +35,7 @@ export default function SPPageCore(props: SPPageCoreProps) {
     switch (typeMsg) {
       case "ginkgo-background-all-polit-query": {
         // console.log("PageCoreSidePanel useEventManager", pilotInfoMsg);
-        if (pilotInfoMsg) {
+        if (pilotInfoMsg?.timer) {
           const { caseId: caseIdMsg, workflowId: workflowIdMsg } = pilotInfoMsg || {};
           routerCompleted(
             UtilsManager.router2url("/case-detail", {
@@ -50,12 +50,12 @@ export default function SPPageCore(props: SPPageCoreProps) {
         break;
       }
       case "ginkgo-background-all-toast": {
-        const { content } = message || {};
+        const { typeToast, contentToast } = message || {};
         messageAntd.open({
-          content,
-          type: "info",
+          type: typeToast,
+          content: contentToast,
         });
-        console.log("ginkgo-background-all-toast", content);
+        console.log("ginkgo-background-all-toast", typeToast, contentToast);
 
         break;
       }

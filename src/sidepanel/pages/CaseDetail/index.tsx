@@ -3,11 +3,12 @@ import { useEventManager } from "@/common/hooks/useEventManager";
 import { usePageParams } from "@/common/hooks/usePageParams";
 import GlobalManager from "@/common/kits/GlobalManager";
 import UtilsManager from "@/common/kits/UtilsManager";
-import { IActionItemType, IPilotType } from "@/common/types/case";
-import { IWorkflowStepType } from "@/common/types/casePilot";
+import { IActionItemType } from "@/common/types/case";
+import { IPilotType, IWorkflowStepType } from "@/common/types/casePilot";
 import SPPageCore from "@/sidepanel/components/SPPageCore";
 import SPPageHeader from "@/sidepanel/components/SPPageHeader";
 import { PilotStepBody } from "@/sidepanel/components/case/PilotStepBody";
+import { PilotStepHeader } from "@/sidepanel/components/case/PilotStepHeader";
 import { stepListItemsDeclaration } from "@/sidepanel/pages/CaseDetail/config";
 import "./index.less";
 
@@ -64,6 +65,17 @@ export default function CaseDetail() {
     UtilsManager.navigateBack();
   };
 
+  const handleBtnPauseClick = () => {
+    try {
+      GlobalManager.g_backgroundPort?.postMessage({
+        type: "ginkgo-sidepanel-all-case-stop",
+        workflowId,
+      });
+    } catch (error) {
+      console.error("[Ginkgo] Sidepanel handleCardClick error", error);
+    }
+  };
+
   const handleStepCollapseChange = async (stepKey: string) => {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
@@ -97,7 +109,12 @@ export default function CaseDetail() {
   return (
     <SPPageCore
       renderPageHeader={() => {
-        return <SPPageHeader title={`CaseDetail-${pilotInfo?.pilotStatus}`} onBtnBackClick={handleBtnBackClick} />;
+        return (
+          <div className="flex w-full flex-col">
+            <SPPageHeader title={`CaseDetail-${pilotInfo?.pilotStatus}`} onBtnBackClick={handleBtnBackClick} />
+            <PilotStepHeader pilotInfo={pilotInfo} onBtnPauseClick={handleBtnPauseClick} />
+          </div>
+        );
       }}
     >
       <PilotStepBody

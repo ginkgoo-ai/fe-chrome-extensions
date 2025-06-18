@@ -24,6 +24,7 @@ export default function CasePortal() {
     const workflowId = "1221f2f4-5311-4e15-b7dd-aecd4f8d9401";
     const url = "https://visas-immigration.service.gov.uk/next"; // test
     // const url = "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk"; // start
+    // const url = "https://visas-immigration.service.gov.uk/resume/3a0bec84-a910-4f74-b4de-763b458e770e"; // return
     // const url = "https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/SKILLED_WORK/3434-4632-5724-0670/"; // uk
 
     try {

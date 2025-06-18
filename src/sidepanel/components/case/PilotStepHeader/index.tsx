@@ -1,7 +1,10 @@
 import { MouseEventHandler, memo } from "react";
 import { Button } from "@/common/components/ui/button";
 import { IconAutoFill, IconCompleted, IconInfo, IconPause, IconView } from "@/common/components/ui/icon";
-import { IPilotType, PilotStatusEnum } from "@/common/types/case";
+import GlobalManager from "@/common/kits/GlobalManager";
+import UtilsManager from "@/common/kits/UtilsManager";
+import Api from "@/common/kits/api";
+import { IPilotType, PilotStatusEnum } from "@/common/types/casePilot";
 
 interface PilotStepHeaderProps {
   pilotInfo: IPilotType | null;
@@ -15,16 +18,39 @@ function PurePilotStepHeader(props: PilotStepHeaderProps) {
   //   !!pilotInfo &&
   //   [PilotStatusEnum.PAUSE, PilotStatusEnum.COMPLETED].includes(pilotInfo.pilotStatus);
 
-  const handleBtnDownloadPdfClick = () => {
+  const handleBtnDownloadPdfClick = async () => {
     console.log("handleBtnDownloadPdfClick");
+    if (!pilotInfo?.progress_file_id) {
+      return;
+    }
+    const resFilesPDFHighlight = await Api.Ginkgo.postFilesPDFHighlight({
+      fileId: pilotInfo?.progress_file_id,
+      highlightData: pilotInfo?.dummy_data_usage,
+    });
+    console.log("handleBtnDownloadPdfClick", resFilesPDFHighlight);
+    if (resFilesPDFHighlight) {
+      UtilsManager.saveBlob({
+        blobPart: resFilesPDFHighlight,
+      });
+    }
   };
 
-  const handleBtnGotoOfficialClick = () => {
-    console.log("handleBtnGotoOfficialClick");
-  };
+  // const handleBtnGotoOfficialClick = () => {
+  //   console.log("handleBtnGotoOfficialClick");
+  // };
 
   const handleBtnViewClick = () => {
-    console.log("handleBtnViewClick");
+    if (!!pilotInfo?.tabInfo?.url) {
+      try {
+        GlobalManager.g_backgroundPort?.postMessage({
+          type: "ginkgo-page-background-tab-update",
+          tabId: pilotInfo?.tabInfo?.id,
+          updateProperties: { active: true },
+        });
+      } catch (error) {
+        console.error("[Ginkgo] Sidepanel handleBtnJumpClick error", error);
+      }
+    }
   };
 
   const renderPilotStepHeaderCompleted = () => {
@@ -69,9 +95,10 @@ function PurePilotStepHeader(props: PilotStepHeaderProps) {
 
                 <div className="h-3.5 w-0.5 flex-[0_0_auto] bg-[#CDA4F7]"></div>
 
-                <Button variant="ghost" className="w-0 flex-[1_1_auto]" onClick={handleBtnGotoOfficialClick}>
+                <Button variant="ghost" className="w-0 flex-[1_1_auto]" onClick={handleBtnViewClick}>
                   <IconView size={20} />
-                  <span className="text-primary truncate">Go to Official Submission Portal</span>
+                  <span className="text-primary truncate">Inspect Current Step</span>
+                  {/* <span className="text-primary truncate">Go to Official Submission Portal</span> */}
                 </Button>
               </div>
             </div>

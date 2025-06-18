@@ -340,6 +340,31 @@ class UtilsManager {
   navigateBack = () => {
     window.history.back();
   };
+
+  clickTagA = (params: { url: string; fileName?: string; target?: string }) => {
+    const { url, fileName, target } = params || {};
+    const a = document.createElement("a");
+
+    a.href = url;
+    if (fileName) {
+      a.download = fileName;
+    }
+    if (target) {
+      a.target = target;
+    }
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  saveBlob = (params: { blobPart: BlobPart; fileName?: string }) => {
+    const { blobPart, fileName } = params;
+    const blob = new Blob([blobPart]);
+
+    this.clickTagA({ url: window.URL.createObjectURL(blob), fileName });
+  };
 }
 
 export default UtilsManager.getInstance();
