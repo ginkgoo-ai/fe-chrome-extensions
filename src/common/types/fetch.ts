@@ -5,7 +5,7 @@ export interface IRequestConfigType {
   headers?: Record<string, string>;
   params?: Record<string, any>;
   data?: Record<string, any>;
-  query?: Record<string, any>;
+  // query?: Record<string, any>;
   body?: string | FormData | URLSearchParams | Record<string, any>;
   formData?: boolean;
   mode?: RequestMode;

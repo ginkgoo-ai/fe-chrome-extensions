@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import CaseManager from "@/common/kits/CaseManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import UtilsManager from "@/common/kits/UtilsManager";
+import Api from "@/common/kits/api";
 import { ICaseItemType } from "@/common/types/case";
+import { WorkflowTypeEnum } from "@/common/types/casePilot";
 import SPPageCore from "@/sidepanel/components/SPPageCore";
 import SPPageHeader from "@/sidepanel/components/SPPageHeader";
 import { CardCase } from "@/sidepanel/components/case/CardCase";
@@ -11,13 +13,29 @@ import { mockCaseList } from "./mock";
 
 export default function CasePortal() {
   const [caseList, setCaseList] = useState<ICaseItemType[]>([]);
+  const [workflowDefinitionId, setWorkflowDefinitionId] = useState<string>("");
+
+  const init = async () => {
+    const caseListTmp = mockCaseList.map((item) => {
+      return CaseManager.parseCaseInfo(item);
+    });
+
+    setCaseList(caseListTmp);
+
+    const resWorkflowDefinitions = await Api.Ginkgo.getWorkflowDefinitions({
+      page: 1,
+      page_size: 1,
+      workflow_type: WorkflowTypeEnum.VISA,
+    });
+
+    if (resWorkflowDefinitions?.items?.length > 0) {
+      const item = resWorkflowDefinitions?.items[0];
+      setWorkflowDefinitionId(item.workflow_definition_id);
+    }
+  };
 
   useEffect(() => {
-    setCaseList(
-      mockCaseList.map((item) => {
-        return CaseManager.parseCaseInfo(item);
-      })
-    );
+    init();
   }, []);
 
   const handleCardClick = (itemCase: ICaseItemType) => {
@@ -50,14 +68,15 @@ export default function CasePortal() {
   return (
     <SPPageCore
       renderPageHeader={() => {
-        return <SPPageHeader title="CasePortal" />;
+        return <SPPageHeader title="Case" />;
       }}
     >
-      <div className="flex flex-col gap-3">
+      <div className="-mt-4 flex flex-col gap-3">
         {caseList.map((itemCase, indexCase) => (
           <CardCase
             key={`case-${indexCase}`}
             itemCase={itemCase}
+            workflowDefinitionId={workflowDefinitionId}
             onCardClick={() => handleCardClick(itemCase)}
             // onCardEditClick={() => handleCardEditClick(itemCase)}
           />

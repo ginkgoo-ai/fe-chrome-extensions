@@ -90,7 +90,7 @@ class PilotManager {
     }
   };
 
-  queryWorkflowList = async (params: { workflowId: string }): Promise<IStepResultType> => {
+  queryWorkflowDetail = async (params: { workflowId: string }): Promise<IStepResultType> => {
     const { workflowId = "" } = params || {};
     const pilotInfo = this.getPilot({ workflowId });
 
@@ -104,13 +104,13 @@ class PilotManager {
       pilotInfo,
     });
 
-    const resWorkflowList = await Api.Ginkgo.getWorkflowList({
+    const resWorkflowDetail = await Api.Ginkgo.getWorkflowDetail({
       workflowId,
     });
 
-    // console.log("queryWorkflowList", resWorkflowList);
+    // console.log("queryWorkflowDetail", resWorkflowDetail);
 
-    if (!resWorkflowList?.steps) {
+    if (!resWorkflowDetail?.steps) {
       pilotInfo.pilotStatus = PilotStatusEnum.COMING_SOON;
       BackgroundEventManager.postConnectMessage({
         type: `ginkgo-background-all-case-update`,
@@ -122,9 +122,9 @@ class PilotManager {
     await this.updatePilotMap({
       workflowId,
       update: {
-        progress_file_id: resWorkflowList?.progress_file_id,
-        dummy_data_usage: resWorkflowList?.dummy_data_usage,
-        steps: resWorkflowList?.steps,
+        progress_file_id: resWorkflowDetail?.progress_file_id,
+        dummy_data_usage: resWorkflowDetail?.dummy_data_usage,
+        steps: resWorkflowDetail?.steps,
       },
     });
 
@@ -440,7 +440,14 @@ class PilotManager {
 
     if (timerSource === pilotInfo?.timer && actionlistPre) {
       // 执行动作
-      const resExecuteActionList = await this.executeActionList({ workflowId, tabInfo, actionlist: actionlistPre });
+      const resExecuteActionList = await this.executeActionList({
+        workflowId,
+        tabInfo,
+        actionlist: actionlistPre.concat({
+          selector: "input[id='submit']",
+          type: "click",
+        }),
+      });
       if (timerSource === pilotInfo?.timer || !resExecuteActionList.result) {
         return;
       }
@@ -455,8 +462,8 @@ class PilotManager {
     while (timerSource === pilotInfo?.timer) {
       console.log("main 0");
       // 查询 workflow List
-      const resQueryWorkflowList = await this.queryWorkflowList({ workflowId });
-      if (timerSource !== pilotInfo?.timer || !resQueryWorkflowList.result) {
+      const resQueryWorkflowDetail = await this.queryWorkflowDetail({ workflowId });
+      if (timerSource !== pilotInfo?.timer || !resQueryWorkflowDetail.result) {
         break;
       }
 

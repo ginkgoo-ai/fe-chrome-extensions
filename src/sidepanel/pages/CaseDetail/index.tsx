@@ -112,7 +112,9 @@ export default function CaseDetail() {
         return (
           <div className="flex w-full flex-col">
             <SPPageHeader title={`CaseDetail-${pilotInfo?.pilotStatus}`} onBtnBackClick={handleBtnBackClick} />
-            <PilotStepHeader pilotInfo={pilotInfo} onBtnPauseClick={handleBtnPauseClick} />
+            <div className="box-border w-full px-4">
+              <PilotStepHeader pilotInfo={pilotInfo} onBtnPauseClick={handleBtnPauseClick} />
+            </div>
           </div>
         );
       }}

@@ -83,7 +83,7 @@ function PurePilotStepBodyNormalInterrupt(props: PilotStepBodyNormalInterruptPro
       autoComplete="off"
     >
       {formDataNormal?.map((itemQuestion, indexQuestion) => {
-        const typeQuestion = itemQuestion?.question?.answer?.type?.toLocaleLowerCase();
+        const typeQuestion = itemQuestion?.question?.answer?.type?.toLocaleLowerCase() || "";
 
         if (!(itemQuestion?.question?.answer?.data?.length > 0)) {
           return null;

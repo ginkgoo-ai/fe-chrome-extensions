@@ -1,7 +1,7 @@
 const themeInfoDefault = {
   DEFAULT: {
     customStyle: {
-      "--color-primary": "#ec6d2d",
+      "--color-primary": "#0061FD", // "#ec6d2d",
     },
   },
 };

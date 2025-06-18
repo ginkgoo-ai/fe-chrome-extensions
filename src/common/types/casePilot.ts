@@ -21,6 +21,15 @@ export enum PilotModeEnum {
   RUNNING = "RUNNING",
 }
 
+export enum WorkflowTypeEnum {
+  VISA = "visa",
+  PASSPORT = "passport",
+  IMMIGRATION = "immigration",
+  STUDENT_VISA = "student_visa",
+  WORK_PERMIT = "work_permit",
+  FAMILY_VISA = "family_visa",
+}
+
 export interface IPilotType {
   caseId: string;
   workflowId: string;
@@ -45,22 +54,39 @@ export interface ISelectorResult {
   [key: string]: unknown;
 }
 
-export interface IGetWorkflowListType {
+export interface IGetWorkflowDefinitionsParamsType {
+  page: number;
+  page_size: number;
+  workflow_type: WorkflowTypeEnum;
+}
+
+export interface IGetWorkflowListParamsType {
+  userId: string;
+  caseId: string;
+}
+
+export interface IGetWorkflowDetailParamsType {
   workflowId: string;
 }
 
-export interface IGetWorkflowStepDataType {
+export interface IGetWorkflowStepDataParamsType {
   workflowId: string;
   stepKey: string;
 }
 
-export interface IWorkflowsProcessFormType {
+export interface ICreateWorkflowParamsType {
+  user_id: string;
+  case_id: string;
+  workflow_definition_id: string;
+}
+
+export interface IWorkflowsProcessFormParamsType {
   workflowId: string;
   message: string;
   fill_data: Record<string, unknown>;
 }
 
-export interface IWorkflowsUploadProgressFileType {
+export interface IWorkflowsUploadProgressFileParamsType {
   workflowId: string;
   fileId: string;
 }

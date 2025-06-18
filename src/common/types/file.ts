@@ -68,12 +68,12 @@ export interface IFileItemType {
   ocrResult?: Record<string, string>[];
 }
 
-export interface IFilesThirdPartType {
+export interface IFilesThirdPartParamsType {
   thirdPartUrl: string;
   cookie: string;
 }
 
-export interface IFilesPDFHighlightType {
+export interface IFilesPDFHighlightParamsType {
   fileId: string;
   highlightData: IWorkflowDummyDataType[];
 }

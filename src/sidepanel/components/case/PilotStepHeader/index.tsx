@@ -5,6 +5,7 @@ import GlobalManager from "@/common/kits/GlobalManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { IPilotType, PilotStatusEnum } from "@/common/types/casePilot";
+import "./index.css";
 
 interface PilotStepHeaderProps {
   pilotInfo: IPilotType | null;
@@ -111,7 +112,7 @@ function PurePilotStepHeader(props: PilotStepHeaderProps) {
   const renderPilotStepHeaderRunning = () => {
     return (
       <>
-        <div className="-translate-1/2 bg-linear-[125deg,#F2E0ED_5%,#E2EDEC_10%,#C9FAED_30%,#8C83E6_45%,#F4CEE4_75%,#DCC1E0_90%,teal] absolute left-[50%] top-[50%] min-h-full w-[200%] animate-spin overflow-hidden rounded-lg pb-[100%]"></div>
+        <div className="animate-spin-header absolute left-[50%] top-[50%] min-h-full w-[200%] overflow-hidden rounded-lg pb-[100%]"></div>
         <div className="relative box-border w-full bg-[rgba(0,0,0,0)] p-0.5">
           <div className="box-border flex w-full flex-col gap-1.5 overflow-hidden rounded-lg bg-white p-3">
             <div className="flex flex-row items-start justify-between gap-3">

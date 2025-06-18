@@ -1,7 +1,8 @@
 import { memo, useCallback } from "react";
 import { Button } from "@/common/components/ui/button";
 import GlobalManager from "@/common/kits/GlobalManager";
-import { IPilotType } from "@/common/types/case";
+import { IPilotType } from "@/common/types/casePilot";
+import imgDeclaration from "@/resource/oss/assets/imgDeclaration.webp";
 
 interface PilotStepBodyDeclarationProps {
   pilotInfo: IPilotType | null;
@@ -41,7 +42,7 @@ function PurePilotStepBodyDeclaration(props: PilotStepBodyDeclarationProps) {
         </Button>
       </div>
       <img
-        src="/imgDeclaration.webp"
+        src={imgDeclaration}
         className="!h-[107px] !w-[111px] flex-[0_0_auto] self-end justify-self-end"
         alt="Declaration"
         width={111}
