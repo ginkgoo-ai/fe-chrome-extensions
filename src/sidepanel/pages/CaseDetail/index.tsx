@@ -90,15 +90,11 @@ export default function CaseDetail() {
 
   const handleStepContinueFilling = (params: { actionlistPre: IActionItemType[] }) => {
     const { actionlistPre } = params || {};
-    const url = "https://visas-immigration.service.gov.uk/next"; // test
 
     try {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgo-sidepanel-all-case-start",
-        url,
-        caseId,
-        workflowId,
-        fill_data: pilotInfo?.fill_data,
+        pilotId: pilotInfo?.id,
         actionlistPre,
       });
     } catch (error) {

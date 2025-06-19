@@ -262,24 +262,41 @@ class UtilsManager {
     //   return {};
     // }
 
-    const urlInfo = new URL(url || window.location.href) || {};
-    const { hash, host, hostname, href, origin = "", password, pathname = "", port, protocol, search, searchParams, username } = urlInfo;
-
     // For example: http://localhost:3000/en/?q=2#why
     const result = {
-      hash, // #why
-      host, // localhost:3000
-      hostname, // localhost
-      href, // http://localhost:3000/en/?q=2#why
-      origin, // http://localhost:3000
-      password, // ""
-      pathname, // /en/
-      port, // 3000
-      protocol, // http:
-      search, // ?q=2
-      searchParams, // URLSearchParams {size: 1}
-      username, // ""
+      hash: "", // #why
+      host: "", // localhost:3000
+      hostname: "", // localhost
+      href: "", // http://localhost:3000/en/?q=2#why
+      origin: "", // http://localhost:3000
+      password: "", // ""
+      pathname: "", // /en/
+      port: "", // 3000
+      protocol: "", // http:
+      search: "", // ?q=2
+      searchParams: {}, // URLSearchParams {size: 1}
+      username: "", // ""
     };
+
+    try {
+      const urlInfo = new URL(url || window.location.href) || {};
+      const { hash, host, hostname, href, origin = "", password, pathname = "", port, protocol, search, searchParams, username } = urlInfo;
+
+      result.hash = hash;
+      result.host = host;
+      result.hostname = hostname;
+      result.href = href;
+      result.origin = origin;
+      result.password = password;
+      result.pathname = pathname;
+      result.port = port;
+      result.protocol = protocol;
+      result.search = search;
+      result.searchParams = searchParams;
+      result.username = username;
+    } catch (error) {
+      console.log("[Ginkgo] UtilsManager getUrlInfo", error);
+    }
 
     // console.log("getUrlInfo result", result);
 

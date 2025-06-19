@@ -296,6 +296,10 @@ class ChromeManager {
         ] as chrome.tabs.Tab[]);
       } else {
         chrome.tabs.query(queryInfo, (tabs) => {
+          if (chrome.runtime.lastError) {
+            console.debug("[Debug] queryTabs Error", chrome.runtime.lastError.message);
+            resolve(tabs);
+          }
           resolve(tabs);
         });
       }

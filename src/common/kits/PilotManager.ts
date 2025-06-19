@@ -1,5 +1,6 @@
 import md5 from "blueimp-md5";
 import { cloneDeep } from "lodash";
+import { v4 as uuidV4 } from "uuid";
 import BackgroundEventManager from "@/common/kits/BackgroundEventManager";
 import ChromeManager from "@/common/kits/ChromeManager";
 import HTMLManager from "@/common/kits/HTMLManager";
@@ -45,14 +46,18 @@ class PilotManager {
     return pilot;
   };
 
-  getPilot = (params: { tabId?: number; caseId?: string; workflowId?: string }): IPilotType | undefined => {
-    const { caseId, tabId, workflowId } = params || {};
+  getPilot = (params: { id?: string; tabId?: number; caseId?: string; workflowId?: string }): IPilotType | undefined => {
+    const { id, caseId, tabId, workflowId } = params || {};
 
-    if (!tabId && !caseId && !workflowId) {
+    if (!id && !tabId && !caseId && !workflowId) {
       return void 0;
     }
 
     return Array.from(this.pilotMap.values()).find((pilot) => {
+      // 如果提供了 id
+      if (id && pilot.id !== id) {
+        return false;
+      }
       // 如果提供了 tabId，则必须匹配
       if (tabId && pilot.tabInfo?.id !== tabId) {
         return false;
@@ -173,6 +178,38 @@ class PilotManager {
     });
 
     return { result: true };
+  };
+
+  queryFillData = async (params: { caseId: string }): Promise<Record<string, unknown>> => {
+    return new Promise((resolve) => {
+      if (!(0 === 0)) {
+        BackgroundEventManager.postConnectMessage({
+          type: `ginkgo-background-all-toast`,
+          typeToast: "error",
+          contentToast: "Query fill data failed.",
+        });
+      }
+      resolve({});
+    });
+  };
+
+  queryWorkflowId = async (params: { userId: string; caseId: string; workflowDefinitionId: string }): Promise<string> => {
+    const { userId, caseId, workflowDefinitionId } = params || {};
+    const res = await Api.Ginkgo.createWorkflow({
+      user_id: userId,
+      case_id: caseId,
+      workflow_definition_id: workflowDefinitionId,
+    });
+
+    if (!res?.workflow_instance_id) {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgo-background-all-toast`,
+        typeToast: "error",
+        contentToast: "Create workflow failed.",
+      });
+    }
+
+    return res?.workflow_instance_id;
   };
 
   queryHtmlInfo = async (params: {
@@ -438,6 +475,12 @@ class PilotManager {
     const { workflowId, tabInfo } = pilotInfo || {};
     const timerSource = cloneDeep(pilotInfo?.timer);
 
+    pilotInfo.pilotStatus = PilotStatusEnum.START;
+    BackgroundEventManager.postConnectMessage({
+      type: `ginkgo-background-all-case-update`,
+      pilotInfo,
+    });
+
     if (timerSource === pilotInfo?.timer && actionlistPre) {
       // 执行动作
       const resExecuteActionList = await this.executeActionList({
@@ -524,6 +567,7 @@ class PilotManager {
       active: false,
     });
     const pilotInfo = {
+      id: uuidV4(),
       caseId,
       workflowId,
       fill_data,
@@ -550,13 +594,13 @@ class PilotManager {
 
   start = async (params: {
     url?: string;
-    caseId?: string;
-    workflowId?: string;
-    fill_data?: Record<string, unknown>;
-    actionlistPre?: IActionItemType[];
-    tabInfo?: chrome.tabs.Tab;
+    pilotId?: string; // 'continue'
+    userId?: string; // 'create'
+    caseId?: string; // 'create'
+    workflowDefinitionId?: string; // 'create'
+    actionlistPre?: IActionItemType[]; // 'continue'
   }) => {
-    const { url, caseId = "", workflowId = "", fill_data = {}, actionlistPre, tabInfo } = params || {};
+    const { url, pilotId = "", userId = "", caseId = "", workflowDefinitionId = "", actionlistPre } = params || {};
     // let pilotInfo = this.getPilot({ tabId: tabInfo.id });
 
     console.log("start", actionlistPre);
@@ -564,33 +608,45 @@ class PilotManager {
     const resTabs = await ChromeManager.queryTabs({
       url,
     });
-    const tabInfoReal = resTabs?.[0] || tabInfo;
+    const tabInfo = resTabs?.[0];
 
-    if (!tabInfoReal) {
+    if (!tabInfo) {
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-case-error`,
-        caseId,
-        workflowId,
-        content: "No matching page found.",
+        type: `ginkgo-background-all-case-no-match-page`,
+        typeToast: "error",
+        contentToast: "No matching page found.",
       });
       return;
     }
 
-    let pilotInfo = this.getPilot({ tabId: tabInfoReal.id });
+    let pilotInfo = pilotId ? this.getPilot({ id: pilotId }) : this.getPilot({ tabId: tabInfo.id });
 
     if (pilotInfo) {
       if (pilotInfo.timer) {
-        pilotInfo.repeatCurrent = 0;
-        clearTimeout(pilotInfo.timer);
+        await this.stop({ workflowId: pilotInfo.workflowId });
       }
     } else {
+      const [fill_data, workflowId] = await Promise.all([
+        this.queryFillData({ caseId }),
+        this.queryWorkflowId({
+          caseId,
+          userId,
+          workflowDefinitionId,
+        }), //
+      ]);
+
+      if (!caseId || !workflowId) {
+        return;
+      }
+
       pilotInfo = this.genPilot({
+        id: uuidV4(),
         caseId,
         workflowId,
         fill_data,
         progress_file_id: "",
         dummy_data_usage: [],
-        tabInfo: tabInfoReal,
+        tabInfo,
         timer: null,
         pilotStatus: PilotStatusEnum.HOLD,
         steps: [],
@@ -605,13 +661,13 @@ class PilotManager {
     pilotInfo.timer = setTimeout(async () => {
       await this.main(pilotInfo, actionlistPre);
       if (pilotInfo.timer) {
-        await this.stop({ workflowId });
+        await this.stop({ workflowId: pilotInfo.workflowId });
       }
     }, 0);
 
-    if (tabInfoReal.id) {
-      ChromeManager.updateTab(tabInfoReal.id, { active: true });
-    }
+    // if (tabInfo.id) {
+    //   ChromeManager.updateTab(tabInfo.id, { active: true });
+    // }
 
     // await this.updatePilotMap({
     //   workflowId: pilotInfo.workflowId,

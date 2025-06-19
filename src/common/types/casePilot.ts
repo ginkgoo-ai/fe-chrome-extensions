@@ -1,6 +1,7 @@
 export enum PilotStatusEnum {
   INIT = "INIT",
   OPEN = "OPEN",
+  START = "START",
   QUERY_WORKFLOW = "QUERY_WORKFLOW",
   QUERY = "QUERY",
   ANALYSIS = "ANALYSIS",
@@ -31,6 +32,7 @@ export enum WorkflowTypeEnum {
 }
 
 export interface IPilotType {
+  id: string;
   caseId: string;
   workflowId: string;
   fill_data: Record<string, unknown>;

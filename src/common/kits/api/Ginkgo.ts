@@ -45,7 +45,7 @@ const StorageApi = {
   filesPDFHighlight: "/storage/v1/files/pdf-highlight",
 };
 
-const IS_MOCK = true;
+const IS_MOCK = false;
 const LOCAL_BASE_URL = "http://192.168.31.205:6011"; // David
 // const LOCAL_BASE_URL_FILE = "http://192.168.31.205:8080/api"; // David
 const baseUrl = LOCAL_BASE_URL || GlobalManager.g_API_CONFIG.apiServerUrl;

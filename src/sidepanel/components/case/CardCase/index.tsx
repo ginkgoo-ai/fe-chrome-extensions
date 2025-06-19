@@ -12,13 +12,12 @@ import { TagStatus } from "@/sidepanel/components/case/TagStatus";
 
 interface CardCaseProps {
   itemCase: ICaseItemType;
-  workflowDefinitionId: string;
-  onCardClick: MouseEventHandler<HTMLButtonElement>;
+  onCardStartClick: MouseEventHandler<HTMLButtonElement>;
   onCardEditClick?: MouseEventHandler<HTMLButtonElement>;
 }
 
 function PureCardCase(props: CardCaseProps) {
-  const { itemCase, workflowDefinitionId, onCardClick, onCardEditClick } = props;
+  const { itemCase, onCardStartClick, onCardEditClick } = props;
 
   const [workflowList, setWorkflowList] = useState<any[]>([]);
 
@@ -38,7 +37,7 @@ function PureCardCase(props: CardCaseProps) {
   }, [itemCase.id]);
 
   const handleBtnStartClick = (e: any) => {
-    onCardClick?.(e);
+    onCardStartClick?.(e);
   };
 
   return (
@@ -53,7 +52,7 @@ function PureCardCase(props: CardCaseProps) {
           <span className="line-clamp-2 text-base font-bold">{itemCase.title}</span>
           {onCardEditClick ? (
             <Button
-              variant="ghost"
+              type="text"
               className="!p-1"
               onClick={(e: any) => {
                 e.stopPropagation();
@@ -74,19 +73,19 @@ function PureCardCase(props: CardCaseProps) {
             <span className="text-[#B4B3B3]">Created at </span>
             <span className="text-[#1F2937]">{dayjs(itemCase.createdAt).format("DD MMM YYYY")}</span>
           </span>
-          <TagStatus
+          {/* <TagStatus
             colorBackground={itemCase.caseStatusForFront?.colorBackground}
             colorText={itemCase.caseStatusForFront?.colorText}
             text={itemCase.caseStatusForFront?.text}
-          />
+          /> */}
         </div>
-        <div className="flex flex-col">
-          {workflowList.map((itemWorkflow, indexWorkflow) => {
+        <div className="mt-1 flex w-full flex-col">
+          {/* {workflowList.map((itemWorkflow, indexWorkflow) => {
             return <div key={`workflow-${indexWorkflow}`}>{itemWorkflow.workflow_instance_id}</div>;
-          })}
+          })} */}
           <Button color="default" variant="dashed" className="h-10" onClick={handleBtnStartClick}>
             <IconMagic size={24} />
-            <span className="text-primary font-semibold">Start Auto-Fill</span>
+            <span className="font-semibold text-primary">Start Auto-Fill</span>
           </Button>
         </div>
       </div>

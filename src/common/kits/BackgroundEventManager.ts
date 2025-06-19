@@ -265,20 +265,22 @@ class BackgroundEventManager {
       case "ginkgo-page-all-case-start":
       case "ginkgo-sidepanel-all-case-start": {
         const {
-          url: urlMsg = "url-123456",
-          caseId: caseIdMsg = "caseId-123456",
-          workflowId: workflowIdMsg = "workflowId-123456",
-          fill_data: fill_dataMsg,
+          url: urlMsg = "",
+          pilotId: pilotIdMsg = "",
+          userId: userIdMsg = "",
+          caseId: caseIdMsg = "",
+          workflowDefinitionId: workflowDefinitionIdMsg = "",
           actionlistPre: actionlistPreMsg,
         } = otherInfo || {};
 
-        console.log("ginkgo-sidepanel-all-case-start actionlistPre", message, otherInfo, actionlistPreMsg);
+        // console.log("ginkgo-sidepanel-all-case-start actionlistPre", message, otherInfo, actionlistPreMsg);
 
         await PilotManager.start({
           url: urlMsg,
+          pilotId: pilotIdMsg,
+          userId: userIdMsg,
           caseId: caseIdMsg,
-          workflowId: workflowIdMsg,
-          fill_data: fill_dataMsg,
+          workflowDefinitionId: workflowDefinitionIdMsg,
           actionlistPre: actionlistPreMsg,
           // tabInfo: tabInfo,
         });
@@ -392,6 +394,18 @@ class BackgroundEventManager {
         const { options } = otherInfo || {};
         console.log("background-sidepanel-open", options);
         await ChromeManager.openSidePanel(options as chrome.sidePanel.OpenOptions);
+        break;
+      }
+      case "ginkgo-sidepanel-background-sidepanel-mounted": {
+        this.postConnectMessage({
+          type: `ginkgo-background-all-sidepanel-mounted`,
+        });
+        break;
+      }
+      case "ginkgo-sidepanel-background-sidepanel-destory": {
+        this.postConnectMessage({
+          type: `ginkgo-background-all-sidepanel-destory`,
+        });
         break;
       }
       default: {

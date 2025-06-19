@@ -59,16 +59,6 @@ export default function SPPageCore(props: SPPageCoreProps) {
 
         break;
       }
-      case "ginkgo-background-all-case-error": {
-        const { content } = message || {};
-        if (content) {
-          messageAntd.open({
-            content,
-            type: "error",
-          });
-        }
-        break;
-      }
       default: {
         break;
       }
@@ -112,19 +102,20 @@ export default function SPPageCore(props: SPPageCoreProps) {
     }, 500);
   }, []);
 
-  useEffect(() => {
-    if (!x_tabActivated?.id || !isLoadCompleted.current) {
-      return;
-    }
-    try {
-      GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgo-sidepanel-background-polit-query",
-        tabId: x_tabActivated?.id,
-      });
-    } catch (error) {
-      console.error("[Ginkgo] Sidepanel handleBtnStartClick error", error);
-    }
-  }, [x_tabActivated?.id]);
+  // Check Activated Page
+  // useEffect(() => {
+  //   if (!x_tabActivated?.id || !isLoadCompleted.current) {
+  //     return;
+  //   }
+  //   try {
+  //     GlobalManager.g_backgroundPort?.postMessage({
+  //       type: "ginkgo-sidepanel-background-polit-query",
+  //       tabId: x_tabActivated?.id,
+  //     });
+  //   } catch (error) {
+  //     console.error("[Ginkgo] Sidepanel handleBtnStartClick error", error);
+  //   }
+  // }, [x_tabActivated?.id]);
 
   if (isAuthenticated === null) {
     // 正在检查登录状态
