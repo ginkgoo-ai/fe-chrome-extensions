@@ -10,6 +10,7 @@ class GlobalManager {
   g_API_CONFIG!: {
     authServerUrl: string;
     apiServerUrl: string;
+    apiAiServerUrl: string;
     clientId: string;
     scope: string;
     responseType: string;
@@ -34,6 +35,7 @@ class GlobalManager {
       this.instance.g_API_CONFIG = {
         authServerUrl: "https://auth.ginkgoo.dev",
         apiServerUrl: "https://api.ginkgoo.dev/api",
+        apiAiServerUrl: "https://api.ginkgoo.dev/api/ai",
         clientId: "ginkgoo-web-client",
         scope: "openid profile email",
         responseType: "code",

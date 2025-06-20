@@ -17,19 +17,19 @@ export default function SidePanel(): JSX.Element {
   useEffect(() => {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgo-sidepanel-background-sidepanel-mounted",
+        type: "ginkgoo-sidepanel-background-sidepanel-mounted",
       });
     } catch (error) {
-      console.error("[Ginkgo] Sidepanel handleBtnStartClick error", error);
+      console.error("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
     }
 
     return () => {
       try {
         GlobalManager.g_backgroundPort?.postMessage({
-          type: "ginkgo-sidepanel-background-sidepanel-destory",
+          type: "ginkgoo-sidepanel-background-sidepanel-destory",
         });
       } catch (error) {
-        console.error("[Ginkgo] Sidepanel handleBtnStartClick error", error);
+        console.error("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
       }
     };
   }, []);

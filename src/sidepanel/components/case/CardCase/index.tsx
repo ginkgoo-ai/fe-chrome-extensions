@@ -22,7 +22,7 @@ function PureCardCase(props: CardCaseProps) {
   const [workflowList, setWorkflowList] = useState<any[]>([]);
 
   const queryWorkflowList = async () => {
-    const resWorkflowList = await Api.Ginkgo.getWorkflowList({
+    const resWorkflowList = await Api.Ginkgoo.getWorkflowList({
       userId: UserManager.userInfo?.id || "",
       caseId: itemCase.id || "",
     });

@@ -295,7 +295,7 @@ class UtilsManager {
       result.searchParams = searchParams;
       result.username = username;
     } catch (error) {
-      console.log("[Ginkgo] UtilsManager getUrlInfo", error);
+      console.log("[Ginkgoo] UtilsManager getUrlInfo", error);
     }
 
     // console.log("getUrlInfo result", result);

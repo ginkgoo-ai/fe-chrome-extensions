@@ -18,11 +18,11 @@ function PureModalNewWorkflow(props: ModalNewWorkflowProps) {
   const [form] = Form.useForm();
   const [loadingContinue, setLoadingContinue] = useState<boolean>(false);
 
-  useEventManager("ginkgo-message", (message) => {
+  useEventManager("ginkgoo-message", (message) => {
     const { type: typeMsg } = message;
 
     switch (typeMsg) {
-      case "ginkgo-background-all-case-no-match-page": {
+      case "ginkgoo-background-all-case-no-match-page": {
         const { typeToast, contentToast } = message || {};
         messageAntd.open({
           type: typeToast,

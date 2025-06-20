@@ -29,11 +29,11 @@ export default function SPPageCore(props: SPPageCoreProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { x_tabActivated } = useSelector((state: IRootStateType) => state.appInfo);
 
-  useEventManager("ginkgo-message", (message) => {
+  useEventManager("ginkgoo-message", (message) => {
     const { type: typeMsg, pilotInfo: pilotInfoMsg } = message;
 
     switch (typeMsg) {
-      case "ginkgo-background-all-polit-query": {
+      case "ginkgoo-background-all-polit-query": {
         // console.log("PageCoreSidePanel useEventManager", pilotInfoMsg);
         if (pilotInfoMsg?.timer) {
           const { caseId: caseIdMsg, workflowId: workflowIdMsg } = pilotInfoMsg || {};
@@ -49,13 +49,13 @@ export default function SPPageCore(props: SPPageCoreProps) {
 
         break;
       }
-      case "ginkgo-background-all-toast": {
+      case "ginkgoo-background-all-toast": {
         const { typeToast, contentToast } = message || {};
         messageAntd.open({
           type: typeToast,
           content: contentToast,
         });
-        console.log("ginkgo-background-all-toast", typeToast, contentToast);
+        console.log("ginkgoo-background-all-toast", typeToast, contentToast);
 
         break;
       }
@@ -89,12 +89,12 @@ export default function SPPageCore(props: SPPageCoreProps) {
 
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgo-sidepanel-background-polit-query",
+        type: "ginkgoo-sidepanel-background-polit-query",
         caseId: caseIdRouter,
         workflowId: workflowIdRouter,
       });
     } catch (error) {
-      console.error("[Ginkgo] Sidepanel handleBtnStartClick error", error);
+      console.error("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
     }
 
     setTimeout(() => {
@@ -109,11 +109,11 @@ export default function SPPageCore(props: SPPageCoreProps) {
   //   }
   //   try {
   //     GlobalManager.g_backgroundPort?.postMessage({
-  //       type: "ginkgo-sidepanel-background-polit-query",
+  //       type: "ginkgoo-sidepanel-background-polit-query",
   //       tabId: x_tabActivated?.id,
   //     });
   //   } catch (error) {
-  //     console.error("[Ginkgo] Sidepanel handleBtnStartClick error", error);
+  //     console.error("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
   //   }
   // }, [x_tabActivated?.id]);
 

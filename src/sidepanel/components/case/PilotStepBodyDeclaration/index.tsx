@@ -15,12 +15,12 @@ function PurePilotStepBodyDeclaration(props: PilotStepBodyDeclarationProps) {
     if (!!pilotInfo?.tabInfo?.url) {
       try {
         GlobalManager.g_backgroundPort?.postMessage({
-          type: "ginkgo-page-background-tab-update",
+          type: "ginkgoo-page-background-tab-update",
           tabId: pilotInfo?.tabInfo?.id,
           updateProperties: { active: true },
         });
       } catch (error) {
-        console.error("[Ginkgo] Sidepanel handleBtnJumpClick error", error);
+        console.error("[Ginkgoo] Sidepanel handleBtnJumpClick error", error);
       }
     }
   }, [pilotInfo?.tabInfo?.url, pilotInfo?.tabInfo?.id]);

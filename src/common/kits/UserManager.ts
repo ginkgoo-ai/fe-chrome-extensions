@@ -167,7 +167,7 @@ class UserManager {
       ...params,
     };
 
-    const resToken = await Api.Ginkgo.authToken({
+    const resToken = await Api.Ginkgoo.authToken({
       body,
     });
 
@@ -249,7 +249,7 @@ class UserManager {
   }
 
   queryUserInfo = async () => {
-    const res = await Api.Ginkgo.queryUserInfo();
+    const res = await Api.Ginkgoo.queryUserInfo();
 
     this.setUserInfo(res);
     return res;

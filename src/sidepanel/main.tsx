@@ -57,13 +57,13 @@ const main = async () => {
   // });
 
   // 注册监听 Background 消息
-  GlobalManager.g_backgroundPort = chrome?.runtime?.connect?.({ name: `ginkgo-sidepanel-${uuidv4()}` });
+  GlobalManager.g_backgroundPort = chrome?.runtime?.connect?.({ name: `ginkgoo-sidepanel-${uuidv4()}` });
   GlobalManager.g_backgroundPort?.onMessage?.addListener(async (message, port: chrome.runtime.Port) => {
     const { type, scope } = message || {};
     if (!scope || scope.includes(port.name)) {
       // 如果有指定送达范围，则只送达指定范围
       switch (type) {
-        case "ginkgo-background-all-tab-activated": {
+        case "ginkgoo-background-all-tab-activated": {
           store.dispatch({
             type: "UPDATE_TAB_ACTIVATED",
             payload: message?.tabInfo,
@@ -71,7 +71,7 @@ const main = async () => {
           break;
         }
         default: {
-          EventManager.emit("ginkgo-message", message);
+          EventManager.emit("ginkgoo-message", message);
           break;
         }
       }

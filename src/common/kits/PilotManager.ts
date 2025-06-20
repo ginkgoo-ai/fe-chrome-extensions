@@ -4,6 +4,7 @@ import { v4 as uuidV4 } from "uuid";
 import BackgroundEventManager from "@/common/kits/BackgroundEventManager";
 import ChromeManager from "@/common/kits/ChromeManager";
 import HTMLManager from "@/common/kits/HTMLManager";
+import LockManager from "@/common/kits/LockManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { IActionItemType } from "@/common/types/case";
@@ -22,18 +23,6 @@ class PilotManager {
   REPEAT_MAX = 5;
 
   pilotMap: Map<string, IPilotType> = new Map();
-  private updateLocks: Map<string, boolean> = new Map();
-
-  private async acquireLock(workflowId: string): Promise<void> {
-    while (this.updateLocks.get(workflowId)) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    this.updateLocks.set(workflowId, true);
-  }
-
-  private releaseLock(workflowId: string): void {
-    this.updateLocks.delete(workflowId);
-  }
 
   static getInstance(): PilotManager {
     if (!this.instance) {
@@ -77,12 +66,13 @@ class PilotManager {
 
   updatePilotMap = async (params: { workflowId: string; update: Partial<IPilotType> }) => {
     const { workflowId, update } = params || {};
+    const lockId = `workflowId-${workflowId}`;
 
     try {
       // 获取锁
-      await this.acquireLock(workflowId);
+      await LockManager.acquireLock(lockId);
 
-      const pilot = this.pilotMap.get(workflowId);
+      const pilot = this.pilotMap.get(lockId);
 
       if (pilot) {
         Object.keys(update).forEach((key) => {
@@ -91,7 +81,7 @@ class PilotManager {
       }
     } finally {
       // 确保在finally中释放锁
-      this.releaseLock(workflowId);
+      LockManager.releaseLock(lockId);
     }
   };
 
@@ -105,11 +95,11 @@ class PilotManager {
 
     pilotInfo.pilotStatus = PilotStatusEnum.QUERY_WORKFLOW;
     BackgroundEventManager.postConnectMessage({
-      type: `ginkgo-background-all-case-update`,
+      type: `ginkgoo-background-all-case-update`,
       pilotInfo,
     });
 
-    const resWorkflowDetail = await Api.Ginkgo.getWorkflowDetail({
+    const resWorkflowDetail = await Api.Ginkgoo.getWorkflowDetail({
       workflowId,
     });
 
@@ -118,7 +108,7 @@ class PilotManager {
     if (!resWorkflowDetail?.steps) {
       pilotInfo.pilotStatus = PilotStatusEnum.COMING_SOON;
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-case-update`,
+        type: `ginkgoo-background-all-case-update`,
         pilotInfo,
       });
       return { result: false };
@@ -134,7 +124,7 @@ class PilotManager {
     });
 
     BackgroundEventManager.postConnectMessage({
-      type: `ginkgo-background-all-case-update`,
+      type: `ginkgoo-background-all-case-update`,
       pilotInfo,
     });
 
@@ -149,7 +139,7 @@ class PilotManager {
       return { result: false };
     }
 
-    const resWorkflowStepData = await Api.Ginkgo.getWorkflowStepData({
+    const resWorkflowStepData = await Api.Ginkgoo.getWorkflowStepData({
       workflowId,
       stepKey,
     });
@@ -173,7 +163,7 @@ class PilotManager {
     });
 
     BackgroundEventManager.postConnectMessage({
-      type: `ginkgo-background-all-case-update`,
+      type: `ginkgoo-background-all-case-update`,
       pilotInfo,
     });
 
@@ -181,21 +171,25 @@ class PilotManager {
   };
 
   queryFillData = async (params: { caseId: string }): Promise<Record<string, unknown>> => {
-    return new Promise((resolve) => {
-      if (!(0 === 0)) {
-        BackgroundEventManager.postConnectMessage({
-          type: `ginkgo-background-all-toast`,
-          typeToast: "error",
-          contentToast: "Query fill data failed.",
-        });
-      }
-      resolve({});
+    const { caseId } = params || {};
+    const resCaseDetail = await await Api.Ginkgoo.queryCaseDetail({
+      caseId,
     });
+    if (resCaseDetail?.profileData) {
+      return resCaseDetail?.profileData;
+    } else {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgoo-background-all-toast`,
+        typeToast: "error",
+        contentToast: "Query fill data failed.",
+      });
+      return {};
+    }
   };
 
   queryWorkflowId = async (params: { userId: string; caseId: string; workflowDefinitionId: string }): Promise<string> => {
     const { userId, caseId, workflowDefinitionId } = params || {};
-    const res = await Api.Ginkgo.createWorkflow({
+    const res = await Api.Ginkgoo.createWorkflow({
       user_id: userId,
       case_id: caseId,
       workflow_definition_id: workflowDefinitionId,
@@ -203,7 +197,7 @@ class PilotManager {
 
     if (!res?.workflow_instance_id) {
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-toast`,
+        type: `ginkgoo-background-all-toast`,
         typeToast: "error",
         contentToast: "Create workflow failed.",
       });
@@ -225,7 +219,7 @@ class PilotManager {
 
     pilotInfo.pilotStatus = PilotStatusEnum.QUERY;
     BackgroundEventManager.postConnectMessage({
-      type: `ginkgo-background-all-case-update`,
+      type: `ginkgoo-background-all-case-update`,
       pilotInfo,
     });
 
@@ -240,7 +234,7 @@ class PilotManager {
       // setAlertTip({ type: "error", message: MESSAGE.NOT_SUPPORT_PAGE });
       pilotInfo.pilotStatus = PilotStatusEnum.NOT_SUPPORT;
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-case-update`,
+        type: `ginkgoo-background-all-case-update`,
         pilotInfo,
       });
       return { result: false };
@@ -271,14 +265,14 @@ class PilotManager {
 
     if (Number(pilotInfo?.repeatCurrent) > this.REPEAT_MAX) {
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-toast`,
+        type: `ginkgoo-background-all-toast`,
         typeToast: "info",
         contentToast: "Repeat Max",
       });
       // Max
       pilotInfo.pilotStatus = PilotStatusEnum.HOLD;
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-case-update`,
+        type: `ginkgoo-background-all-case-update`,
         pilotInfo,
       });
       return { result: false };
@@ -362,11 +356,11 @@ class PilotManager {
 
     pilotInfo.pilotStatus = PilotStatusEnum.ANALYSIS;
     BackgroundEventManager.postConnectMessage({
-      type: `ginkgo-background-all-case-update`,
+      type: `ginkgoo-background-all-case-update`,
       pilotInfo,
     });
 
-    const resWorkflowsProcessForm = await Api.Ginkgo.postWorkflowsProcessForm({
+    const resWorkflowsProcessForm = await Api.Ginkgoo.postWorkflowsProcessForm({
       workflowId,
       message: htmlCleansing,
       fill_data: pilotInfo.fill_data,
@@ -402,7 +396,7 @@ class PilotManager {
 
     pilotInfo.pilotStatus = PilotStatusEnum.ACTION;
     BackgroundEventManager.postConnectMessage({
-      type: `ginkgo-background-all-case-update`,
+      type: `ginkgoo-background-all-case-update`,
       pilotInfo,
     });
 
@@ -437,7 +431,7 @@ class PilotManager {
 
     pilotInfo.pilotStatus = PilotStatusEnum.WAIT;
     BackgroundEventManager.postConnectMessage({
-      type: `ginkgo-background-all-case-update`,
+      type: `ginkgoo-background-all-case-update`,
       pilotInfo,
     });
     await UtilsManager.sleep(this.DELAY_STEP);
@@ -448,7 +442,7 @@ class PilotManager {
   uploadAndBindPDF = async (params: { workflowId: string; pdfUrl: string; cookiesStr: string }) => {
     const { workflowId, pdfUrl, cookiesStr } = params || {};
 
-    const resFilesThirdPart = await Api.Ginkgo.postFilesThirdPart({
+    const resFilesThirdPart = await Api.Ginkgoo.postFilesThirdPart({
       thirdPartUrl: pdfUrl,
       cookie: cookiesStr,
     });
@@ -456,14 +450,14 @@ class PilotManager {
     // console.log("uploadPdf", resFilesThirdPart);
     if (!resFilesThirdPart?.id) {
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-toast`,
+        type: `ginkgoo-background-all-toast`,
         typeToast: "error",
         contentToast: "Upload PDF failed.",
       });
       return;
     }
 
-    const resWorkflowsUploadProgressFile = await Api.Ginkgo.postWorkflowsUploadProgressFile({
+    const resWorkflowsUploadProgressFile = await Api.Ginkgoo.postWorkflowsUploadProgressFile({
       workflowId,
       fileId: resFilesThirdPart.id,
     });
@@ -477,7 +471,7 @@ class PilotManager {
 
     pilotInfo.pilotStatus = PilotStatusEnum.START;
     BackgroundEventManager.postConnectMessage({
-      type: `ginkgo-background-all-case-update`,
+      type: `ginkgoo-background-all-case-update`,
       pilotInfo,
     });
 
@@ -586,7 +580,7 @@ class PilotManager {
     this.pilotMap.set(workflowId, pilotInfo);
 
     BackgroundEventManager.postConnectMessage({
-      type: `ginkgo-background-all-case-open`,
+      type: `ginkgoo-background-all-case-open`,
       caseId,
       pilotInfo,
     });
@@ -603,16 +597,16 @@ class PilotManager {
     const { url, pilotId = "", userId = "", caseId = "", workflowDefinitionId = "", actionlistPre } = params || {};
     // let pilotInfo = this.getPilot({ tabId: tabInfo.id });
 
-    console.log("start", actionlistPre);
-
     const resTabs = await ChromeManager.queryTabs({
       url,
     });
     const tabInfo = resTabs?.[0];
 
+    console.log("start 0", tabInfo);
+
     if (!tabInfo) {
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgo-background-all-case-no-match-page`,
+        type: `ginkgoo-background-all-case-no-match-page`,
         typeToast: "error",
         contentToast: "No matching page found.",
       });
@@ -620,6 +614,8 @@ class PilotManager {
     }
 
     let pilotInfo = pilotId ? this.getPilot({ id: pilotId }) : this.getPilot({ tabId: tabInfo.id });
+
+    console.log("start 1", pilotId, pilotInfo);
 
     if (pilotInfo) {
       if (pilotInfo.timer) {
@@ -697,7 +693,7 @@ class PilotManager {
     pilotInfo.repeatHash = "";
     pilotInfo.repeatCurrent = 0;
     BackgroundEventManager.postConnectMessage({
-      type: `ginkgo-background-all-case-update`,
+      type: `ginkgoo-background-all-case-update`,
       pilotInfo,
     });
 

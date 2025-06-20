@@ -21,13 +21,13 @@ export default function CasePortal() {
   const [caseList, setCaseList] = useState<ICaseItemType[]>([]);
   const [isModalNewWorkflowOpen, setModalNewWorkflowOpen] = useState<boolean>(false);
 
-  useEventManager("ginkgo-message", (message) => {
+  useEventManager("ginkgoo-message", (message) => {
     // console.log('🚀 ~ useEventManager ~ data:', message);
 
     const { type: typeMsg, pilotInfo: pilotInfoMsg } = message || {};
 
     switch (typeMsg) {
-      case "ginkgo-background-all-case-update": {
+      case "ginkgoo-background-all-case-update": {
         const { caseId: caseIdMsg, workflowId: workflowIdMsg, pilotStatus: pilotStatusMsg } = pilotInfoMsg || {};
         if (pilotStatusMsg === PilotStatusEnum.START) {
           setModalNewWorkflowOpen(false);
@@ -54,7 +54,7 @@ export default function CasePortal() {
 
     setCaseList(caseListTmp);
 
-    const resWorkflowDefinitions = await Api.Ginkgo.getWorkflowDefinitions({
+    const resWorkflowDefinitions = await Api.Ginkgoo.getWorkflowDefinitions({
       page: 1,
       page_size: 1,
       workflow_type: WorkflowTypeEnum.VISA,
@@ -85,14 +85,14 @@ export default function CasePortal() {
 
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgo-sidepanel-all-case-start",
+        type: "ginkgoo-sidepanel-all-case-start",
         url,
         userId: UserManager.userInfo?.id || "",
         caseId: refCaseInfoSelect.current?.id || "",
         workflowDefinitionId: refWorkflowDefinitionId.current,
       });
     } catch (error) {
-      console.error("[Ginkgo] Sidepanel handleCardClick error", error);
+      console.error("[Ginkgoo] Sidepanel handleCardClick error", error);
     }
   };
 

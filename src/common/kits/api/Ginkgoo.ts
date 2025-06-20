@@ -3,13 +3,14 @@ import FetchManager from "@/common/kits/FetchManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import UserManager from "@/common/kits/UserManager";
 import {
+  mockCaseDetail,
   mockGetWorkflowDetail,
   mockGetWorkflowList,
   mockGetWorkflowStepData,
   mockPostFilesThirdPart,
   mockPostWorkflowsProcessForm,
   mockWorkflowDefinitions,
-} from "@/common/kits/mock/Ginkgo";
+} from "@/common/kits/mock/Ginkgoo";
 import {
   ICreateWorkflowParamsType,
   IGetWorkflowDefinitionsParamsType,
@@ -30,6 +31,10 @@ const AuthApi = {
   userInfo: "/userinfo",
 };
 
+const CaseApi = {
+  caseDetail: "/legalcase/cases/:caseId",
+};
+
 const WorkflowApi = {
   workflows: "/workflows",
   workflowsDefinitions: "/workflows/definitions",
@@ -48,10 +53,9 @@ const StorageApi = {
 const IS_MOCK = false;
 const LOCAL_BASE_URL = "http://192.168.31.205:6011"; // David
 // const LOCAL_BASE_URL_FILE = "http://192.168.31.205:8080/api"; // David
-const baseUrl = LOCAL_BASE_URL || GlobalManager.g_API_CONFIG.apiServerUrl;
-const baseUrlFile = GlobalManager.g_API_CONFIG.apiServerUrl;
+const baseUrl = LOCAL_BASE_URL || GlobalManager.g_API_CONFIG.apiAiServerUrl;
 
-const genGinkgoHeaders = async (params?: { headers?: Record<string, string> }) => {
+const genGinkgooHeaders = async (params?: { headers?: Record<string, string> }) => {
   const { headers = {} } = params || {};
 
   const accessToken = await UserManager.getAccessToken();
@@ -85,7 +89,7 @@ const authToken = async (config: IRequestConfigType = {}) => {
 const queryUserInfo = async () => {
   const url = `${GlobalManager.g_API_CONFIG.authServerUrl}${AuthApi.userInfo}`;
   const headers = {
-    ...(await genGinkgoHeaders()),
+    ...(await genGinkgooHeaders()),
   };
   // console.log("queryUserInfo", headers);
 
@@ -98,11 +102,33 @@ const queryUserInfo = async () => {
   return res;
 };
 
+const queryCaseDetail = async (params: { caseId: string }) => {
+  const { caseId } = params || {};
+  const url = `${GlobalManager.g_API_CONFIG.apiAiServerUrl}${CaseApi.caseDetail}`.replace(":caseId", caseId);
+  const headers = {
+    ...(await genGinkgooHeaders()),
+  };
+
+  if (IS_MOCK) {
+    return new Promise((resolve) => {
+      resolve(mockCaseDetail);
+    });
+  }
+
+  const res = await FetchManager.fetchAPI({
+    method: "GET",
+    url,
+    headers,
+  });
+
+  return res;
+};
+
 const getWorkflowDefinitions = async (params: IGetWorkflowDefinitionsParamsType) => {
   // const { page, page_size, workflow_type } = params || {};
-  const url = `${baseUrl}${WorkflowApi.workflowsDefinitions}`;
+  const url = `${GlobalManager.g_API_CONFIG.apiAiServerUrl}${WorkflowApi.workflowsDefinitions}`;
   const headers = {
-    ...(await genGinkgoHeaders()),
+    ...(await genGinkgooHeaders()),
   };
 
   if (IS_MOCK) {
@@ -123,9 +149,11 @@ const getWorkflowDefinitions = async (params: IGetWorkflowDefinitionsParamsType)
 
 const getWorkflowList = async (params: IGetWorkflowListParamsType) => {
   const { userId = "", caseId = "" } = params;
-  const url = `${baseUrl}${WorkflowApi.workflowsList}`.replace(":userId", userId).replace(":caseId", caseId);
+  const url = `${GlobalManager.g_API_CONFIG.apiAiServerUrl}${WorkflowApi.workflowsList}`
+    .replace(":userId", userId)
+    .replace(":caseId", caseId);
   const headers = {
-    ...(await genGinkgoHeaders()),
+    ...(await genGinkgooHeaders()),
   };
 
   if (IS_MOCK) {
@@ -145,9 +173,9 @@ const getWorkflowList = async (params: IGetWorkflowListParamsType) => {
 
 const getWorkflowDetail = async (params: IGetWorkflowDetailParamsType): Promise<IWorkflowType> => {
   const { workflowId = "" } = params;
-  const url = `${baseUrl}${WorkflowApi.workflowsDetail}`.replace(":workflowId", workflowId);
+  const url = `${GlobalManager.g_API_CONFIG.apiAiServerUrl}${WorkflowApi.workflowsDetail}`.replace(":workflowId", workflowId);
   const headers = {
-    ...(await genGinkgoHeaders()),
+    ...(await genGinkgooHeaders()),
   };
 
   if (IS_MOCK) {
@@ -167,9 +195,11 @@ const getWorkflowDetail = async (params: IGetWorkflowDetailParamsType): Promise<
 
 const getWorkflowStepData = async (params: IGetWorkflowStepDataParamsType): Promise<{ step_key: string; data: IWorkflowStepDataType }> => {
   const { workflowId = "", stepKey = "" } = params;
-  const url = `${baseUrl}${WorkflowApi.workflowsStep}`.replace(":workflowId", workflowId).replace(":stepKey", stepKey);
+  const url = `${GlobalManager.g_API_CONFIG.apiAiServerUrl}${WorkflowApi.workflowsStep}`
+    .replace(":workflowId", workflowId)
+    .replace(":stepKey", stepKey);
   const headers = {
-    ...(await genGinkgoHeaders()),
+    ...(await genGinkgooHeaders()),
   };
 
   if (IS_MOCK) {
@@ -189,9 +219,9 @@ const getWorkflowStepData = async (params: IGetWorkflowStepDataParamsType): Prom
 
 const createWorkflow = async (params: ICreateWorkflowParamsType) => {
   // const { user_id, case_id, workflow_definition_id } = params;
-  const url = `${baseUrl}${WorkflowApi.workflows}`;
+  const url = `${GlobalManager.g_API_CONFIG.apiAiServerUrl}${WorkflowApi.workflows}`;
   const headers = {
-    ...(await genGinkgoHeaders()),
+    ...(await genGinkgooHeaders()),
   };
 
   // if (IS_MOCK) {
@@ -212,9 +242,9 @@ const createWorkflow = async (params: ICreateWorkflowParamsType) => {
 
 const postWorkflowsProcessForm = async (params: IWorkflowsProcessFormParamsType) => {
   const { workflowId = "", ...body } = params;
-  const url = `${baseUrl}${WorkflowApi.workflowsProcessForm}`.replace(":workflowId", workflowId);
+  const url = `${GlobalManager.g_API_CONFIG.apiAiServerUrl}${WorkflowApi.workflowsProcessForm}`.replace(":workflowId", workflowId);
   const headers = {
-    ...(await genGinkgoHeaders()),
+    ...(await genGinkgooHeaders()),
   };
 
   if (IS_MOCK) {
@@ -235,9 +265,9 @@ const postWorkflowsProcessForm = async (params: IWorkflowsProcessFormParamsType)
 
 const postWorkflowsUploadProgressFile = async (params: IWorkflowsUploadProgressFileParamsType) => {
   const { workflowId = "", ...body } = params;
-  const url = `${baseUrl}${WorkflowApi.workflowsUploadProgressFile}`.replace(":workflowId", workflowId);
+  const url = `${GlobalManager.g_API_CONFIG.apiAiServerUrl}${WorkflowApi.workflowsUploadProgressFile}`.replace(":workflowId", workflowId);
   const headers = {
-    ...(await genGinkgoHeaders()),
+    ...(await genGinkgooHeaders()),
   };
 
   // if (IS_MOCK) {
@@ -258,9 +288,9 @@ const postWorkflowsUploadProgressFile = async (params: IWorkflowsUploadProgressF
 
 const postFilesThirdPart = async (params: IFilesThirdPartParamsType): Promise<ICloudFileType> => {
   // const { thirdPartUrl, cookie } = params;
-  const url = `${baseUrlFile}${StorageApi.filesThirdPart}`;
+  const url = `${GlobalManager.g_API_CONFIG.authServerUrl}${StorageApi.filesThirdPart}`;
   const headers = {
-    ...(await genGinkgoHeaders()),
+    ...(await genGinkgooHeaders()),
   };
 
   if (IS_MOCK) {
@@ -282,9 +312,9 @@ const postFilesThirdPart = async (params: IFilesThirdPartParamsType): Promise<IC
 
 const postFilesPDFHighlight = async (params: IFilesPDFHighlightParamsType): Promise<BlobPart> => {
   // const { fileId, highlightData } = params;
-  const url = `${baseUrlFile}${StorageApi.filesPDFHighlight}`;
+  const url = `${GlobalManager.g_API_CONFIG.authServerUrl}${StorageApi.filesPDFHighlight}`;
   const headers = {
-    ...(await genGinkgoHeaders({
+    ...(await genGinkgooHeaders({
       headers: {
         Accept: "application/octet-stream",
       },
@@ -306,6 +336,7 @@ const postFilesPDFHighlight = async (params: IFilesPDFHighlightParamsType): Prom
 export default {
   authToken,
   queryUserInfo,
+  queryCaseDetail,
   getWorkflowDefinitions,
   getWorkflowList,
   getWorkflowDetail,

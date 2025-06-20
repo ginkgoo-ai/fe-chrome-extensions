@@ -24,7 +24,7 @@ function PurePilotStepHeader(props: PilotStepHeaderProps) {
     if (!pilotInfo?.progress_file_id) {
       return;
     }
-    const resFilesPDFHighlight = await Api.Ginkgo.postFilesPDFHighlight({
+    const resFilesPDFHighlight = await Api.Ginkgoo.postFilesPDFHighlight({
       fileId: pilotInfo?.progress_file_id,
       highlightData: pilotInfo?.dummy_data_usage,
     });
@@ -44,12 +44,12 @@ function PurePilotStepHeader(props: PilotStepHeaderProps) {
     if (!!pilotInfo?.tabInfo?.url) {
       try {
         GlobalManager.g_backgroundPort?.postMessage({
-          type: "ginkgo-page-background-tab-update",
+          type: "ginkgoo-page-background-tab-update",
           tabId: pilotInfo?.tabInfo?.id,
           updateProperties: { active: true },
         });
       } catch (error) {
-        console.error("[Ginkgo] Sidepanel handleBtnJumpClick error", error);
+        console.error("[Ginkgoo] Sidepanel handleBtnJumpClick error", error);
       }
     }
   };
@@ -83,7 +83,7 @@ function PurePilotStepHeader(props: PilotStepHeaderProps) {
                 <div className="flex flex-[0_0_2.25rem] flex-row justify-center">
                   <IconInfo size={18} />
                 </div>
-                <div className="text-primary flex flex-1 flex-col text-sm">
+                <div className="flex flex-1 flex-col text-sm text-primary">
                   <span>Ready for Your Final Check 🧐</span>
                   <span>For the final steps, including review and official submission, please visit the government website.</span>
                 </div>
@@ -91,14 +91,14 @@ function PurePilotStepHeader(props: PilotStepHeaderProps) {
               <div className="flex h-11 w-full flex-row items-center justify-between gap-1 rounded-xl border border-dashed border-[#D8DFF5] bg-white px-1">
                 <Button variant="ghost" className="w-0 flex-[1_1_auto]" onClick={handleBtnDownloadPdfClick}>
                   <IconPause size={20} />
-                  <span className="text-primary truncate">Download Complete PDF</span>
+                  <span className="truncate text-primary">Download Complete PDF</span>
                 </Button>
 
                 <div className="h-3.5 w-0.5 flex-[0_0_auto] bg-[#CDA4F7]"></div>
 
                 <Button variant="ghost" className="w-0 flex-[1_1_auto]" onClick={handleBtnViewClick}>
                   <IconView size={20} />
-                  <span className="text-primary truncate">Inspect Current Step</span>
+                  <span className="truncate text-primary">Inspect Current Step</span>
                   {/* <span className="text-primary truncate">Go to Official Submission Portal</span> */}
                 </Button>
               </div>
@@ -134,14 +134,14 @@ function PurePilotStepHeader(props: PilotStepHeaderProps) {
                 <div className="-ml-4 flex w-full flex-row items-center justify-start overflow-hidden">
                   <Button variant="ghost" className="w-0 max-w-fit flex-[1_1_auto]" onClick={onBtnPauseClick}>
                     <IconPause size={20} />
-                    <span className="text-primary truncate">Pause Automation</span>
+                    <span className="truncate text-primary">Pause Automation</span>
                   </Button>
 
                   <div className="h-3.5 w-0.5 flex-[0_0_auto] bg-[#CDA4F7]"></div>
 
                   <Button variant="ghost" className="w-0 max-w-fit flex-[1_1_auto]" onClick={handleBtnViewClick}>
                     <IconView size={20} />
-                    <span className="text-primary truncate">Inspect Current Step</span>
+                    <span className="truncate text-primary">Inspect Current Step</span>
                   </Button>
                 </div>
               </div>

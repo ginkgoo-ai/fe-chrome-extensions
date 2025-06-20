@@ -19,13 +19,13 @@ export default function CaseDetail() {
   const [pilotInfo, setPilotInfo] = useState<IPilotType | null>(null);
   const [stepListItems, setStepListItems] = useState<IWorkflowStepType[]>([]);
 
-  useEventManager("ginkgo-message", (message) => {
+  useEventManager("ginkgoo-message", (message) => {
     // console.log('🚀 ~ useEventManager ~ data:', message);
 
     const { type: typeMsg, pilotInfo: pilotInfoMsg } = message || {};
 
     switch (typeMsg) {
-      case "ginkgo-background-all-case-update": {
+      case "ginkgoo-background-all-case-update": {
         const { steps: stepsMsg } = pilotInfoMsg || {};
 
         setPilotInfo(pilotInfoMsg);
@@ -55,7 +55,7 @@ export default function CaseDetail() {
 
   useEffect(() => {
     GlobalManager.g_backgroundPort?.postMessage({
-      type: "ginkgo-sidepanel-background-case-query",
+      type: "ginkgoo-sidepanel-background-case-query",
       caseId,
       workflowId,
     });
@@ -68,23 +68,23 @@ export default function CaseDetail() {
   const handleBtnPauseClick = () => {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgo-sidepanel-all-case-stop",
+        type: "ginkgoo-sidepanel-all-case-stop",
         workflowId,
       });
     } catch (error) {
-      console.error("[Ginkgo] Sidepanel handleCardClick error", error);
+      console.error("[Ginkgoo] Sidepanel handleCardClick error", error);
     }
   };
 
   const handleStepCollapseChange = async (stepKey: string) => {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgo-sidepanel-background-polit-step-query",
+        type: "ginkgoo-sidepanel-background-polit-step-query",
         workflowId,
         stepKey,
       });
     } catch (error) {
-      console.error("[Ginkgo] Sidepanel handleCardClick error", error);
+      console.error("[Ginkgoo] Sidepanel handleCardClick error", error);
     }
   };
 
@@ -93,12 +93,12 @@ export default function CaseDetail() {
 
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgo-sidepanel-all-case-start",
+        type: "ginkgoo-sidepanel-all-case-start",
         pilotId: pilotInfo?.id,
         actionlistPre,
       });
     } catch (error) {
-      console.error("[Ginkgo] Sidepanel handleContinueFilling error", error);
+      console.error("[Ginkgoo] Sidepanel handleContinueFilling error", error);
     }
   };
 
