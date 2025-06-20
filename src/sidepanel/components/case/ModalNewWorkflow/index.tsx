@@ -2,7 +2,7 @@
 
 import { Button } from "antd";
 import { Form, Input, Modal, message as messageAntd } from "antd";
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { IconFormItemLink } from "@/common/components/ui/icon";
 import { useEventManager } from "@/common/hooks/useEventManager";
 
@@ -15,7 +15,6 @@ interface ModalNewWorkflowProps {
 function PureModalNewWorkflow(props: ModalNewWorkflowProps) {
   const { isOpen = false, onOpenUpdate, onFinish } = props;
 
-  const [form] = Form.useForm();
   const [loadingContinue, setLoadingContinue] = useState<boolean>(false);
 
   useEventManager("ginkgoo-message", (message) => {
@@ -37,6 +36,12 @@ function PureModalNewWorkflow(props: ModalNewWorkflowProps) {
       }
     }
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoadingContinue(false);
+    }
+  }, [isOpen]);
 
   const handleNewWorkflowCancel = () => {
     onOpenUpdate?.(false);
@@ -60,7 +65,6 @@ function PureModalNewWorkflow(props: ModalNewWorkflowProps) {
       onCancel={handleNewWorkflowCancel}
     >
       <Form
-        form={form}
         name="new-workflow"
         layout="vertical"
         labelCol={{ span: 24 }}

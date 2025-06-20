@@ -50,10 +50,20 @@ const StorageApi = {
   filesPDFHighlight: "/storage/v1/files/pdf-highlight",
 };
 
-const IS_MOCK = false;
-const LOCAL_BASE_URL = "http://192.168.31.205:6011"; // David
+const IS_MOCK_LIST: string[] = [
+  // "queryCaseDetail",
+  // "getWorkflowDefinitions",
+  // "getWorkflowList",
+  // "getWorkflowDetail",
+  // "getWorkflowStepData",
+  // "createWorkflow",
+  // "postWorkflowsProcessForm",
+  // "postWorkflowsUploadProgressFile",
+  // "postFilesThirdPart",
+  // "postFilesPDFHighlight",
+];
+// const LOCAL_BASE_URL = "http://192.168.31.205:6011"; // David
 // const LOCAL_BASE_URL_FILE = "http://192.168.31.205:8080/api"; // David
-const baseUrl = LOCAL_BASE_URL || GlobalManager.g_API_CONFIG.apiAiServerUrl;
 
 const genGinkgooHeaders = async (params?: { headers?: Record<string, string> }) => {
   const { headers = {} } = params || {};
@@ -104,12 +114,12 @@ const queryUserInfo = async () => {
 
 const queryCaseDetail = async (params: { caseId: string }) => {
   const { caseId } = params || {};
-  const url = `${GlobalManager.g_API_CONFIG.apiAiServerUrl}${CaseApi.caseDetail}`.replace(":caseId", caseId);
+  const url = `${GlobalManager.g_API_CONFIG.apiServerUrl}${CaseApi.caseDetail}`.replace(":caseId", caseId);
   const headers = {
     ...(await genGinkgooHeaders()),
   };
 
-  if (IS_MOCK) {
+  if (IS_MOCK_LIST.includes("queryCaseDetail")) {
     return new Promise((resolve) => {
       resolve(mockCaseDetail);
     });
@@ -131,7 +141,7 @@ const getWorkflowDefinitions = async (params: IGetWorkflowDefinitionsParamsType)
     ...(await genGinkgooHeaders()),
   };
 
-  if (IS_MOCK) {
+  if (IS_MOCK_LIST.includes("getWorkflowDefinitions")) {
     return new Promise((resolve) => {
       resolve(mockWorkflowDefinitions);
     });
@@ -156,7 +166,7 @@ const getWorkflowList = async (params: IGetWorkflowListParamsType) => {
     ...(await genGinkgooHeaders()),
   };
 
-  if (IS_MOCK) {
+  if (IS_MOCK_LIST.includes("getWorkflowList")) {
     return new Promise((resolve) => {
       resolve(mockGetWorkflowList);
     });
@@ -178,7 +188,7 @@ const getWorkflowDetail = async (params: IGetWorkflowDetailParamsType): Promise<
     ...(await genGinkgooHeaders()),
   };
 
-  if (IS_MOCK) {
+  if (IS_MOCK_LIST.includes("getWorkflowDetail")) {
     return new Promise((resolve) => {
       resolve(mockGetWorkflowDetail);
     });
@@ -202,7 +212,7 @@ const getWorkflowStepData = async (params: IGetWorkflowStepDataParamsType): Prom
     ...(await genGinkgooHeaders()),
   };
 
-  if (IS_MOCK) {
+  if (IS_MOCK_LIST.includes("getWorkflowStepData")) {
     return new Promise((resolve) => {
       resolve(mockGetWorkflowStepData);
     });
@@ -247,7 +257,7 @@ const postWorkflowsProcessForm = async (params: IWorkflowsProcessFormParamsType)
     ...(await genGinkgooHeaders()),
   };
 
-  if (IS_MOCK) {
+  if (IS_MOCK_LIST.includes("postWorkflowsProcessForm")) {
     return new Promise((resolve) => {
       resolve(mockPostWorkflowsProcessForm);
     });
@@ -293,7 +303,7 @@ const postFilesThirdPart = async (params: IFilesThirdPartParamsType): Promise<IC
     ...(await genGinkgooHeaders()),
   };
 
-  if (IS_MOCK) {
+  if (IS_MOCK_LIST.includes("postFilesThirdPart")) {
     return new Promise((resolve) => {
       resolve(mockPostFilesThirdPart);
     });

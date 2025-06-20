@@ -325,7 +325,7 @@ class ChromeManager {
     });
   };
 
-  getActiveTabInfo = async (queryInfo: Record<string, any>): Promise<chrome.tabs.Tab> => {
+  getActiveTabInfo = async (): Promise<chrome.tabs.Tab> => {
     return new Promise((resolve) => {
       if (GlobalManager.g_isDev) {
         message.open({

@@ -5,6 +5,7 @@ import BackgroundEventManager from "@/common/kits/BackgroundEventManager";
 import ChromeManager from "@/common/kits/ChromeManager";
 import HTMLManager from "@/common/kits/HTMLManager";
 import LockManager from "@/common/kits/LockManager";
+import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { IActionItemType } from "@/common/types/case";
@@ -603,6 +604,19 @@ class PilotManager {
     const tabInfo = resTabs?.[0];
 
     console.log("start 0", tabInfo);
+    const isCheckAuth = await UserManager.checkAuth();
+
+    console.log("start 1", isCheckAuth);
+
+    if (!isCheckAuth) {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgoo-background-all-auth-check`,
+        value: isCheckAuth,
+      });
+      return;
+    }
+
+    console.log("start 2", tabInfo);
 
     if (!tabInfo) {
       BackgroundEventManager.postConnectMessage({
@@ -615,7 +629,7 @@ class PilotManager {
 
     let pilotInfo = pilotId ? this.getPilot({ id: pilotId }) : this.getPilot({ tabId: tabInfo.id });
 
-    console.log("start 1", pilotId, pilotInfo);
+    console.log("start 3", pilotId, pilotInfo);
 
     if (pilotInfo) {
       if (pilotInfo.timer) {

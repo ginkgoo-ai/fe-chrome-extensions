@@ -2,6 +2,7 @@
 import ChromeManager from "@/common/kits/ChromeManager";
 import FetchManager from "@/common/kits/FetchManager";
 import PilotManager from "@/common/kits/PilotManager";
+import UserManager from "@/common/kits/UserManager";
 
 interface IMessageType {
   type: string;
@@ -249,10 +250,27 @@ class BackgroundEventManager {
     // console.log("onConnectCommon", type, otherInfo);
 
     switch (type) {
+      case "ginkgoo-page-background-auth-check": {
+        const isCheckAuth = await UserManager.checkAuth();
+        this.postConnectMessage({
+          type: `ginkgoo-background-all-auth-check`,
+          value: isCheckAuth,
+        });
+        break;
+      }
       case "ginkgoo-page-page-register": {
         messageNew.scope = [port.name];
         messageNew.version = chrome.runtime.getManifest().version;
         this.postConnectMessage(messageNew);
+        break;
+      }
+      case "ginkgoo-page-background-tab-query":
+      case "ginkgoo-sidepanel-background-tab-query": {
+        const activeTabInfo = await ChromeManager.getActiveTabInfo();
+        this.postConnectMessage({
+          type: `ginkgoo-background-all-tab-query`,
+          value: activeTabInfo,
+        });
         break;
       }
       case "ginkgoo-page-background-tab-update":
