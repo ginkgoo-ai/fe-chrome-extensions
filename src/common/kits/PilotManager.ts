@@ -465,6 +465,15 @@ class PilotManager {
       fileId: resFilesThirdPart.id,
     });
 
+    if (!resWorkflowsUploadProgressFile?.success) {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgoo-background-all-toast`,
+        typeToast: "error",
+        contentToast: "Bind PDF failed.",
+      });
+      return;
+    }
+
     console.log("resWorkflowsUploadProgressFile", resWorkflowsUploadProgressFile);
   };
 

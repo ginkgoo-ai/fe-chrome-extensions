@@ -301,7 +301,7 @@ const postWorkflowsProcessForm = async (params: IWorkflowsProcessFormParamsType)
 };
 
 const postWorkflowsUploadProgressFile = async (params: IWorkflowsUploadProgressFileParamsType) => {
-  const { workflowId = "", ...body } = params;
+  const { workflowId = "", fileId = "" } = params;
   const url = `${GlobalManager.g_API_CONFIG.apiAiServerUrl}${WorkflowApi.workflowsUploadProgressFile}`.replace(":workflowId", workflowId);
   const headers = {
     ...(await genGinkgooHeaders()),
@@ -317,7 +317,9 @@ const postWorkflowsUploadProgressFile = async (params: IWorkflowsUploadProgressF
     method: "POST",
     url,
     headers,
-    body,
+    body: {
+      file_id: fileId,
+    },
   });
 
   return res;
