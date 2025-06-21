@@ -291,7 +291,10 @@ const postWorkflowsProcessForm = async (params: IWorkflowsProcessFormParamsType)
     method: "POST",
     url,
     headers,
-    body,
+    body: {
+      ...body,
+      trace_id: workflowId,
+    },
   });
 
   return res;
@@ -322,7 +325,7 @@ const postWorkflowsUploadProgressFile = async (params: IWorkflowsUploadProgressF
 
 const postFilesThirdPart = async (params: IFilesThirdPartParamsType): Promise<ICloudFileType> => {
   // const { thirdPartUrl, cookie } = params;
-  const url = `${GlobalManager.g_API_CONFIG.authServerUrl}${StorageApi.filesThirdPart}`;
+  const url = `${GlobalManager.g_API_CONFIG.apiServerUrl}${StorageApi.filesThirdPart}`;
   const headers = {
     ...(await genGinkgooHeaders()),
   };
@@ -346,7 +349,7 @@ const postFilesThirdPart = async (params: IFilesThirdPartParamsType): Promise<IC
 
 const postFilesPDFHighlight = async (params: IFilesPDFHighlightParamsType): Promise<BlobPart> => {
   // const { fileId, highlightData } = params;
-  const url = `${GlobalManager.g_API_CONFIG.authServerUrl}${StorageApi.filesPDFHighlight}`;
+  const url = `${GlobalManager.g_API_CONFIG.apiServerUrl}${StorageApi.filesPDFHighlight}`;
   const headers = {
     ...(await genGinkgooHeaders({
       headers: {

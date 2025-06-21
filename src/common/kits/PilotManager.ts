@@ -73,7 +73,7 @@ class PilotManager {
       // 获取锁
       await LockManager.acquireLock(lockId);
 
-      const pilot = this.pilotMap.get(lockId);
+      const pilot = this.pilotMap.get(workflowId);
 
       if (pilot) {
         Object.keys(update).forEach((key) => {
@@ -263,6 +263,8 @@ class PilotManager {
         },
       });
     }
+
+    console.log("queryHtmlInfo", hash, pilotInfo?.repeatHash, Number(pilotInfo?.repeatCurrent));
 
     if (Number(pilotInfo?.repeatCurrent) > this.REPEAT_MAX) {
       BackgroundEventManager.postConnectMessage({
