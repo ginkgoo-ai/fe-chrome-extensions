@@ -84,7 +84,7 @@ export interface ICreateWorkflowParamsType {
 
 export interface IWorkflowsProcessFormParamsType {
   workflowId: string;
-  message: string;
+  form_html: string;
   fill_data: Record<string, unknown>;
 }
 

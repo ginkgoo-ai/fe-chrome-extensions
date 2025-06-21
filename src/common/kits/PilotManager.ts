@@ -365,7 +365,7 @@ class PilotManager {
 
     const resWorkflowsProcessForm = await Api.Ginkgoo.postWorkflowsProcessForm({
       workflowId,
-      message: htmlCleansing,
+      form_html: htmlCleansing,
       fill_data: pilotInfo.fill_data,
     });
 

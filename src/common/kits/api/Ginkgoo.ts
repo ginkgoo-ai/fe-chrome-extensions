@@ -291,10 +291,7 @@ const postWorkflowsProcessForm = async (params: IWorkflowsProcessFormParamsType)
     method: "POST",
     url,
     headers,
-    body: {
-      ...body,
-      trace_id: workflowId,
-    },
+    body,
   });
 
   return res;
