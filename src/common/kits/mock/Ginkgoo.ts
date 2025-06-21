@@ -15956,7 +15956,7 @@ export const mockGetWorkflowList = [
     "user_id": "user-12345",
     "case_id": "case-12345",
     "status": "PENDING",
-    "current_step_key": "string",
+    "current_step_key": "applicant_setup",
     "created_at": "2025-06-18T09:55:52.668Z",
     "updated_at": "2025-06-18T09:55:52.668Z",
     "completed_at": "2025-06-18T09:55:52.668Z",

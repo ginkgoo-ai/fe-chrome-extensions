@@ -1,13 +1,8 @@
 import { useEffect } from "react";
-import { usePageParams } from "@/common/hooks/usePageParams";
-import UserManager from "@/common/kits/UserManager";
-import UtilsManager from "@/common/kits/UtilsManager";
+import SPPageCore from "@/sidepanel/components/SPPageCore";
 import "./index.less";
 
 export default function Entry() {
-  const { location, pathRouter, paramsRouter } = usePageParams();
-  const { track = "" } = paramsRouter || {};
-
   // const init = async () => {
   //   const isAuth = await UserManager.checkAuth();
   //   if (isAuth) {
@@ -27,5 +22,9 @@ export default function Entry() {
     // init();
   }, []);
 
-  return <div>Entry</div>;
+  return (
+    <SPPageCore track="/case-portal">
+      <div></div>
+    </SPPageCore>
+  );
 }

@@ -8,7 +8,6 @@ import { IPilotType, IWorkflowStepType } from "@/common/types/casePilot";
 import SPPageCore from "@/sidepanel/components/SPPageCore";
 import SPPageHeader from "@/sidepanel/components/SPPageHeader";
 import { PilotStepBody } from "@/sidepanel/components/case/PilotStepBody";
-import { PilotStepHeader } from "@/sidepanel/components/case/PilotStepHeader";
 import { stepListItemsDeclaration } from "@/sidepanel/pages/CaseDetail/config";
 import "./index.less";
 
@@ -54,11 +53,15 @@ export default function CaseDetail() {
   });
 
   useEffect(() => {
-    GlobalManager.g_backgroundPort?.postMessage({
-      type: "ginkgoo-sidepanel-background-case-query",
-      caseId,
-      workflowId,
-    });
+    try {
+      GlobalManager.g_backgroundPort?.postMessage({
+        type: "ginkgoo-sidepanel-background-case-query",
+        caseId,
+        workflowId,
+      });
+    } catch (error) {
+      console.debug("[Ginkgoo] CaseDetail init", error);
+    }
   }, []);
 
   const handleBtnBackClick = () => {

@@ -39,6 +39,6 @@ export const globalRouters = createHashRouter([
   },
   {
     path: "*",
-    element: <Navigate to="/case-portal" />,
+    element: <Navigate to="/entry" />,
   },
 ]);

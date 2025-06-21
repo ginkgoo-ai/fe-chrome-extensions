@@ -181,7 +181,7 @@ const getWorkflowDefinitions = async (params: IGetWorkflowDefinitionsParamsType)
   return res;
 };
 
-const getWorkflowList = async (params: IGetWorkflowListParamsType) => {
+const getWorkflowList = async (params: IGetWorkflowListParamsType): Promise<IWorkflowType[]> => {
   const { userId = "", caseId = "" } = params;
   const url = `${GlobalManager.g_API_CONFIG.apiAiServerUrl}${WorkflowApi.workflowsList}`
     .replace(":userId", userId)

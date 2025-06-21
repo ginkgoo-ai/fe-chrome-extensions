@@ -13,6 +13,7 @@ import { IRootStateType } from "@/sidepanel/types/redux";
 import "./index.less";
 
 interface SPPageCoreProps {
+  track?: string;
   renderPageHeader?: () => React.ReactNode;
   renderPageFooter?: () => React.ReactNode;
   children: React.ReactNode;
@@ -22,7 +23,7 @@ interface SPPageCoreProps {
  * 页面容器组件
  */
 export default function SPPageCore(props: SPPageCoreProps) {
-  const { renderPageHeader, renderPageFooter, children } = props || {};
+  const { track, renderPageHeader, renderPageFooter, children } = props || {};
   const { location, pathRouter, paramsRouter } = usePageParams();
 
   const isLoadCompleted = useRef<boolean>(false);
@@ -47,22 +48,22 @@ export default function SPPageCore(props: SPPageCoreProps) {
 
         break;
       }
-      case "ginkgoo-background-all-polit-query": {
-        // console.log("PageCoreSidePanel useEventManager", pilotInfoMsg);
-        if (pilotInfoMsg?.timer) {
-          const { caseId: caseIdMsg, workflowId: workflowIdMsg } = pilotInfoMsg || {};
-          routerCompleted(
-            UtilsManager.router2url("/case-detail", {
-              caseId: caseIdMsg,
-              workflowId: workflowIdMsg,
-            })
-          );
-        } else {
-          routerCompleted("/case-portal");
-        }
+      // case "ginkgoo-background-all-polit-query": {
+      //   // console.log("PageCoreSidePanel useEventManager", pilotInfoMsg);
+      //   if (pilotInfoMsg?.timer) {
+      //     const { caseId: caseIdMsg, workflowId: workflowIdMsg } = pilotInfoMsg || {};
+      //     routerCompleted(
+      //       UtilsManager.router2url("/case-detail", {
+      //         caseId: caseIdMsg,
+      //         workflowId: workflowIdMsg,
+      //       })
+      //     );
+      //   } else {
+      //     routerCompleted("/case-portal");
+      //   }
 
-        break;
-      }
+      //   break;
+      // }
       case "ginkgoo-background-all-toast": {
         const { typeToast, contentToast } = message || {};
         messageAntd.open({
@@ -88,7 +89,7 @@ export default function SPPageCore(props: SPPageCoreProps) {
       //   track: encodeURIComponent(UtilsManager.router2url(pathRouter, paramsRouter)),
       // });
       UtilsManager.redirectTo("/login", {
-        track: encodeURIComponent(UtilsManager.router2url(pathRouter, paramsRouter)),
+        track: track || encodeURIComponent(UtilsManager.router2url(pathRouter, paramsRouter)),
       });
     }
   };
@@ -99,21 +100,20 @@ export default function SPPageCore(props: SPPageCoreProps) {
   };
 
   useEffect(() => {
-    const { caseId: caseIdRouter, workflowId: workflowIdRouter } = paramsRouter || {};
-
-    try {
-      GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-background-polit-query",
-        caseId: caseIdRouter,
-        workflowId: workflowIdRouter,
-      });
-    } catch (error) {
-      console.error("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
-    }
-
-    setTimeout(() => {
-      isLoadCompleted.current = true;
-    }, 500);
+    checkAuth();
+    // const { caseId: caseIdRouter, workflowId: workflowIdRouter } = paramsRouter || {};
+    // try {
+    //   GlobalManager.g_backgroundPort?.postMessage({
+    //     type: "ginkgoo-sidepanel-background-polit-query",
+    //     caseId: caseIdRouter,
+    //     workflowId: workflowIdRouter,
+    //   });
+    // } catch (error) {
+    //   console.error("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
+    // }
+    // setTimeout(() => {
+    //   isLoadCompleted.current = true;
+    // }, 500);
   }, []);
 
   // Check Activated Page

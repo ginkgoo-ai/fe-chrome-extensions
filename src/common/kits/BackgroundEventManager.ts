@@ -250,7 +250,8 @@ class BackgroundEventManager {
     // console.log("onConnectCommon", type, otherInfo);
 
     switch (type) {
-      case "ginkgoo-page-background-auth-check": {
+      case "ginkgoo-page-background-auth-check":
+      case "ginkgoo-sidepanel-background-auth-check": {
         const isCheckAuth = await UserManager.checkAuth();
         this.postConnectMessage({
           type: `ginkgoo-background-all-auth-check`,

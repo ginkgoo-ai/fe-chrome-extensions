@@ -144,13 +144,14 @@ export interface IWorkflowDummyDataType {
 export interface IWorkflowType {
   workflow_instance_id: string;
   user_id: string;
-  status: string; // 'IN_PROGRESS';
+  case_id?: string;
+  status: string; // 'IN_PROGRESS' | "PENDING";
   current_step_key: string; // 'applicant_setup';
   created_at: string | null;
-  dummy_data_usage: IWorkflowDummyDataType[];
-  progress_file_id: string;
   updated_at: string | null;
   completed_at: string | null;
-  workflow_definition_id: string;
-  steps: IWorkflowStepType[];
+  dummy_data_usage?: IWorkflowDummyDataType[];
+  progress_file_id?: string;
+  workflow_definition_id?: string;
+  steps?: IWorkflowStepType[];
 }
