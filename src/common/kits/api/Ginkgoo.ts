@@ -4,6 +4,7 @@ import GlobalManager from "@/common/kits/GlobalManager";
 import UserManager from "@/common/kits/UserManager";
 import {
   mockCaseDetail,
+  mockCaseList,
   mockGetWorkflowDetail,
   mockGetWorkflowList,
   mockGetWorkflowStepData,
@@ -11,6 +12,7 @@ import {
   mockPostWorkflowsProcessForm,
   mockWorkflowDefinitions,
 } from "@/common/kits/mock/Ginkgoo";
+import { ICaseItemType } from "@/common/types/case";
 import {
   ICreateWorkflowParamsType,
   IGetWorkflowDefinitionsParamsType,
@@ -32,6 +34,7 @@ const AuthApi = {
 };
 
 const CaseApi = {
+  case: "/legalcase/cases",
   caseDetail: "/legalcase/cases/:caseId",
 };
 
@@ -51,6 +54,7 @@ const StorageApi = {
 };
 
 const IS_MOCK_LIST: string[] = [
+  // "queryCaseList",
   // "queryCaseDetail",
   // "getWorkflowDefinitions",
   // "getWorkflowList",
@@ -109,6 +113,26 @@ const queryUserInfo = async () => {
     url,
     headers,
   });
+  return res;
+};
+
+const queryCaseList = async (): Promise<{ content: ICaseItemType[] }> => {
+  const url = `${GlobalManager.g_API_CONFIG.apiServerUrl}${CaseApi.case}`;
+  const headers = {
+    ...(await genGinkgooHeaders()),
+  };
+  if (IS_MOCK_LIST.includes("queryCaseList")) {
+    return new Promise((resolve) => {
+      resolve({ content: mockCaseList });
+    });
+  }
+
+  const res = await FetchManager.fetchAPI({
+    method: "GET",
+    url,
+    headers,
+  });
+
   return res;
 };
 
@@ -346,6 +370,7 @@ const postFilesPDFHighlight = async (params: IFilesPDFHighlightParamsType): Prom
 export default {
   authToken,
   queryUserInfo,
+  queryCaseList,
   queryCaseDetail,
   getWorkflowDefinitions,
   getWorkflowList,

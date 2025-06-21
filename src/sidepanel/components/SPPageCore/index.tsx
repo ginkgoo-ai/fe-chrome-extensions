@@ -8,6 +8,7 @@ import { usePageParams } from "@/common/hooks/usePageParams";
 import GlobalManager from "@/common/kits/GlobalManager";
 import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
+import { PilotStatusEnum } from "@/common/types/casePilot";
 import { IRootStateType } from "@/sidepanel/types/redux";
 import "./index.less";
 
@@ -33,6 +34,19 @@ export default function SPPageCore(props: SPPageCoreProps) {
     const { type: typeMsg, pilotInfo: pilotInfoMsg } = message;
 
     switch (typeMsg) {
+      case "ginkgoo-background-all-case-update": {
+        const { caseId: caseIdMsg, workflowId: workflowIdMsg, pilotStatus: pilotStatusMsg } = pilotInfoMsg || {};
+        if (pilotStatusMsg === PilotStatusEnum.START) {
+          setTimeout(() => {
+            UtilsManager.redirectTo("/case-detail", {
+              caseId: caseIdMsg,
+              workflowId: workflowIdMsg,
+            });
+          }, 500);
+        }
+
+        break;
+      }
       case "ginkgoo-background-all-polit-query": {
         // console.log("PageCoreSidePanel useEventManager", pilotInfoMsg);
         if (pilotInfoMsg?.timer) {

@@ -62,10 +62,6 @@ export default function CaseDetail() {
   }, []);
 
   const handleBtnBackClick = () => {
-    UtilsManager.navigateBack();
-  };
-
-  const handleBtnPauseClick = () => {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgoo-sidepanel-all-case-stop",
@@ -74,6 +70,7 @@ export default function CaseDetail() {
     } catch (error) {
       console.error("[Ginkgoo] Sidepanel handleCardClick error", error);
     }
+    UtilsManager.redirectTo("/case-portal");
   };
 
   const handleStepCollapseChange = async (stepKey: string) => {
@@ -108,9 +105,6 @@ export default function CaseDetail() {
         return (
           <div className="flex w-full flex-col">
             <SPPageHeader title={`CaseDetail-${pilotInfo?.pilotStatus}`} onBtnBackClick={handleBtnBackClick} />
-            <div className="box-border w-full px-4">
-              <PilotStepHeader pilotInfo={pilotInfo} onBtnPauseClick={handleBtnPauseClick} />
-            </div>
           </div>
         );
       }}

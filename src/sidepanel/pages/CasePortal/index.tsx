@@ -1,18 +1,16 @@
+import { message as messageAntd } from "antd";
 import { useEffect, useRef, useState } from "react";
-import { useEventManager } from "@/common/hooks/useEventManager";
 import CaseManager from "@/common/kits/CaseManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import UserManager from "@/common/kits/UserManager";
-import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { ICaseItemType } from "@/common/types/case";
-import { PilotStatusEnum, WorkflowTypeEnum } from "@/common/types/casePilot";
+import { WorkflowTypeEnum } from "@/common/types/casePilot";
 import SPPageCore from "@/sidepanel/components/SPPageCore";
 import SPPageHeader from "@/sidepanel/components/SPPageHeader";
 import { CardCase } from "@/sidepanel/components/case/CardCase";
 import { ModalNewWorkflow } from "@/sidepanel/components/case/ModalNewWorkflow";
 import "./index.less";
-import { mockCaseList } from "./mock";
 
 export default function CasePortal() {
   const refCaseInfoSelect = useRef<ICaseItemType | null>(null);
@@ -21,39 +19,25 @@ export default function CasePortal() {
   const [caseList, setCaseList] = useState<ICaseItemType[]>([]);
   const [isModalNewWorkflowOpen, setModalNewWorkflowOpen] = useState<boolean>(false);
 
-  useEventManager("ginkgoo-message", (message) => {
-    // console.log('🚀 ~ useEventManager ~ data:', message);
+  const refreshCaseList = async () => {
+    const resCaseList = await Api.Ginkgoo.queryCaseList();
 
-    const { type: typeMsg, pilotInfo: pilotInfoMsg } = message || {};
+    if (resCaseList?.content) {
+      const caseListTmp = resCaseList?.content?.map((item) => {
+        return CaseManager.parseCaseInfo(item);
+      });
 
-    switch (typeMsg) {
-      case "ginkgoo-background-all-case-update": {
-        const { caseId: caseIdMsg, workflowId: workflowIdMsg, pilotStatus: pilotStatusMsg } = pilotInfoMsg || {};
-        if (pilotStatusMsg === PilotStatusEnum.START) {
-          setModalNewWorkflowOpen(false);
-          setTimeout(() => {
-            UtilsManager.navigateTo("/case-detail", {
-              caseId: caseIdMsg,
-              workflowId: workflowIdMsg,
-            });
-          }, 500);
-        }
-
-        break;
-      }
-      default: {
-        break;
-      }
+      setCaseList(caseListTmp);
+      return;
     }
-  });
 
-  const init = async () => {
-    const caseListTmp = mockCaseList.map((item) => {
-      return CaseManager.parseCaseInfo(item);
+    messageAntd.open({
+      type: "error",
+      content: "RefreshCaseList Error",
     });
+  };
 
-    setCaseList(caseListTmp);
-
+  const refreshWorkflowDefinitions = async () => {
     const resWorkflowDefinitions = await Api.Ginkgoo.getWorkflowDefinitions({
       page: 1,
       page_size: 1,
@@ -63,7 +47,18 @@ export default function CasePortal() {
     if (resWorkflowDefinitions?.items?.length > 0) {
       const item = resWorkflowDefinitions?.items[0];
       refWorkflowDefinitionId.current = item.workflow_definition_id;
+      return;
     }
+
+    messageAntd.open({
+      type: "error",
+      content: "RefreshWorkflowDefinitions Error",
+    });
+  };
+
+  const init = async () => {
+    refreshCaseList();
+    refreshWorkflowDefinitions();
   };
 
   useEffect(() => {
