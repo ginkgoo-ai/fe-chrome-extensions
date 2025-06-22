@@ -1,6 +1,7 @@
 import { Navigate, createHashRouter } from "react-router-dom";
 import About from "@/sidepanel/pages/About";
-import Pilot from "@/sidepanel/pages/Case";
+import CaseDetail from "@/sidepanel/pages/CaseDetail";
+import CasePortal from "@/sidepanel/pages/CasePortal";
 import Debug from "@/sidepanel/pages/Debug";
 import Entry from "@/sidepanel/pages/Entry";
 import Login from "@/sidepanel/pages/Login";
@@ -11,6 +12,14 @@ export const globalRouters = createHashRouter([
   {
     path: "/about",
     element: <About />,
+  },
+  {
+    path: "/case-detail",
+    element: <CaseDetail />,
+  },
+  {
+    path: "/case-portal",
+    element: <CasePortal />,
   },
   {
     path: "/debug",
@@ -25,15 +34,11 @@ export const globalRouters = createHashRouter([
     element: <Login />,
   },
   {
-    path: "/pilot",
-    element: <Pilot />,
-  },
-  {
     path: "/privacy",
     element: <Privacy />,
   },
   {
     path: "*",
-    element: <Navigate to="/pilot" />,
+    element: <Navigate to="/entry" />,
   },
 ]);

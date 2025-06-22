@@ -245,7 +245,7 @@ class UtilsManager {
     const arrParams = [];
     let strResult = strPath;
 
-    if (strResult) {
+    if (strResult && Object.values(objParams)?.length > 0) {
       strResult += strPath.includes("?") ? "&" : "?";
     }
 
@@ -262,24 +262,41 @@ class UtilsManager {
     //   return {};
     // }
 
-    const urlInfo = new URL(url || window.location.href) || {};
-    const { hash, host, hostname, href, origin = "", password, pathname = "", port, protocol, search, searchParams, username } = urlInfo;
-
     // For example: http://localhost:3000/en/?q=2#why
     const result = {
-      hash, // #why
-      host, // localhost:3000
-      hostname, // localhost
-      href, // http://localhost:3000/en/?q=2#why
-      origin, // http://localhost:3000
-      password, // ""
-      pathname, // /en/
-      port, // 3000
-      protocol, // http:
-      search, // ?q=2
-      searchParams, // URLSearchParams {size: 1}
-      username, // ""
+      hash: "", // #why
+      host: "", // localhost:3000
+      hostname: "", // localhost
+      href: "", // http://localhost:3000/en/?q=2#why
+      origin: "", // http://localhost:3000
+      password: "", // ""
+      pathname: "", // /en/
+      port: "", // 3000
+      protocol: "", // http:
+      search: "", // ?q=2
+      searchParams: {}, // URLSearchParams {size: 1}
+      username: "", // ""
     };
+
+    try {
+      const urlInfo = new URL(url || window.location.href) || {};
+      const { hash, host, hostname, href, origin = "", password, pathname = "", port, protocol, search, searchParams, username } = urlInfo;
+
+      result.hash = hash;
+      result.host = host;
+      result.hostname = hostname;
+      result.href = href;
+      result.origin = origin;
+      result.password = password;
+      result.pathname = pathname;
+      result.port = port;
+      result.protocol = protocol;
+      result.search = search;
+      result.searchParams = searchParams;
+      result.username = username;
+    } catch (error) {
+      console.log("[Ginkgoo] UtilsManager getUrlInfo", error);
+    }
 
     // console.log("getUrlInfo result", result);
 
@@ -327,12 +344,43 @@ class UtilsManager {
     const path = this.router2url(url, params);
     const href = `${html}#${path}`;
 
-    console.log("redirectTo", href, html, path);
+    console.log("redirectTo", href, window?.location?.href);
+    // if (window?.location?.href !== href) {
+    //   window.location.replace(href);
+    //   return true;
+    // } else {
+    //   return false;
+    // }
     window.location.replace(href);
   };
 
   navigateBack = () => {
     window.history.back();
+  };
+
+  clickTagA = (params: { url: string; fileName?: string; target?: string }) => {
+    const { url, fileName, target } = params || {};
+    const a = document.createElement("a");
+
+    a.href = url;
+    if (fileName) {
+      a.download = fileName;
+    }
+    if (target) {
+      a.target = target;
+    }
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  saveBlob = (params: { blobPart: BlobPart; fileName?: string }) => {
+    const { blobPart, fileName } = params;
+    const blob = new Blob([blobPart]);
+
+    this.clickTagA({ url: window.URL.createObjectURL(blob), fileName });
   };
 }
 

@@ -1,16 +1,16 @@
-import MKHeader from "@/common/components/MKHeader";
 import MKIcon from "@/common/components/MKIcon";
 import MKModuleSupport from "@/common/components/MKModuleSupport";
-import MKPageCore from "@/common/components/MKPageCore";
 import GlobalManager from "@/common/kits/GlobalManager";
 import imgLogo from "@/resource/oss/assets/app.webp";
+import SPPageCore from "@/sidepanel/components/SPPageCore";
+import SPPageHeader from "@/sidepanel/components/SPPageHeader";
 import "./index.less";
 
 export default function About(): JSX.Element {
   return (
-    <MKPageCore
+    <SPPageCore
       renderPageHeader={() => {
-        return <MKHeader title="About" />;
+        return <SPPageHeader title="About" />;
       }}
     >
       <div className="flex flex-1 flex-col items-center justify-start">
@@ -29,6 +29,6 @@ export default function About(): JSX.Element {
         </div>
       </div>
       <MKModuleSupport />
-    </MKPageCore>
+    </SPPageCore>
   );
 }

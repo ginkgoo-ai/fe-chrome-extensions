@@ -1,7 +1,7 @@
 import { LoadingOutlined } from "@ant-design/icons";
 import { Spin } from "antd";
-import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { usePageParams } from "@/common/hooks/usePageParams";
 import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import "./index.less";
@@ -15,7 +15,7 @@ export default function MKPageCore(props: {
   children: React.ReactNode;
 }) {
   const { renderPageHeader, renderPageFooter, children } = props || {};
-  const location = useLocation();
+  const { location, pathRouter, paramsRouter } = usePageParams();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   const checkAuth = async () => {
@@ -23,14 +23,13 @@ export default function MKPageCore(props: {
     if (isAuthenticatedTmp) {
       setIsAuthenticated(isAuthenticatedTmp);
     } else {
-      UtilsManager.redirectTo("/entry");
+      UtilsManager.redirectTo("/entry", {
+        track: encodeURIComponent(UtilsManager.router2url(pathRouter, paramsRouter)),
+      });
     }
   };
 
   useEffect(() => {
-    if (location.pathname === "/entry") {
-      return;
-    }
     checkAuth();
   }, [location.pathname]);
 

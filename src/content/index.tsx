@@ -2,14 +2,14 @@ import { v4 as uuidv4 } from "uuid";
 import GlobalManager from "@/common/kits/GlobalManager";
 import "./index.less";
 
-const mainGinkgo = () => {
+const mainGinkgoo = () => {
   let port: chrome.runtime.Port | null = null;
 
   const handleMessage = (event: MessageEvent) => {
     const message = event.data;
     const { type, ...otherInfo } = message;
-    const [_, source, target] = type.split("-");
-    // console.log("[Ginkgo] ContentScript handleMessage", event, type, type.startsWith("ginkgo-page-"));
+    const [_, source, target] = type?.split("-");
+    // console.log("[Ginkgoo] ContentScript handleMessage", event, type, type.startsWith("ginkgoo-page-"));
 
     // 如果是自身来源的消息，才会转发
     if (source === "page") {
@@ -19,10 +19,15 @@ const mainGinkgo = () => {
             try {
               port?.postMessage(message);
             } catch (error) {
-              console.debug("[Ginkgo] ContentScript postMessage error", error);
+              console.debug("[Ginkgoo] ContentScript postMessage error", error);
               // 断线重连
               if (String(error).includes("Attempting to use a disconnected port")) {
                 connectBackground();
+                return;
+              }
+              if (String(error).includes("Extension context invalidated")) {
+                window.postMessage({ type: "ginkgoo-content-page-invalidated" }, window.location.origin);
+                return;
               }
             }
           }
@@ -33,9 +38,9 @@ const mainGinkgo = () => {
   };
 
   const handleConnectMessage = (message: any, port: chrome.runtime.Port) => {
-    // console.log("[Ginkgo] ContentScript handleConnectMessage", message, window.location.origin);
+    // console.log("[Ginkgoo] ContentScript handleConnectMessage", message, window.location.origin);
     const { type, scope } = message;
-    const [_, source, target] = type.split("-");
+    const [_, source, target] = type?.split("-");
 
     if (!scope || scope.includes(port.name)) {
       // 如果有指定送达范围，则只送达指定范围
@@ -52,7 +57,7 @@ const mainGinkgo = () => {
   };
 
   const connectBackground = () => {
-    port = chrome.runtime.connect({ name: `ginkgo-page-${uuidv4()}` });
+    port = chrome.runtime.connect({ name: `ginkgoo-page-${uuidv4()}` });
     port.onMessage.addListener(handleConnectMessage);
   };
 
@@ -60,11 +65,11 @@ const mainGinkgo = () => {
     try {
       // 仅白名单网站才会注入脚本
       if (!GlobalManager.g_whiteListForRegister.includes(window.location.origin)) {
-        console.log("[Ginkgo] fe-chrome-extensions ignore");
+        console.log("[Ginkgoo] fe-chrome-extensions ignore");
         return;
       }
 
-      console.log("[Ginkgo] fe-chrome-extensions load");
+      console.log("[Ginkgoo] fe-chrome-extensions load");
 
       // 注册监听页面事件
       window.addEventListener("message", handleMessage);
@@ -72,7 +77,7 @@ const mainGinkgo = () => {
       // 注册监听background事件
       connectBackground();
     } catch (error) {
-      console.debug("[Ginkgo] Error in load event:", error);
+      console.debug("[Ginkgoo] Error in load event:", error);
     }
   });
 
@@ -82,7 +87,7 @@ const mainGinkgo = () => {
   });
 };
 
-mainGinkgo();
+mainGinkgoo();
 
 // window.addEventListener("unload", () => {
 //   window.removeEventListener("message", handleMessage);

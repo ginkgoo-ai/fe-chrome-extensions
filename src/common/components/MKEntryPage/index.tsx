@@ -1,10 +1,10 @@
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import MKButton from "@/common/components/MKButton";
+import useActions from "@/common/hooks/useActions";
 import Config from "@/common/kits/config";
-import useActions from "@/common/kits/hooks/useActions";
 import appInfoActions from "@/popup/redux/actions/appInfo";
-import { IRootStateType } from "@/sidepanel/types/redux.d";
+import { IRootStateType } from "@/sidepanel/types/redux";
 import "./index.less";
 
 // width: 260px = 300px - 20px * 2;

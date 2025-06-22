@@ -1,7 +1,7 @@
 {
   "name": "fe-chrome-extensions",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev:popup": "vite --mode development -c ./script/vite.popup.config.js",
@@ -14,12 +14,18 @@
     "preview": "vite preview -c ./script/vite.popup.config.js"
   },
   "dependencies": {
+    "@ant-design/v5-patch-for-react-19": "^1.0.3",
+    "@radix-ui/react-slot": "^1.2.3",
     "antd": "^5.25.1",
     "autoprefixer": "^10.4.17",
     "blueimp-md5": "^2.19.0",
+    "class-variance-authority": "^0.7.1",
     "classnames": "^2.5.1",
+    "clsx": "^2.1.1",
     "dayjs": "^1.11.10",
     "immer": "^10.1.1",
+    "lodash": "^4.17.21",
+    "lucide-react": "^0.515.0",
     "parse5": "^7.3.0",
     "postcss": "^8.4.33",
     "react": "^18.2.0",
@@ -30,6 +36,7 @@
     "redux-logger": "^3.0.6",
     "redux-thunk": "^3.1.0",
     "swiper": "^11.0.5",
+    "tailwind-merge": "^3.3.1",
     "tailwindcss": "^3.4.1",
     "uuid": "^9.0.1"
   },
@@ -37,6 +44,7 @@
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/blueimp-md5": "^2.18.2",
     "@types/chrome": "^0.0.318",
+    "@types/lodash": "^4.17.17",
     "@types/node": "^20.11.19",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",

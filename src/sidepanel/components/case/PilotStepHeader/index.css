@@ -1,0 +1,13 @@
+.animate-spin-header {
+  animation: spin-header 1s linear infinite;
+  background-image: linear-gradient(125deg, #f2e0ed 5%, #e2edec 10%, #c9faed 30%, #8c83e6 45%, #f4cee4 75%, #dcc1e0 90%);
+}
+
+@keyframes spin-header {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}

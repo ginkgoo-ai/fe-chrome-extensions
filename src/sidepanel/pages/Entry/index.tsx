@@ -1,16 +1,45 @@
-import { useEffect } from "react";
-import MKPageCore from "@/common/components/MKPageCore";
-import UserManager from "@/common/kits/UserManager";
+import { Spin } from "antd";
+import { useEffect, useState } from "react";
+import { useEventManager } from "@/common/hooks/useEventManager";
+import GlobalManager from "@/common/kits/GlobalManager";
 import UtilsManager from "@/common/kits/UtilsManager";
+import SPPageCore from "@/sidepanel/components/SPPageCore";
 import "./index.less";
 
 export default function Entry() {
+  const [track, setTrack] = useState<string>("");
+
+  useEventManager("ginkgoo-message", (message) => {
+    // console.log('🚀 ~ useEventManager ~ data:', message);
+
+    const { type: typeMsg, pilotInfo: pilotInfoMsg } = message || {};
+    const { caseId: caseIdMsg, workflowId: workflowIdMsg } = pilotInfoMsg || {};
+
+    switch (typeMsg) {
+      case "ginkgoo-background-all-polit-query-actived": {
+        const trackTmp = !!pilotInfoMsg
+          ? UtilsManager.router2url("/case-detail", {
+              caseId: caseIdMsg,
+              workflowId: workflowIdMsg,
+            })
+          : "/case-portal";
+
+        setTrack(trackTmp);
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+  });
+
   const init = async () => {
-    const isAuth = await UserManager.checkAuth();
-    if (isAuth) {
-      UtilsManager.navigateBack();
-    } else {
-      UtilsManager.redirectTo("/login");
+    try {
+      GlobalManager.g_backgroundPort?.postMessage({
+        type: "ginkgoo-sidepanel-background-polit-query-actived",
+      });
+    } catch (error) {
+      console.debug("[Ginkgoo] CaseDetail init", error);
     }
   };
 
@@ -18,9 +47,15 @@ export default function Entry() {
     init();
   }, []);
 
-  return (
-    <MKPageCore>
-      <div></div>
-    </MKPageCore>
+  return track ? (
+    <SPPageCore track={track}>
+      <div className="flex h-full w-full items-center justify-center">
+        <Spin size="large"></Spin>
+      </div>
+    </SPPageCore>
+  ) : (
+    <div className="flex h-screen w-screen items-center justify-center">
+      <Spin size="large"></Spin>
+    </div>
   );
 }

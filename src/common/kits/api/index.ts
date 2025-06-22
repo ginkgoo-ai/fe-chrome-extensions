@@ -1,7 +1,7 @@
-import Ginkgo from "./Ginkgo";
+import Ginkgoo from "./Ginkgoo";
 import Orz2 from "./Orz2";
 
 export default {
-  Ginkgo,
+  Ginkgoo,
   Orz2,
 };

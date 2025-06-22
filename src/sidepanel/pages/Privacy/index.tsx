@@ -1,19 +1,19 @@
 import { useEffect } from "react";
-import MKHeader from "@/common/components/MKHeader";
 import MKModuleCache from "@/common/components/MKModuleCache";
-import MKPageCore from "@/common/components/MKPageCore";
+import SPPageCore from "@/sidepanel/components/SPPageCore";
+import SPPageHeader from "@/sidepanel/components/SPPageHeader";
 import "./index.less";
 
 export default function Privacy() {
   useEffect(() => {}, []);
 
   return (
-    <MKPageCore
+    <SPPageCore
       renderPageHeader={() => {
-        return <MKHeader title="Privacy" />;
+        return <SPPageHeader title="Privacy" />;
       }}
     >
       <MKModuleCache />
-    </MKPageCore>
+    </SPPageCore>
   );
 }

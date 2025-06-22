@@ -1,7 +1,7 @@
 import ChromeManager from "@/common/kits/ChromeManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
-import { IRequestConfigType } from "@/common/types/fetch.d";
+import { IRequestConfigType } from "@/common/types/fetch";
 
 /**
  * @description 接口请求管理器
@@ -46,7 +46,11 @@ class FetchManager {
       //   mode: "cors",
       //   // credentials: "include",
       // };
-      let { url, callbackStream, ...otherConfig } = {
+      let {
+        url = "",
+        callbackStream,
+        ...otherConfig
+      } = {
         // ...defaultConfig,
         ...config,
       };
@@ -58,6 +62,7 @@ class FetchManager {
 
       // 判断是否有data参数，如果有，则需要设置给body，否则不需要设置
       if (otherConfig.body && otherConfig.headers?.["Content-Type"]?.includes("application/json")) {
+        // if (otherConfig.body && typeof otherConfig.body === "object") {
         otherConfig.body = JSON.stringify(otherConfig.body);
       }
 
@@ -73,7 +78,7 @@ class FetchManager {
       }
 
       if (callbackStream) {
-        const res = await fetch(url, otherConfig);
+        const res = await fetch(url, otherConfig as RequestInit);
         const reader = res.body?.getReader();
         if (reader) {
           // 循环5000次，如果没有数据则退出
@@ -91,7 +96,7 @@ class FetchManager {
           }
         }
       } else {
-        const res = await fetch(url, otherConfig);
+        const res = await fetch(url, otherConfig as RequestInit);
         result = await this.calcResult(res);
       }
       console.debug("[Debug] FetchManager fetchAPI Res", {
