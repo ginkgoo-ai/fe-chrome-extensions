@@ -3,6 +3,7 @@ import ChromeManager from "@/common/kits/ChromeManager";
 import FetchManager from "@/common/kits/FetchManager";
 import PilotManager from "@/common/kits/PilotManager";
 import UserManager from "@/common/kits/UserManager";
+import Api from "@/common/kits/api";
 
 interface IMessageType {
   type: string;
@@ -387,6 +388,20 @@ class BackgroundEventManager {
         this.postConnectMessage({
           type: `ginkgoo-background-all-polit-query`,
           pilotInfo,
+        });
+        break;
+      }
+      case "ginkgoo-page-background-workflow-detail-query":
+      case "ginkgoo-sidepanel-background-workflow-detail-query": {
+        const { workflowId: workflowIdMsg } = otherInfo || {};
+
+        const resWorkflowDetail = await Api.Ginkgoo.getWorkflowDetail({
+          workflowId: workflowIdMsg,
+        });
+
+        this.postConnectMessage({
+          type: `ginkgoo-background-all-workflow-detail-query`,
+          workflowInfo: resWorkflowDetail,
         });
         break;
       }

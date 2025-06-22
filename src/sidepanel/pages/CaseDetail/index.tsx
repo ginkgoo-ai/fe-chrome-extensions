@@ -29,7 +29,7 @@ export default function CaseDetail() {
 
         setPilotInfo(pilotInfoMsg);
         if (stepsMsg?.length > 0) {
-          setStepListItems(stepsMsg.concat(stepListItemsDeclaration));
+          setStepListItems(stepsMsg);
         }
 
         // if (stepListCurrentMsg >= 0 && stepListItemsMsg?.length > 0 && !!stepListItemsMsg[stepListCurrentMsg]) {

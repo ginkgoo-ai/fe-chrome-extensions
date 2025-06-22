@@ -37,13 +37,14 @@ export default function SPPageCore(props: SPPageCoreProps) {
     switch (typeMsg) {
       case "ginkgoo-background-all-case-update": {
         const { caseId: caseIdMsg, workflowId: workflowIdMsg, pilotStatus: pilotStatusMsg } = pilotInfoMsg || {};
-        if (pilotStatusMsg === PilotStatusEnum.START) {
+        if (pilotStatusMsg === PilotStatusEnum.START || location.pathname !== "/case-detail") {
           setTimeout(() => {
             UtilsManager.redirectTo("/case-detail", {
               caseId: caseIdMsg,
               workflowId: workflowIdMsg,
             });
           }, 500);
+          return;
         }
 
         break;
@@ -84,6 +85,9 @@ export default function SPPageCore(props: SPPageCoreProps) {
     const isAuthenticatedTmp = await UserManager.checkAuth(); // await UserManager.isAuth();
     if (isAuthenticatedTmp) {
       setIsAuthenticated(isAuthenticatedTmp);
+      if (track) {
+        UtilsManager.redirectTo(track);
+      }
     } else {
       // UtilsManager.redirectTo("/entry", {
       //   track: encodeURIComponent(UtilsManager.router2url(pathRouter, paramsRouter)),
@@ -141,7 +145,7 @@ export default function SPPageCore(props: SPPageCoreProps) {
   }
 
   return (
-    <div className="m-k-page-core-wrap flex h-screen flex-col justify-start">
+    <div className="m-k-page-core-wrap flex h-screen w-screen flex-col justify-start">
       <div className="flex-0">{renderPageHeader?.()}</div>
       <div className="page-core-content flex h-0 flex-1 flex-col overflow-y-auto p-4">{children}</div>
       <div className="flex-0">{renderPageFooter?.()}</div>

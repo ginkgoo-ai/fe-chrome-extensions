@@ -27,23 +27,22 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
 
   const handleCollapseChange = (key: string[]) => {
     // 找出 key 中比 stepListActiveKeyBody 多的元素
-    const newKeys = key.filter((k) => !stepListActiveKeyBody.includes(k));
-    if (newKeys.length > 0) {
-      // 展开操作：如果有新增的 key, 且是可展开的项，则调用 onCollapseChange，并展开
-      const newKey = newKeys[0];
-      const newStep = stepListItems.find((item) => {
-        return item.step_key === newKey && ["ACTIVE", "COMPLETED_SUCCESS"].includes(item.status);
-      });
-      if (newStep) {
-        onCollapseChange?.(newKey);
-        setStepListActiveKeyBody(key);
-      }
-    } else {
-      // 收起操作
-      setStepListActiveKeyBody(key);
-    }
-
-    setRefreshRenderTS(+dayjs());
+    // const newKeys = key.filter((k) => !stepListActiveKeyBody.includes(k));
+    // if (newKeys.length > 0) {
+    //   // 展开操作：如果有新增的 key, 且是可展开的项，则调用 onCollapseChange，并展开
+    //   const newKey = newKeys[0];
+    //   const newStep = stepListItems.find((item) => {
+    //     return item.step_key === newKey && ["ACTIVE", "COMPLETED_SUCCESS"].includes(item.status);
+    //   });
+    //   if (newStep) {
+    //     onCollapseChange?.(newKey);
+    //     setStepListActiveKeyBody(key);
+    //   }
+    // } else {
+    //   // 收起操作
+    //   setStepListActiveKeyBody(key);
+    // }
+    // setRefreshRenderTS(+dayjs());
   };
 
   // update collapse
@@ -84,7 +83,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
               ) : null}
             </div>
           </div>
-          <div className="flex-[0_0_auto]">
+          {/* <div className="flex-[0_0_auto]">
             <IconStepDown
               size={10}
               color={isSelect ? "#0061FD" : "#98A1B7"}
@@ -92,25 +91,34 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
                 "rotate-180": isSelect,
               })}
             />
-          </div>
+          </div> */}
         </div>
       );
     };
 
     const renderStepChildren = (itemStep: IWorkflowStepType, indexStep: number) => {
-      if (itemStep.step_key !== "Declaration" && !itemStep?.data) {
-        return null;
+      if (itemStep.step_key === "Declaration") {
+        return <PilotStepBodyDeclaration pilotInfo={pilotInfo || null} />;
       }
+      return null;
 
-      return (
-        <div className="border-bottom">
-          {itemStep.step_key === "Declaration" ? (
-            <PilotStepBodyDeclaration pilotInfo={pilotInfo} />
-          ) : (
-            <PilotStepBodyNormal itemStep={itemStep} indexStep={indexStep} onContinueFilling={onContinueFilling} />
-          )}
-        </div>
-      );
+      // if (itemStep.step_key !== 'Declaration' && !itemStep?.data) {
+      //   return null;
+      // }
+
+      // return (
+      //   <div className="border-bottom">
+      //     {itemStep.step_key === 'Declaration' ? (
+      //       <PilotStepBodyDeclaration pilotInfo={workflowInfo.pilotInfo || null} />
+      //     ) : (
+      //       <PilotStepBodyNormal
+      //         itemStep={itemStep}
+      //         indexStep={indexStep}
+      //         onContinueFilling={handleContinueFilling}
+      //       />
+      //     )}
+      //   </div>
+      // );
     };
 
     setStepListItemsBody(

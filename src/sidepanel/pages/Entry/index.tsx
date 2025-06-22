@@ -1,10 +1,11 @@
+import { Spin } from "antd";
 import { useEffect } from "react";
 import SPPageCore from "@/sidepanel/components/SPPageCore";
 import "./index.less";
 
 export default function Entry() {
   // const init = async () => {
-  //   const isAuth = await UserManager.checkAuth();
+  //   const isAuth = await UserManager.isAuth();
   //   if (isAuth) {
   //     if (track) {
   //       UtilsManager.redirectTo(track);
@@ -24,7 +25,9 @@ export default function Entry() {
 
   return (
     <SPPageCore track="/case-portal">
-      <div></div>
+      <div className="flex h-full w-full items-center justify-center">
+        <Spin size="large"></Spin>
+      </div>
     </SPPageCore>
   );
 }

@@ -731,6 +731,11 @@ class PilotManager {
       });
     }
 
+    BackgroundEventManager.postConnectMessage({
+      type: `ginkgoo-background-all-case-done`,
+      pilotInfo,
+    });
+
     // Don't need to delete pilotInfo
     // this.pilotMap.delete(caseId);
   };
