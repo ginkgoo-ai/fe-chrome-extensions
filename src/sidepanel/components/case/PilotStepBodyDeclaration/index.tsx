@@ -12,7 +12,7 @@ function PurePilotStepBodyDeclaration(props: PilotStepBodyDeclarationProps) {
   const { pilotInfo } = props;
 
   const handleBtnJumpClick = useCallback(async () => {
-    if (!!pilotInfo?.tabInfo?.url) {
+    if (!!pilotInfo?.tabInfo?.id) {
       try {
         GlobalManager.g_backgroundPort?.postMessage({
           type: "ginkgoo-page-background-tab-update",
@@ -23,7 +23,7 @@ function PurePilotStepBodyDeclaration(props: PilotStepBodyDeclarationProps) {
         console.error("[Ginkgoo] Sidepanel handleBtnJumpClick error", error);
       }
     }
-  }, [pilotInfo?.tabInfo?.url, pilotInfo?.tabInfo?.id]);
+  }, [pilotInfo?.tabInfo?.id]);
 
   return (
     <div className="box-border flex flex-row gap-1 rounded-xl bg-[#FF97DF1A] pl-6 pt-5">

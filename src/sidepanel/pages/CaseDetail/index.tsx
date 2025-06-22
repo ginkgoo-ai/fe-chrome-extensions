@@ -4,11 +4,10 @@ import { usePageParams } from "@/common/hooks/usePageParams";
 import GlobalManager from "@/common/kits/GlobalManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import { IActionItemType } from "@/common/types/case";
-import { IPilotType, IWorkflowStepType } from "@/common/types/casePilot";
+import { IPilotType } from "@/common/types/casePilot";
 import SPPageCore from "@/sidepanel/components/SPPageCore";
 import SPPageHeader from "@/sidepanel/components/SPPageHeader";
 import { PilotStepBody } from "@/sidepanel/components/case/PilotStepBody";
-import { stepListItemsDeclaration } from "@/sidepanel/pages/CaseDetail/config";
 import "./index.less";
 
 export default function CaseDetail() {
@@ -16,7 +15,6 @@ export default function CaseDetail() {
   const { caseId, workflowId } = paramsRouter || {};
 
   const [pilotInfo, setPilotInfo] = useState<IPilotType | null>(null);
-  const [stepListItems, setStepListItems] = useState<IWorkflowStepType[]>([]);
 
   useEventManager("ginkgoo-message", (message) => {
     // console.log('🚀 ~ useEventManager ~ data:', message);
@@ -25,12 +23,7 @@ export default function CaseDetail() {
 
     switch (typeMsg) {
       case "ginkgoo-background-all-case-update": {
-        const { steps: stepsMsg } = pilotInfoMsg || {};
-
         setPilotInfo(pilotInfoMsg);
-        if (stepsMsg?.length > 0) {
-          setStepListItems(stepsMsg);
-        }
 
         // if (stepListCurrentMsg >= 0 && stepListItemsMsg?.length > 0 && !!stepListItemsMsg[stepListCurrentMsg]) {
         //   setTimeout(() => {
@@ -112,12 +105,7 @@ export default function CaseDetail() {
         );
       }}
     >
-      <PilotStepBody
-        pilotInfo={pilotInfo}
-        stepListItems={stepListItems}
-        onCollapseChange={handleStepCollapseChange}
-        onContinueFilling={handleStepContinueFilling}
-      />
+      <PilotStepBody pilotInfo={pilotInfo} onCollapseChange={handleStepCollapseChange} onContinueFilling={handleStepContinueFilling} />
     </SPPageCore>
   );
 }

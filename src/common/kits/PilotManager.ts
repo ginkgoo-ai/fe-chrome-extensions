@@ -65,22 +65,30 @@ class PilotManager {
     });
   };
 
+  getPilotActived = (): IPilotType | undefined => {
+    return Array.from(this.pilotMap.values()).find((pilot) => !!pilot.timer);
+  };
+
   updatePilotMap = async (params: { workflowId: string; update: Partial<IPilotType> }) => {
     const { workflowId, update } = params || {};
     const lockId = `workflowId-${workflowId}`;
+    const pilotInfo = this.pilotMap.get(workflowId);
 
     try {
       // 获取锁
       await LockManager.acquireLock(lockId);
 
-      const pilot = this.pilotMap.get(workflowId);
-
-      if (pilot) {
+      if (pilotInfo) {
         Object.keys(update).forEach((key) => {
-          (pilot as any)[key] = (update as any)[key];
+          (pilotInfo as any)[key] = (update as any)[key];
         });
       }
     } finally {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgoo-background-all-case-update`,
+        pilotInfo,
+      });
+
       // 确保在finally中释放锁
       LockManager.releaseLock(lockId);
     }
@@ -124,11 +132,6 @@ class PilotManager {
       },
     });
 
-    BackgroundEventManager.postConnectMessage({
-      type: `ginkgoo-background-all-case-update`,
-      pilotInfo,
-    });
-
     return { result: true };
   };
 
@@ -161,11 +164,6 @@ class PilotManager {
       update: {
         steps: stepsNew,
       },
-    });
-
-    BackgroundEventManager.postConnectMessage({
-      type: `ginkgoo-background-all-case-update`,
-      pilotInfo,
     });
 
     return { result: true };

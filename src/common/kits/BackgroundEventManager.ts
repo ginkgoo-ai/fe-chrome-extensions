@@ -376,6 +376,16 @@ class BackgroundEventManager {
         });
         break;
       }
+      case "ginkgoo-page-background-polit-query-actived":
+      case "ginkgoo-sidepanel-background-polit-query-actived": {
+        const pilotInfo = PilotManager.getPilotActived();
+
+        this.postConnectMessage({
+          type: `ginkgoo-background-all-polit-query-actived`,
+          pilotInfo,
+        });
+        break;
+      }
       case "ginkgoo-page-background-polit-query":
       case "ginkgoo-sidepanel-background-polit-query": {
         const { tabId: tabIdMsg, caseId: caseIdMsg, workflowId: workflowIdMsg } = otherInfo || {};

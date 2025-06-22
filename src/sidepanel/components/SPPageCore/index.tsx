@@ -16,6 +16,7 @@ interface SPPageCoreProps {
   track?: string;
   renderPageHeader?: () => React.ReactNode;
   renderPageFooter?: () => React.ReactNode;
+  onAuthCompleted?: () => void;
   children: React.ReactNode;
 }
 
@@ -23,7 +24,7 @@ interface SPPageCoreProps {
  * 页面容器组件
  */
 export default function SPPageCore(props: SPPageCoreProps) {
-  const { track, renderPageHeader, renderPageFooter, children } = props || {};
+  const { track, renderPageHeader, renderPageFooter, onAuthCompleted, children } = props || {};
   const { location, pathRouter, paramsRouter } = usePageParams();
 
   const isLoadCompleted = useRef<boolean>(false);
@@ -37,7 +38,7 @@ export default function SPPageCore(props: SPPageCoreProps) {
     switch (typeMsg) {
       case "ginkgoo-background-all-case-update": {
         const { caseId: caseIdMsg, workflowId: workflowIdMsg, pilotStatus: pilotStatusMsg } = pilotInfoMsg || {};
-        if (pilotStatusMsg === PilotStatusEnum.START || location.pathname !== "/case-detail") {
+        if (isAuthenticated && (pilotStatusMsg === PilotStatusEnum.START || location.pathname !== "/case-detail")) {
           setTimeout(() => {
             UtilsManager.redirectTo("/case-detail", {
               caseId: caseIdMsg,
