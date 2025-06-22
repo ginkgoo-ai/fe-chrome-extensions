@@ -744,6 +744,10 @@ class PilotManager {
       this.pilotMap.delete(pilotInfo.workflowId);
     }
   };
+
+  clear = () => {
+    this.pilotMap.clear();
+  };
 }
 
 export default PilotManager.getInstance();

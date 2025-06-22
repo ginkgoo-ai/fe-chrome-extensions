@@ -6,7 +6,7 @@ import { IconInfo, IconLoading, IconStepDeclaration, IconStepDot } from "@/commo
 import { cn } from "@/common/kits";
 import GlobalManager from "@/common/kits/GlobalManager";
 import { IActionItemType } from "@/common/types/case";
-import { IPilotType, IWorkflowStepType } from "@/common/types/casePilot";
+import { IPilotType, IWorkflowStepType, PilotStatusEnum } from "@/common/types/casePilot";
 import "./index.css";
 
 interface PilotStepBodyProps {
@@ -89,9 +89,13 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
                 <IconStepDeclaration size={16} />
               ) : (
                 <>
-                  {itemStep.status === "COMPLETED_SUCCESS" ? <Check size={16} color="#00ff00" /> : null}
-                  {itemStep.status === "ACTIVE" ? <IconLoading size={16} className="animate-spin" /> : null}
-                  {itemStep.status === "PENDING" ? <IconStepDot size={16} /> : null}
+                  {itemStep.status === "COMPLETED_SUCCESS" ? (
+                    <Check size={16} color="#00ff00" />
+                  ) : pilotInfo?.pilotStatus !== PilotStatusEnum.HOLD && itemStep.status === "ACTIVE" ? (
+                    <IconLoading size={16} className="animate-spin" />
+                  ) : (
+                    <IconStepDot size={16} />
+                  )}
                 </>
               )}
             </div>
