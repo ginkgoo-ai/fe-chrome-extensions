@@ -294,6 +294,7 @@ class BackgroundEventManager {
         } = otherInfo || {};
 
         // console.log("ginkgoo-sidepanel-all-case-start actionlistPre", message, otherInfo, actionlistPreMsg);
+        PilotManager.clear();
 
         await PilotManager.start({
           url: urlMsg,
