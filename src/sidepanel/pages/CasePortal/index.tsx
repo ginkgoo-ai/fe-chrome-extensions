@@ -52,7 +52,7 @@ export default function CasePortal() {
 
     messageAntd.open({
       type: "error",
-      content: "RefreshWorkflowDefinitions Error",
+      content: "Missing required workflow definition ID.",
     });
   };
 
@@ -77,6 +77,12 @@ export default function CasePortal() {
     // const url = "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk"; // start
     // const url = "https://visas-immigration.service.gov.uk/resume/3a0bec84-a910-4f74-b4de-763b458e770e"; // return
     // const url = "https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/SKILLED_WORK/3434-4632-5724-0670/"; // uk
+    if (!refWorkflowDefinitionId.current) {
+      messageAntd.open({
+        type: "error",
+        content: "Refresh workflow definitions failed, please try again later.",
+      });
+    }
 
     try {
       GlobalManager.g_backgroundPort?.postMessage({
@@ -87,7 +93,7 @@ export default function CasePortal() {
         workflowDefinitionId: refWorkflowDefinitionId.current,
       });
     } catch (error) {
-      console.error("[Ginkgoo] Sidepanel handleCardClick error", error);
+      console.log("[Ginkgoo] Sidepanel handleCardClick error", error);
     }
   };
 

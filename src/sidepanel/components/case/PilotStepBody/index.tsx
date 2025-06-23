@@ -62,7 +62,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
           updateProperties: { active: true },
         });
       } catch (error) {
-        console.error("[Ginkgoo] Sidepanel handleBtnJumpClick error", error);
+        console.log("[Ginkgoo] Sidepanel handleBtnJumpClick error", error);
       }
     }
   };

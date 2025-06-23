@@ -64,7 +64,7 @@ export default function CaseDetail() {
         workflowId,
       });
     } catch (error) {
-      console.error("[Ginkgoo] Sidepanel handleCardClick error", error);
+      console.log("[Ginkgoo] Sidepanel handleBtnBackClick error", error);
     }
     UtilsManager.redirectTo("/case-portal");
   };
@@ -77,7 +77,7 @@ export default function CaseDetail() {
         stepKey,
       });
     } catch (error) {
-      console.error("[Ginkgoo] Sidepanel handleCardClick error", error);
+      console.log("[Ginkgoo] Sidepanel handleStepCollapseChange error", error);
     }
   };
 
@@ -91,7 +91,7 @@ export default function CaseDetail() {
         actionlistPre,
       });
     } catch (error) {
-      console.error("[Ginkgoo] Sidepanel handleContinueFilling error", error);
+      console.log("[Ginkgoo] Sidepanel handleContinueFilling error", error);
     }
   };
 
@@ -100,7 +100,10 @@ export default function CaseDetail() {
       renderPageHeader={() => {
         return (
           <div className="flex w-full flex-col">
-            <SPPageHeader title={`CaseDetail-${pilotInfo?.pilotStatus}`} onBtnBackClick={handleBtnBackClick} />
+            <SPPageHeader
+              title={`CaseDetail-${pilotInfo?.pilotStatus}`}
+              // onBtnBackClick={handleBtnBackClick}
+            />
           </div>
         );
       }}
