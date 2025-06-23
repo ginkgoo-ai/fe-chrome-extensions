@@ -19,22 +19,22 @@ interface CardCaseProps {
 function PureCardCase(props: CardCaseProps) {
   const { itemCase, onCardStartClick, onCardEditClick } = props;
 
-  const [workflowList, setWorkflowList] = useState<any[]>([]);
+  // const [workflowList, setWorkflowList] = useState<any[]>([]);
 
-  const queryWorkflowList = async () => {
-    const resWorkflowList = await Api.Ginkgoo.getWorkflowList({
-      userId: UserManager.userInfo?.id || "",
-      caseId: itemCase.id || "",
-    });
+  // const queryWorkflowList = async () => {
+  //   const resWorkflowList = await Api.Ginkgoo.getWorkflowList({
+  //     userId: UserManager.userInfo?.id || "",
+  //     caseId: itemCase.id || "",
+  //   });
 
-    setWorkflowList(resWorkflowList);
-  };
+  //   setWorkflowList(resWorkflowList);
+  // };
 
-  useEffect(() => {
-    if (itemCase.id) {
-      queryWorkflowList();
-    }
-  }, [itemCase.id]);
+  // useEffect(() => {
+  //   if (itemCase.id) {
+  //     queryWorkflowList();
+  //   }
+  // }, [itemCase.id]);
 
   const handleBtnStartClick = (e: any) => {
     onCardStartClick?.(e);
@@ -79,11 +79,11 @@ function PureCardCase(props: CardCaseProps) {
             text={itemCase.caseStatusForFront?.text}
           /> */}
         </div>
-        <div className="mt-1 flex w-full flex-col">
+        <div className="mt-2 flex w-full flex-col">
           {/* {workflowList.map((itemWorkflow, indexWorkflow) => {
             return <div key={`workflow-${indexWorkflow}`}>{itemWorkflow.workflow_instance_id}</div>;
           })} */}
-          <Button color="default" variant="dashed" className="h-10" onClick={handleBtnStartClick}>
+          <Button color="default" variant="dashed" className="h-8" onClick={handleBtnStartClick}>
             <IconMagic size={24} />
             <span className="font-semibold text-primary">Start Auto-Fill</span>
           </Button>

@@ -289,18 +289,22 @@ class BackgroundEventManager {
           pilotId: pilotIdMsg = "",
           userId: userIdMsg = "",
           caseId: caseIdMsg = "",
+          caseInfo: caseInfoMsg = {},
           workflowDefinitionId: workflowDefinitionIdMsg = "",
           actionlistPre: actionlistPreMsg,
         } = otherInfo || {};
 
         // console.log("ginkgoo-sidepanel-all-case-start actionlistPre", message, otherInfo, actionlistPreMsg);
-        PilotManager.clear();
+        if (!actionlistPreMsg) {
+          PilotManager.clear();
+        }
 
         await PilotManager.start({
           url: urlMsg,
           pilotId: pilotIdMsg,
           userId: userIdMsg,
           caseId: caseIdMsg,
+          caseInfo: caseInfoMsg,
           workflowDefinitionId: workflowDefinitionIdMsg,
           actionlistPre: actionlistPreMsg,
           // tabInfo: tabInfo,
@@ -439,6 +443,12 @@ class BackgroundEventManager {
         const { options } = otherInfo || {};
         console.log("background-sidepanel-open", options);
         await ChromeManager.openSidePanel(options as chrome.sidePanel.OpenOptions);
+
+        setTimeout(() => {
+          this.postConnectMessage({
+            type: `ginkgoo-background-sidepanel-page-reload`,
+          });
+        }, 500);
         break;
       }
       case "ginkgoo-sidepanel-background-sidepanel-mounted": {

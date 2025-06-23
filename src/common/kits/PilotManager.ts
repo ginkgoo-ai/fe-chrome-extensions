@@ -8,7 +8,7 @@ import LockManager from "@/common/kits/LockManager";
 import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
-import { IActionItemType } from "@/common/types/case";
+import { IActionItemType, ICaseItemType } from "@/common/types/case";
 import { IPilotType, ISelectorResult, IStepResultType, PilotStatusEnum } from "@/common/types/casePilot";
 
 /**
@@ -123,6 +123,26 @@ class PilotManager {
       return { result: false };
     }
 
+    const currentStep = resWorkflowDetail?.steps?.find((itemStep) => {
+      return itemStep.step_key === resWorkflowDetail?.current_step_key;
+    });
+    const isInterrupt = currentStep?.data?.form_data?.some((itemFormData) => {
+      return itemFormData.question.type === "interrupt";
+    });
+
+    if (isInterrupt) {
+      await this.updatePilotMap({
+        workflowId,
+        update: {
+          pilotStatus: PilotStatusEnum.HOLD,
+          progress_file_id: resWorkflowDetail?.progress_file_id,
+          dummy_data_usage: resWorkflowDetail?.dummy_data_usage,
+          steps: resWorkflowDetail?.steps,
+        },
+      });
+      return { result: false };
+    }
+
     await this.updatePilotMap({
       workflowId,
       update: {
@@ -186,7 +206,7 @@ class PilotManager {
     }
   };
 
-  queryWorkflowId = async (params: { userId: string; caseId: string; workflowDefinitionId: string }): Promise<string> => {
+  createWorkflow = async (params: { userId: string; caseId: string; workflowDefinitionId: string }): Promise<string> => {
     const { userId, caseId, workflowDefinitionId } = params || {};
     const res = await Api.Ginkgoo.createWorkflow({
       user_id: userId,
@@ -422,8 +442,8 @@ class PilotManager {
     return { result: true };
   };
 
-  delayStep = async (params: { workflowId: string }) => {
-    const { workflowId } = params || {};
+  delayStep = async (params: { workflowId: string; delayTime?: number }) => {
+    const { workflowId, delayTime } = params || {};
     const pilotInfo = this.getPilot({ workflowId });
 
     if (!pilotInfo) {
@@ -435,7 +455,7 @@ class PilotManager {
       type: `ginkgoo-background-all-case-update`,
       pilotInfo,
     });
-    await UtilsManager.sleep(this.DELAY_STEP);
+    await UtilsManager.sleep(delayTime ?? this.DELAY_STEP);
 
     return { result: true };
   };
@@ -485,35 +505,38 @@ class PilotManager {
       pilotInfo,
     });
 
-    if (timerSource === pilotInfo?.timer && actionlistPre) {
-      // 执行动作
-      const resExecuteActionList = await this.executeActionList({
-        workflowId,
-        tabInfo,
-        actionlist: actionlistPre.concat({
-          selector: "input[id='submit']",
-          type: "click",
-        }),
-      });
-      if (timerSource === pilotInfo?.timer || !resExecuteActionList.result) {
-        return;
-      }
+    if (timerSource === pilotInfo?.timer) {
+      if (actionlistPre) {
+        // 执行动作
+        const resExecuteActionList = await this.executeActionList({
+          workflowId,
+          tabInfo,
+          actionlist: actionlistPre.concat({
+            selector: "input[id='submit']",
+            type: "click",
+          }),
+        });
+        if (timerSource !== pilotInfo?.timer || !resExecuteActionList.result) {
+          return;
+        }
 
-      // 等待
-      const resDelayStep = await this.delayStep({ workflowId });
-      if (timerSource === pilotInfo?.timer || !resDelayStep.result) {
-        return;
+        // 等待
+        const resDelayStep = await this.delayStep({ workflowId, delayTime: 3000 });
+        if (timerSource !== pilotInfo?.timer || !resDelayStep.result) {
+          return;
+        }
+      } else {
+        // 查询 workflow List
+        const resQueryWorkflowDetail = await this.queryWorkflowDetail({ workflowId });
+        if (timerSource !== pilotInfo?.timer || !resQueryWorkflowDetail.result) {
+          return;
+        }
       }
     }
 
-    while (timerSource === pilotInfo?.timer) {
-      console.log("main 0");
-      // 查询 workflow List
-      const resQueryWorkflowDetail = await this.queryWorkflowDetail({ workflowId });
-      if (timerSource !== pilotInfo?.timer || !resQueryWorkflowDetail.result) {
-        break;
-      }
+    console.log("main 0");
 
+    while (timerSource === pilotInfo?.timer) {
       console.log("main 1");
       // 查询页面
       const resQueryHtmlInfo = await this.queryHtmlInfo({ workflowId, tabInfo });
@@ -559,8 +582,16 @@ class PilotManager {
       }
 
       console.log("main 7");
+
+      // 查询 workflow List
+      const resQueryWorkflowDetail = await this.queryWorkflowDetail({ workflowId });
+      if (timerSource !== pilotInfo?.timer || !resQueryWorkflowDetail.result) {
+        break;
+      }
+
+      console.log("main 8");
     }
-    console.log("main 8");
+    console.log("main 9");
   };
 
   open = async (params: { caseId: string; workflowId: string; fill_data: Record<string, unknown> }) => {
@@ -601,18 +632,15 @@ class PilotManager {
     pilotId?: string; // 'continue'
     userId?: string; // 'create'
     caseId?: string; // 'create'
+    caseInfo?: ICaseItemType;
     workflowDefinitionId?: string; // 'create'
     actionlistPre?: IActionItemType[]; // 'continue'
   }) => {
-    const { url, pilotId = "", userId = "", caseId = "", workflowDefinitionId = "", actionlistPre } = params || {};
+    const { url = "", pilotId = "", userId = "", caseId = "", caseInfo, workflowDefinitionId = "", actionlistPre } = params || {};
     // let pilotInfo = this.getPilot({ tabId: tabInfo.id });
+    let pilotInfo = this.getPilot({ id: pilotId });
 
-    const resTabs = await ChromeManager.queryTabs({
-      url,
-    });
-    const tabInfo = resTabs?.[0];
-
-    console.log("start 0", tabInfo);
+    console.log("start 0", pilotInfo, this.pilotMap);
     const isCheckAuth = await UserManager.checkAuth();
 
     console.log("start 1", isCheckAuth);
@@ -625,6 +653,14 @@ class PilotManager {
       return;
     }
 
+    const tabInfo = pilotInfo?.tabInfo.id
+      ? await ChromeManager.getTabInfo(pilotInfo?.tabInfo.id)
+      : (
+          await ChromeManager.queryTabs({
+            url,
+          })
+        )?.[0];
+
     console.log("start 2", tabInfo);
 
     if (!tabInfo) {
@@ -636,22 +672,21 @@ class PilotManager {
       return;
     }
 
-    let pilotInfo = pilotId ? this.getPilot({ id: pilotId }) : this.getPilot({ tabId: tabInfo.id });
-
-    console.log("start 3", pilotId, pilotInfo);
+    console.log("start 3", pilotId, pilotInfo, pilotInfo?.timer);
 
     if (pilotInfo) {
+      pilotInfo.tabInfo = tabInfo;
       if (pilotInfo.timer) {
         await this.stop({ workflowId: pilotInfo.workflowId });
       }
     } else {
       const [fill_data, workflowId] = await Promise.all([
         this.queryFillData({ caseId }),
-        this.queryWorkflowId({
+        this.createWorkflow({
           caseId,
           userId,
           workflowDefinitionId,
-        }), //
+        }),
       ]);
 
       if (!caseId || !workflowId) {
@@ -666,11 +701,13 @@ class PilotManager {
         progress_file_id: "",
         dummy_data_usage: [],
         tabInfo,
+        caseInfo,
         timer: null,
         pilotStatus: PilotStatusEnum.HOLD,
         steps: [],
         repeatHash: "",
         repeatCurrent: 0,
+        pageUrl: url,
         pdfUrl: "",
         cookiesStr: "",
       });

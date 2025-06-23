@@ -32,13 +32,22 @@ export default function SPPageCore(props: SPPageCoreProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { x_tabActivated } = useSelector((state: IRootStateType) => state.appInfo);
 
-  useEventManager("ginkgoo-message", (message) => {
+  useEventManager("ginkgoo-message", async (message) => {
     const { type: typeMsg, pilotInfo: pilotInfoMsg } = message;
 
     switch (typeMsg) {
+      case "ginkgoo-background-sidepanel-page-reload": {
+        window.location.reload();
+        break;
+      }
+      case "ginkgoo-background-all-case-done":
       case "ginkgoo-background-all-case-update": {
-        const { caseId: caseIdMsg, workflowId: workflowIdMsg, pilotStatus: pilotStatusMsg } = pilotInfoMsg || {};
-        if (isAuthenticated && (pilotStatusMsg === PilotStatusEnum.START || location.pathname !== "/case-detail")) {
+        const { caseId: caseIdMsg, workflowId: workflowIdMsg } = pilotInfoMsg || {};
+        const { caseId: caseIdRouter, workflowId: workflowIdRouter } = paramsRouter || {};
+        const isAuthSimple = await UserManager.checkAuth();
+
+        console.log("ginkgoo-background-all-case-xxx", isAuthSimple, location.pathname);
+        if (isAuthSimple && (location.pathname !== "/case-detail" || caseIdMsg !== caseIdRouter || workflowIdMsg !== workflowIdRouter)) {
           setTimeout(() => {
             UtilsManager.redirectTo("/case-detail", {
               caseId: caseIdMsg,
@@ -114,7 +123,7 @@ export default function SPPageCore(props: SPPageCoreProps) {
     //     workflowId: workflowIdRouter,
     //   });
     // } catch (error) {
-    //   console.error("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
+    //   console.log("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
     // }
     // setTimeout(() => {
     //   isLoadCompleted.current = true;
@@ -132,7 +141,7 @@ export default function SPPageCore(props: SPPageCoreProps) {
   //       tabId: x_tabActivated?.id,
   //     });
   //   } catch (error) {
-  //     console.error("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
+  //     console.log("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
   //   }
   // }, [x_tabActivated?.id]);
 

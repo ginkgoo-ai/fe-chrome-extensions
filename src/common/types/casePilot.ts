@@ -1,3 +1,5 @@
+import { ICaseItemType } from "./case";
+
 export enum PilotStatusEnum {
   INIT = "INIT",
   OPEN = "OPEN",
@@ -39,11 +41,13 @@ export interface IPilotType {
   progress_file_id: string;
   dummy_data_usage: IWorkflowDummyDataType[];
   tabInfo: chrome.tabs.Tab;
+  caseInfo?: ICaseItemType;
   timer: NodeJS.Timeout | null;
   pilotStatus: PilotStatusEnum;
   steps: IWorkflowStepType[];
   repeatHash: string;
   repeatCurrent: number;
+  pageUrl: string;
   pdfUrl: string;
   cookiesStr: string;
 }

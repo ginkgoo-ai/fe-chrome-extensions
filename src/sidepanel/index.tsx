@@ -20,7 +20,7 @@ export default function SidePanel(): JSX.Element {
         type: "ginkgoo-sidepanel-background-sidepanel-mounted",
       });
     } catch (error) {
-      console.error("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
+      console.log("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
     }
 
     return () => {
@@ -29,7 +29,7 @@ export default function SidePanel(): JSX.Element {
           type: "ginkgoo-sidepanel-background-sidepanel-destory",
         });
       } catch (error) {
-        console.error("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
+        console.log("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
       }
     };
   }, []);
