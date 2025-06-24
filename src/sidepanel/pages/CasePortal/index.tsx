@@ -88,8 +88,7 @@ export default function CasePortal() {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgoo-sidepanel-all-case-start",
         url,
-        userId: UserManager.userInfo?.id || "",
-        caseId: refCaseInfoSelect.current?.id || "",
+        caseInfo: refCaseInfoSelect.current,
         workflowDefinitionId: refWorkflowDefinitionId.current,
       });
     } catch (error) {

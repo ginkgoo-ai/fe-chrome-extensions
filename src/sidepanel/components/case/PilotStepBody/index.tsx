@@ -6,59 +6,56 @@ import { IconInfo, IconLoading, IconStepDeclaration, IconStepDot } from "@/commo
 import { cn } from "@/common/kits";
 import GlobalManager from "@/common/kits/GlobalManager";
 import { IActionItemType } from "@/common/types/case";
-import { IPilotType, IWorkflowStepType, PilotStatusEnum } from "@/common/types/casePilot";
+import { IPilotType, IWorkflowStepType, IWorkflowType, PilotStatusEnum } from "@/common/types/casePilot";
+import { PilotStepBodyNormal } from "@/sidepanel/components/case/PilotStepBodyNormal";
 import "./index.css";
 
 interface PilotStepBodyProps {
   pilotInfo: IPilotType | null;
-  onCollapseChange: (key: string) => void;
-  onContinueFilling: (params: { actionlistPre: IActionItemType[] }) => void;
 }
 
 function PurePilotStepBody(props: PilotStepBodyProps) {
-  const { pilotInfo, onCollapseChange, onContinueFilling } = props;
+  const { pilotInfo } = props;
 
-  const [stepListActiveKeyBody, setStepListActiveKeyBody] = useState<string[]>([]);
+  const [stepListActiveKeyBody, setStepListActiveKeyBody] = useState<string>("");
   const [stepListItemsBody, setStepListItemsBody] = useState<CollapseProps["items"]>([]);
 
-  const workflowSteps = useMemo(() => {
-    let result: IWorkflowStepType[] | undefined = void 0;
+  const workflowInfo = useMemo(() => {
+    let result: IWorkflowType | null | undefined = null;
 
-    result = pilotInfo?.steps;
+    result = pilotInfo?.pilotWorkflowInfo;
 
     return result;
   }, [pilotInfo]);
 
-  const handleCollapseChange = (key: string[]) => {
-    // 找出 key 中比 stepListActiveKeyBody 多的元素
-    // const newKeys = key.filter((k) => !stepListActiveKeyBody.includes(k));
-    // if (newKeys.length > 0) {
-    //   // 展开操作：如果有新增的 key, 且是可展开的项，则调用 onCollapseChange，并展开
-    //   const newKey = newKeys[0];
-    //   const newStep = stepListItems.find((item) => {
-    //     return item.step_key === newKey && ["ACTIVE", "COMPLETED_SUCCESS"].includes(item.status);
-    //   });
-    //   if (newStep) {
-    //     onCollapseChange?.(newKey);
-    //     setStepListActiveKeyBody(key);
-    //   }
-    // } else {
-    //   // 收起操作
-    //   setStepListActiveKeyBody(key);
-    // }
-    // setRefreshRenderTS(+dayjs());
+  const workflowSteps = useMemo(() => {
+    let result: IWorkflowStepType[] | undefined = void 0;
+
+    result = pilotInfo?.pilotWorkflowInfo?.steps;
+
+    return result;
+  }, [pilotInfo]);
+
+  const handleContinueFilling = (params: { actionlistPre: IActionItemType[] }) => {
+    const { actionlistPre } = params || {};
+
+    try {
+      GlobalManager.g_backgroundPort?.postMessage({
+        type: "ginkgoo-sidepanel-all-case-start",
+        pilotId: pilotInfo?.pilotWorkflowInfo?.workflow_instance_id,
+        actionlistPre,
+      });
+    } catch (error) {
+      console.log("[Ginkgoo] Sidepanel handleContinueFilling error", error);
+    }
   };
 
-  // const handleContinueFilling = (params: { actionlistPre: IActionItemType[] }) => {
-  //   onContinueFilling?.(params);
-  // };
-
   const handleBtnProceedToFormClick = () => {
-    if (!!pilotInfo?.tabInfo?.id) {
+    if (!!pilotInfo?.pilotTabInfo?.id) {
       try {
         GlobalManager.g_backgroundPort?.postMessage({
           type: "ginkgoo-page-background-tab-update",
-          tabId: pilotInfo?.tabInfo?.id,
+          tabId: pilotInfo?.pilotTabInfo?.id,
           updateProperties: { active: true },
         });
       } catch (error) {
@@ -122,28 +119,11 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
     };
 
     const renderStepChildren = (itemStep: IWorkflowStepType, indexStep: number) => {
-      return null;
-      // if (itemStep.step_key === "Declaration") {
-      //   return <PilotStepBodyDeclaration pilotInfo={pilotInfo || null} />;
-      // }
-
-      // if (itemStep.step_key !== 'Declaration' && !itemStep?.data) {
-      //   return null;
-      // }
-
-      // return (
-      //   <div className="border-bottom">
-      //     {itemStep.step_key === 'Declaration' ? (
-      //       <PilotStepBodyDeclaration pilotInfo={workflowInfo.pilotInfo || null} />
-      //     ) : (
-      //       <PilotStepBodyNormal
-      //         itemStep={itemStep}
-      //         indexStep={indexStep}
-      //         onContinueFilling={handleContinueFilling}
-      //       />
-      //     )}
-      //   </div>
-      // );
+      return (
+        <div className="border-bottom">
+          <PilotStepBodyNormal itemStep={itemStep} indexStep={indexStep} onContinueFilling={handleContinueFilling} />
+        </div>
+      );
     };
 
     setStepListItemsBody(
@@ -156,12 +136,51 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
         };
       })
     );
-  }, [workflowSteps, onContinueFilling]);
+  }, [workflowSteps]);
+
+  useEffect(() => {
+    if (pilotInfo?.pilotStatus === PilotStatusEnum.HOLD) {
+      const currentStep = workflowSteps?.find((itemStep) => {
+        return itemStep.step_key === workflowInfo?.current_step_key;
+      });
+
+      // console.log(
+      //   'workflowInfo?.pilotInfo?.pilotStatus 0',
+      //   workflowInfo?.current_step_key,
+      //   currentStep
+      // );
+      const isInterrupt = currentStep?.data?.form_data?.some((itemFormData) => {
+        return itemFormData.question.type === "interrupt";
+      });
+
+      console.log("workflowInfo?.pilotInfo?.pilotStatus 1", isInterrupt);
+
+      if (isInterrupt) {
+        setStepListActiveKeyBody(pilotInfo?.pilotWorkflowInfo?.current_step_key || "");
+        // setStepListActiveKeyBody(prev => {
+        //   const currentKey = workflowInfo?.current_step_key;
+        //   if (!currentKey) {
+        //     return prev;
+        //   }
+        //   const newKeys = Array.from(new Set([...(prev || []), currentKey]));
+
+        //   console.log('workflowInfo?.pilotInfo?.pilotStatus 2', newKeys);
+        //   return newKeys;
+        // });
+      }
+
+      setTimeout(() => {
+        window.document
+          .getElementById(`step-item-${workflowInfo?.current_step_key}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 500);
+    }
+  }, [pilotInfo]);
 
   return stepListItemsBody && stepListItemsBody.length > 0 ? (
     <div className="relative box-border flex w-full flex-col items-center justify-start rounded-lg border border-[#D8DFF5] p-2">
-      <Collapse className="w-full" activeKey={stepListActiveKeyBody} ghost items={stepListItemsBody} onChange={handleCollapseChange} />
-      {pilotInfo?.tabInfo?.id ? (
+      <Collapse className="w-full" activeKey={stepListActiveKeyBody} ghost items={stepListItemsBody} />
+      {pilotInfo?.pilotTabInfo?.id ? (
         <Alert
           message={<div className="text-base text-[#075985]">Manual Input Required</div>}
           icon={<IconInfo size={16} className="mr-2 mt-1" />}

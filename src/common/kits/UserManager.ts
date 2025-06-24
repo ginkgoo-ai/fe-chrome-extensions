@@ -293,7 +293,7 @@ class UserManager {
     // 如果没有用户信息 且有 refresh_token
     if (refresh_token) {
       const newTokens = await this.queryTokenByRefreshAccess({ refresh_token });
-      if (!!newTokens) {
+      if (!!newTokens && !!this.userInfo) {
         return true;
       }
     }

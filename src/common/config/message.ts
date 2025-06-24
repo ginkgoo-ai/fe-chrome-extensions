@@ -5,6 +5,10 @@ export const MESSAGE = {
   NO_MATCH_STEP: "No matching step found.",
   NOT_FOUND_TAB: "No tab found.",
   NOT_SUPPORT_PAGE: "This page is not supported.",
-  REPEAT_MAX_TIP: "Please manually operate and then try start again.",
   MANUAL_TIP: "Please complete manually and try to continue.",
+  //
+  TOAST_USER_ID_EMPTY: "User information is empty, please try again later.",
+  ALERT_DECLARATION_TIP: "Currently in declaration node, please operate manually.",
+  ALERT_QUERY_HTML_FAILED: "Failed to get page information, please try again later.",
+  ALERT_REPEAT_MAX: "Please manually operate and then try start again.",
 };

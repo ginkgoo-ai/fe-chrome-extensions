@@ -644,7 +644,7 @@ class ChromeManager {
               {
                 target: { tabId: tab.id! },
                 func: async (cbParams: any) => {
-                  const { action = {}, banRuleList = [] } = cbParams || {};
+                  const { action = {}, stopRuleList = [] } = cbParams || {};
 
                   const element = document.querySelector(action.selector);
 
@@ -657,10 +657,10 @@ class ChromeManager {
 
                   element.scrollIntoView({ behavior: "smooth", block: "center" }); // auto nearest‌
 
-                  for (let indexBanRule = 0; indexBanRule < banRuleList.length; indexBanRule++) {
-                    const itemBanRule = banRuleList[indexBanRule];
-                    const { method, key, value } = itemBanRule || {};
-                    let isBan = false;
+                  for (let indexStopRule = 0; indexStopRule < stopRuleList.length; indexStopRule++) {
+                    const itemStopRule = stopRuleList[indexStopRule];
+                    const { type, method, key, value } = itemStopRule || {};
+                    let isStop = false;
 
                     if (!element[key]) {
                       continue;
@@ -668,18 +668,18 @@ class ChromeManager {
 
                     switch (method) {
                       case "endsWith": {
-                        isBan = new RegExp(value + "$").test(element[key]);
+                        isStop = new RegExp(value + "$").test(element[key]);
                         break;
                       }
                       default: {
-                        isBan = element[key] === value;
+                        isStop = element[key] === value;
                         break;
                       }
                     }
 
-                    if (isBan) {
+                    if (isStop) {
                       return {
-                        type: "ban",
+                        type,
                       };
                     }
                   }

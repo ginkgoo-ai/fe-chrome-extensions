@@ -27,8 +27,8 @@ function PurePilotStepBodyNormal(props: PilotStepBodyNormalProps) {
         formDataNormalStepTmp.push(item);
       }
     });
-    // console.log("PurePilotStepBodyNormal", itemStep, formDataNormalStepTmp, formDataNormalInterruptTmp);
-    setFormDataNormalStep(formDataNormalStepTmp);
+
+    // setFormDataNormalStep(formDataNormalStepTmp);
     setFormDataNormalInterrupt(formDataNormalInterruptTmp);
   }, [itemStep]);
 

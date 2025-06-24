@@ -33,7 +33,7 @@ export default function SPPageCore(props: SPPageCoreProps) {
   const { x_tabActivated } = useSelector((state: IRootStateType) => state.appInfo);
 
   useEventManager("ginkgoo-message", async (message) => {
-    const { type: typeMsg, pilotInfo: pilotInfoMsg } = message;
+    const { type: typeMsg } = message;
 
     switch (typeMsg) {
       case "ginkgoo-background-sidepanel-page-reload": {
@@ -42,7 +42,11 @@ export default function SPPageCore(props: SPPageCoreProps) {
       }
       case "ginkgoo-background-all-case-done":
       case "ginkgoo-background-all-case-update": {
-        const { caseId: caseIdMsg, workflowId: workflowIdMsg } = pilotInfoMsg || {};
+        const { pilotInfo: pilotInfoMsg } = message;
+        const { pilotCaseInfo: pilotCaseInfoMsg, pilotWorkflowInfo: pilotWorkflowInfoMsg } = pilotInfoMsg || {};
+        const { id: caseIdMsg } = pilotCaseInfoMsg || {};
+        const { workflow_instance_id: workflowIdMsg } = pilotWorkflowInfoMsg || {};
+
         const { caseId: caseIdRouter, workflowId: workflowIdRouter } = paramsRouter || {};
         const isAuthSimple = await UserManager.checkAuth();
 

@@ -25,19 +25,33 @@ export interface IProfileVaultDocumentType extends IOcrFileType {
 }
 
 export interface ICaseItemType {
-  id: string;
-  title: string;
-  caseType: string;
-  documents?: IOcrFileType[];
-  status: CaseStatusEnum;
+  additionalData: null;
+  clientId: string | null;
+  clientName: string | null;
   createdAt: string;
+  description: string | null;
+  documentChecklist: any; // ICaseDocumentChecklistType
+  documents?: IOcrFileType[];
+  documentsCount: number;
+  endDate: null;
+  eventsCount: number;
+  id: string;
+  profileChecklist: any; // ICaseProfileChecklistType
+  profileId: string;
+  profileName: string | null;
+  startDate: string | null;
+  status: string;
+  title: string;
+  travelDate: string | null;
   updatedAt: string;
+  visaType: string | null;
   caseStatusForFront?: {
     colorBackground: string;
     colorText: string;
     text: string;
   };
-  timestamp: number;
+  timestamp?: number;
+  profileData?: Record<string, unknown>;
   [key: string]: unknown;
 }
 
