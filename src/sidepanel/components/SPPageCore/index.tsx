@@ -46,7 +46,6 @@ export default function SPPageCore(props: SPPageCoreProps) {
         const { caseId: caseIdRouter, workflowId: workflowIdRouter } = paramsRouter || {};
         const isAuthSimple = await UserManager.checkAuth();
 
-        console.log("ginkgoo-background-all-case-xxx", isAuthSimple, location.pathname);
         if (isAuthSimple && (location.pathname !== "/case-detail" || caseIdMsg !== caseIdRouter || workflowIdMsg !== workflowIdRouter)) {
           setTimeout(() => {
             UtilsManager.redirectTo("/case-detail", {

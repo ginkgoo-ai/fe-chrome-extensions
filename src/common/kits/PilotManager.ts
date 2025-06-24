@@ -102,10 +102,11 @@ class PilotManager {
       return { result: false };
     }
 
-    pilotInfo.pilotStatus = PilotStatusEnum.QUERY_WORKFLOW;
-    BackgroundEventManager.postConnectMessage({
-      type: `ginkgoo-background-all-case-update`,
-      pilotInfo,
+    await this.updatePilotMap({
+      workflowId,
+      update: {
+        pilotStatus: PilotStatusEnum.QUERY_WORKFLOW,
+      },
     });
 
     const resWorkflowDetail = await Api.Ginkgoo.getWorkflowDetail({
@@ -115,10 +116,11 @@ class PilotManager {
     // console.log("queryWorkflowDetail", resWorkflowDetail);
 
     if (!resWorkflowDetail?.steps) {
-      pilotInfo.pilotStatus = PilotStatusEnum.COMING_SOON;
-      BackgroundEventManager.postConnectMessage({
-        type: `ginkgoo-background-all-case-update`,
-        pilotInfo,
+      await this.updatePilotMap({
+        workflowId,
+        update: {
+          pilotStatus: PilotStatusEnum.HOLD,
+        },
       });
       return { result: false };
     }
@@ -236,10 +238,11 @@ class PilotManager {
       return { result: false };
     }
 
-    pilotInfo.pilotStatus = PilotStatusEnum.QUERY;
-    BackgroundEventManager.postConnectMessage({
-      type: `ginkgoo-background-all-case-update`,
-      pilotInfo,
+    await this.updatePilotMap({
+      workflowId,
+      update: {
+        pilotStatus: PilotStatusEnum.QUERY,
+      },
     });
 
     const resQueryHtmlInfo = await ChromeManager.executeScript(tabInfo, {
@@ -250,11 +253,11 @@ class PilotManager {
     const html = resQueryHtmlInfo?.[0]?.result;
 
     if (!html) {
-      // setAlertTip({ type: "error", message: MESSAGE.NOT_SUPPORT_PAGE });
-      pilotInfo.pilotStatus = PilotStatusEnum.NOT_SUPPORT;
-      BackgroundEventManager.postConnectMessage({
-        type: `ginkgoo-background-all-case-update`,
-        pilotInfo,
+      await this.updatePilotMap({
+        workflowId,
+        update: {
+          pilotStatus: PilotStatusEnum.NOT_SUPPORT,
+        },
       });
       return { result: false };
     }
@@ -285,16 +288,17 @@ class PilotManager {
     console.log("queryHtmlInfo", hash, pilotInfo?.repeatHash, Number(pilotInfo?.repeatCurrent));
 
     if (Number(pilotInfo?.repeatCurrent) > this.REPEAT_MAX) {
+      // Max
       BackgroundEventManager.postConnectMessage({
         type: `ginkgoo-background-all-toast`,
         typeToast: "info",
         contentToast: "Repeat Max",
       });
-      // Max
-      pilotInfo.pilotStatus = PilotStatusEnum.HOLD;
-      BackgroundEventManager.postConnectMessage({
-        type: `ginkgoo-background-all-case-update`,
-        pilotInfo,
+      await this.updatePilotMap({
+        workflowId,
+        update: {
+          pilotStatus: PilotStatusEnum.HOLD,
+        },
       });
       return { result: false };
     }
@@ -407,10 +411,11 @@ class PilotManager {
       return { result: false };
     }
 
-    pilotInfo.pilotStatus = PilotStatusEnum.ANALYSIS;
-    BackgroundEventManager.postConnectMessage({
-      type: `ginkgoo-background-all-case-update`,
-      pilotInfo,
+    await this.updatePilotMap({
+      workflowId,
+      update: {
+        pilotStatus: PilotStatusEnum.ANALYSIS,
+      },
     });
 
     const resWorkflowsProcessForm = await Api.Ginkgoo.postWorkflowsProcessForm({
@@ -452,10 +457,11 @@ class PilotManager {
       return { result: false };
     }
 
-    pilotInfo.pilotStatus = PilotStatusEnum.ACTION;
-    BackgroundEventManager.postConnectMessage({
-      type: `ginkgoo-background-all-case-update`,
-      pilotInfo,
+    await this.updatePilotMap({
+      workflowId,
+      update: {
+        pilotStatus: PilotStatusEnum.ACTION,
+      },
     });
 
     for (let i = 0; i < actionlist.length; i++) {
@@ -508,10 +514,11 @@ class PilotManager {
       return { result: false };
     }
 
-    pilotInfo.pilotStatus = PilotStatusEnum.WAIT;
-    BackgroundEventManager.postConnectMessage({
-      type: `ginkgoo-background-all-case-update`,
-      pilotInfo,
+    await this.updatePilotMap({
+      workflowId,
+      update: {
+        pilotStatus: PilotStatusEnum.WAIT,
+      },
     });
     await UtilsManager.sleep(delayTime ?? this.DELAY_STEP);
 
@@ -558,10 +565,11 @@ class PilotManager {
     const { workflowId, tabInfo } = pilotInfo || {};
     const timerSource = cloneDeep(pilotInfo?.timer);
 
-    pilotInfo.pilotStatus = PilotStatusEnum.START;
-    BackgroundEventManager.postConnectMessage({
-      type: `ginkgoo-background-all-case-update`,
-      pilotInfo,
+    await this.updatePilotMap({
+      workflowId,
+      update: {
+        pilotStatus: PilotStatusEnum.START,
+      },
     });
 
     if (timerSource === pilotInfo?.timer) {
@@ -570,10 +578,16 @@ class PilotManager {
         const resExecuteActionList = await this.executeActionList({
           workflowId,
           tabInfo,
-          actionlist: actionlistPre.concat({
-            selector: "input[id='submit']",
-            type: "click",
-          }),
+          actionlist: actionlistPre.concat([
+            {
+              selector: "input[id='submit']",
+              type: "click",
+            },
+            {
+              selector: "button[type='submit']",
+              type: "click",
+            },
+          ]),
         });
         if (timerSource !== pilotInfo?.timer || !resExecuteActionList.result) {
           return;
@@ -795,7 +809,7 @@ class PilotManager {
     const { workflowId } = params || {};
     const pilotInfo = this.pilotMap.get(workflowId);
 
-    console.log("stop", workflowId, pilotInfo);
+    console.log("stop 1", workflowId, pilotInfo);
 
     if (!pilotInfo) {
       return;
@@ -808,13 +822,13 @@ class PilotManager {
     }
 
     console.log("stop 2");
-    // 会覆盖报错状态
-    pilotInfo.pilotStatus = PilotStatusEnum.HOLD;
-    pilotInfo.repeatHash = "";
-    pilotInfo.repeatCurrent = 0;
-    BackgroundEventManager.postConnectMessage({
-      type: `ginkgoo-background-all-case-update`,
-      pilotInfo,
+    await this.updatePilotMap({
+      workflowId,
+      update: {
+        pilotStatus: PilotStatusEnum.HOLD,
+        repeatHash: "",
+        repeatCurrent: 0,
+      },
     });
 
     // 上传 pdf 文件 Cookie ，以及将文件 fileId 同 workflow 绑定
