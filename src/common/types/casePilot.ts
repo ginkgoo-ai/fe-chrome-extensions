@@ -47,9 +47,9 @@ export interface IPilotType {
   steps: IWorkflowStepType[];
   repeatHash: string;
   repeatCurrent: number;
-  pageUrl: string;
   pdfUrl: string;
   cookiesStr: string;
+  csrfToken: string;
 }
 
 export interface IStepResultType {

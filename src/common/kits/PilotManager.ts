@@ -311,15 +311,20 @@ class PilotManager {
     }
 
     const resCookies = await ChromeManager.getSyncCookiesCore(tabInfo);
-    const { cookiesStr } = resCookies || {};
-
-    // console.log("queryCookies", resCookies);
+    const { cookies, cookiesStr } = resCookies || {};
 
     if (cookiesStr) {
+      const objCsrfToken = cookies.find((item) => {
+        return item.name.toLocaleUpperCase() === "CSRF-TOKEN";
+      });
+
+      // console.log("queryCookies", cookies, objCsrfToken);
+
       await this.updatePilotMap({
         workflowId,
         update: {
           cookiesStr,
+          csrfToken: objCsrfToken?.value || "",
         },
       });
     }
@@ -335,18 +340,45 @@ class PilotManager {
       return { result: false };
     }
 
-    const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
-      cbName: "querySelectors",
-      cbParams: {
-        selectors: [
-          {
-            selector: `a[id="pdfLink"]`,
-            attr: [{ key: "href" }],
+    const type = "EU";
+    let pdfUrl = "";
+
+    switch (type) {
+      case "EU": {
+        const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
+          cbName: "querySelectors",
+          cbParams: {
+            selectors: [
+              {
+                selector: `#task-list-subtitle h2 span[class="govuk-body-m"]`,
+                attr: [{ key: "innerText" }],
+              },
+            ],
           },
-        ],
-      },
-    });
-    const pdfUrl = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.href as string;
+        });
+        const id = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.innerText as string;
+        if (id) {
+          pdfUrl = `https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/form/api/applications/download-partial-pdf/${id}`;
+        }
+        break;
+      }
+      default: {
+        const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
+          cbName: "querySelectors",
+          cbParams: {
+            selectors: [
+              {
+                selector: `a[id="pdfLink"]`,
+                attr: [{ key: "href" }],
+              },
+            ],
+          },
+        });
+        pdfUrl = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.href as string;
+        break;
+      }
+    }
+
     // const { origin } = UtilsManager.getUrlInfo(tabInfo.url);
 
     if (pdfUrl) {
@@ -388,6 +420,11 @@ class PilotManager {
     });
 
     actionlist = resWorkflowsProcessForm?.actions;
+    // TODO: test
+    // .concat({
+    //   selector: `a[href="/PBS_DEPENDANT_PARTNER/3434-2085-7166-1778/people-applying-with-you/already-have-their-visa"]`,
+    //   type: "click",
+    // });
 
     if (!actionlist) {
       return { result: false };
@@ -432,11 +469,32 @@ class PilotManager {
         cbName: "actionDom",
         cbParams: {
           action,
+          banRuleList: [
+            // {
+            //   method: "endsWith",
+            //   key: "href",
+            //   value: "/already-have-their-visa",
+            // },
+            {
+              method: "endsWith",
+              key: "href",
+              value: "/declaration",
+            },
+          ],
         },
       });
 
       const { type } = resActionDom?.[0]?.result || {};
       console.log("executeActionList", action, type);
+      if (type === "ban") {
+        await this.updatePilotMap({
+          workflowId,
+          update: {
+            pilotStatus: PilotStatusEnum.HOLD,
+          },
+        });
+        return { result: false };
+      }
     }
 
     return { result: true };
@@ -460,12 +518,13 @@ class PilotManager {
     return { result: true };
   };
 
-  uploadAndBindPDF = async (params: { workflowId: string; pdfUrl: string; cookiesStr: string }) => {
-    const { workflowId, pdfUrl, cookiesStr } = params || {};
+  uploadAndBindPDF = async (params: { workflowId: string; pdfUrl: string; cookiesStr: string; csrfToken: string }) => {
+    const { workflowId, pdfUrl, cookiesStr, csrfToken } = params || {};
 
     const resFilesThirdPart = await Api.Ginkgoo.postFilesThirdPart({
       thirdPartUrl: pdfUrl,
       cookie: cookiesStr,
+      csrfToken,
     });
 
     // console.log("uploadPdf", resFilesThirdPart);
@@ -601,7 +660,7 @@ class PilotManager {
       url: "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk",
       active: false,
     });
-    const pilotInfo = {
+    const pilotInfo: IPilotType = {
       id: uuidV4(),
       caseId,
       workflowId,
@@ -616,6 +675,7 @@ class PilotManager {
       repeatCurrent: 0,
       pdfUrl: "",
       cookiesStr: "",
+      csrfToken: "",
     };
 
     this.pilotMap.set(workflowId, pilotInfo);
@@ -707,9 +767,9 @@ class PilotManager {
         steps: [],
         repeatHash: "",
         repeatCurrent: 0,
-        pageUrl: url,
         pdfUrl: "",
         cookiesStr: "",
+        csrfToken: "",
       });
       this.pilotMap.set(workflowId, pilotInfo);
     }
@@ -763,6 +823,7 @@ class PilotManager {
         workflowId,
         pdfUrl: pilotInfo?.pdfUrl,
         cookiesStr: pilotInfo.cookiesStr,
+        csrfToken: pilotInfo.csrfToken,
       });
     }
 
