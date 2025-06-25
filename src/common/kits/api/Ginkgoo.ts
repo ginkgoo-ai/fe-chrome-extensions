@@ -136,7 +136,7 @@ const queryCaseList = async (): Promise<{ content: ICaseItemType[] }> => {
   return res;
 };
 
-const queryCaseDetail = async (params: { caseId: string }) => {
+const queryCaseDetail = async (params: { caseId: string }): Promise<ICaseItemType> => {
   const { caseId } = params || {};
   const url = `${GlobalManager.g_API_CONFIG.apiServerUrl}${CaseApi.caseDetail}`.replace(":caseId", caseId);
   const headers = {

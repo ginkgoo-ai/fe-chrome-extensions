@@ -69,31 +69,17 @@ export default function CaseDetail() {
     UtilsManager.redirectTo("/case-portal");
   };
 
-  const handleStepCollapseChange = async (stepKey: string) => {
-    try {
-      GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-background-polit-step-query",
-        workflowId,
-        stepKey,
-      });
-    } catch (error) {
-      console.log("[Ginkgoo] Sidepanel handleStepCollapseChange error", error);
-    }
-  };
-
-  const handleStepContinueFilling = (params: { actionlistPre: IActionItemType[] }) => {
-    const { actionlistPre } = params || {};
-
-    try {
-      GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-all-case-start",
-        pilotId: pilotInfo?.id,
-        actionlistPre,
-      });
-    } catch (error) {
-      console.log("[Ginkgoo] Sidepanel handleContinueFilling error", error);
-    }
-  };
+  // const handleStepCollapseChange = async (stepKey: string) => {
+  //   try {
+  //     GlobalManager.g_backgroundPort?.postMessage({
+  //       type: "ginkgoo-sidepanel-background-polit-step-query",
+  //       workflowId,
+  //       stepKey,
+  //     });
+  //   } catch (error) {
+  //     console.log("[Ginkgoo] Sidepanel handleStepCollapseChange error", error);
+  //   }
+  // };
 
   return (
     <SPPageCore
@@ -108,7 +94,7 @@ export default function CaseDetail() {
         );
       }}
     >
-      <PilotStepBody pilotInfo={pilotInfo} onCollapseChange={handleStepCollapseChange} onContinueFilling={handleStepContinueFilling} />
+      <PilotStepBody pilotInfo={pilotInfo} />
     </SPPageCore>
   );
 }

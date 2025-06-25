@@ -65,13 +65,13 @@ class UtilsManager {
 
     if (res) {
       message.open({
-        content: `Copied to clipboard.`,
         type: "success",
+        content: `Copied to clipboard.`,
       });
     } else {
       message.open({
-        content: `Failed to copy to clipboard.`,
         type: "error",
+        content: `Failed to copy to clipboard.`,
       });
     }
   };

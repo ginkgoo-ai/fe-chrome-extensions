@@ -13,7 +13,9 @@ export default function Entry() {
     // console.log('🚀 ~ useEventManager ~ data:', message);
 
     const { type: typeMsg, pilotInfo: pilotInfoMsg } = message || {};
-    const { caseId: caseIdMsg, workflowId: workflowIdMsg } = pilotInfoMsg || {};
+    const { pilotCaseInfo: pilotCaseInfoMsg, pilotWorkflowInfo: pilotWorkflowInfoMsg } = pilotInfoMsg || {};
+    const { id: caseIdMsg } = pilotCaseInfoMsg || {};
+    const { workflow_instance_id: workflowIdMsg } = pilotWorkflowInfoMsg || {};
 
     switch (typeMsg) {
       case "ginkgoo-background-all-polit-query-actived": {

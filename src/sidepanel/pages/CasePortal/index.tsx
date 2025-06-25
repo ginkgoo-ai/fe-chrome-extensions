@@ -1,8 +1,8 @@
 import { message as messageAntd } from "antd";
 import { useEffect, useRef, useState } from "react";
+import { MESSAGE } from "@/common/config/message";
 import CaseManager from "@/common/kits/CaseManager";
 import GlobalManager from "@/common/kits/GlobalManager";
-import UserManager from "@/common/kits/UserManager";
 import Api from "@/common/kits/api";
 import { ICaseItemType } from "@/common/types/case";
 import { WorkflowTypeEnum } from "@/common/types/casePilot";
@@ -33,7 +33,7 @@ export default function CasePortal() {
 
     messageAntd.open({
       type: "error",
-      content: "RefreshCaseList Error",
+      content: MESSAGE.TOAST_REFRESH_CASE_LIST_FAILED,
     });
   };
 
@@ -52,7 +52,7 @@ export default function CasePortal() {
 
     messageAntd.open({
       type: "error",
-      content: "Missing required workflow definition ID.",
+      content: MESSAGE.TOAST_WORKFLOW_DEFINITIONS_MISSING,
     });
   };
 
@@ -80,7 +80,7 @@ export default function CasePortal() {
     if (!refWorkflowDefinitionId.current) {
       messageAntd.open({
         type: "error",
-        content: "Refresh workflow definitions failed, please try again later.",
+        content: MESSAGE.TOAST_REFRESH_WORKFLOW_DEFINITIONS_FAILED,
       });
     }
 
@@ -88,8 +88,7 @@ export default function CasePortal() {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgoo-sidepanel-all-case-start",
         url,
-        userId: UserManager.userInfo?.id || "",
-        caseId: refCaseInfoSelect.current?.id || "",
+        caseInfo: refCaseInfoSelect.current,
         workflowDefinitionId: refWorkflowDefinitionId.current,
       });
     } catch (error) {

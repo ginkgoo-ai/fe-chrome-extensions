@@ -71,6 +71,7 @@ export interface IFileItemType {
 export interface IFilesThirdPartParamsType {
   thirdPartUrl: string;
   cookie: string;
+  csrfToken: string;
 }
 
 export interface IFilesPDFHighlightParamsType {

@@ -286,11 +286,9 @@ class BackgroundEventManager {
       case "ginkgoo-sidepanel-all-case-start": {
         const {
           url: urlMsg = "",
-          pilotId: pilotIdMsg = "",
-          userId: userIdMsg = "",
-          caseId: caseIdMsg = "",
           caseInfo: caseInfoMsg = {},
           workflowDefinitionId: workflowDefinitionIdMsg = "",
+          pilotId: pilotIdMsg = "",
           actionlistPre: actionlistPreMsg,
         } = otherInfo || {};
 
@@ -301,13 +299,10 @@ class BackgroundEventManager {
 
         await PilotManager.start({
           url: urlMsg,
-          pilotId: pilotIdMsg,
-          userId: userIdMsg,
-          caseId: caseIdMsg,
           caseInfo: caseInfoMsg,
           workflowDefinitionId: workflowDefinitionIdMsg,
+          pilotId: pilotIdMsg,
           actionlistPre: actionlistPreMsg,
-          // tabInfo: tabInfo,
         });
 
         // let tabInfo = null;
@@ -368,9 +363,8 @@ class BackgroundEventManager {
       }
       case "ginkgoo-page-background-case-query":
       case "ginkgoo-sidepanel-background-case-query": {
-        const { caseId: caseIdMsg, workflowId: workflowIdMsg, tabId: tabIdMsg } = otherInfo || {};
+        const { workflowId: workflowIdMsg, tabId: tabIdMsg } = otherInfo || {};
         const pilotInfo = PilotManager.getPilot({
-          caseId: caseIdMsg,
           workflowId: workflowIdMsg,
           tabId: tabIdMsg,
         });
@@ -393,11 +387,10 @@ class BackgroundEventManager {
       }
       case "ginkgoo-page-background-polit-query":
       case "ginkgoo-sidepanel-background-polit-query": {
-        const { tabId: tabIdMsg, caseId: caseIdMsg, workflowId: workflowIdMsg } = otherInfo || {};
+        const { workflowId: workflowIdMsg, tabId: tabIdMsg } = otherInfo || {};
         const pilotInfo = PilotManager.getPilot({
-          tabId: tabIdMsg,
-          caseId: caseIdMsg,
           workflowId: workflowIdMsg,
+          tabId: tabIdMsg,
         });
 
         this.postConnectMessage({

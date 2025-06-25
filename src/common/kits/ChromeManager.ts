@@ -209,10 +209,10 @@ class ChromeManager {
 
     if (tabInfo?.url) {
       try {
-        const url = new URL(tabInfo.url);
+        // const url = new URL(tabInfo.url);
         const cookies = await chrome.cookies.getAll({
           url: tabInfo.url,
-          domain: url.hostname,
+          // domain: url.hostname,
         });
         result = {
           cookies,
@@ -221,30 +221,30 @@ class ChromeManager {
               const cookieParts = [`${cookie.name}=${cookie.value}`];
 
               // 添加过期时间
-              if (cookie.expirationDate) {
-                const expires = new Date(cookie.expirationDate * 1000).toUTCString();
-                cookieParts.push(`Expires=${expires}`);
-              }
+              // if (cookie.expirationDate) {
+              //   const expires = new Date(cookie.expirationDate * 1000).toUTCString();
+              //   cookieParts.push(`Expires=${expires}`);
+              // }
 
               // 添加路径
-              if (cookie.path) {
-                cookieParts.push(`Path=${cookie.path}`);
-              }
+              // if (cookie.path) {
+              //   cookieParts.push(`Path=${cookie.path}`);
+              // }
 
               // 添加域名
-              if (cookie.domain) {
-                cookieParts.push(`Domain=${cookie.domain}`);
-              }
+              // if (cookie.domain) {
+              //   cookieParts.push(`Domain=${cookie.domain}`);
+              // }
 
               // 添加安全标志
-              if (cookie.secure) {
-                cookieParts.push("Secure");
-              }
+              // if (cookie.secure) {
+              //   cookieParts.push("Secure");
+              // }
 
               // 添加 HttpOnly 标志
-              if (cookie.httpOnly) {
-                cookieParts.push("HttpOnly");
-              }
+              // if (cookie.httpOnly) {
+              //   cookieParts.push("HttpOnly");
+              // }
 
               return cookieParts.join("; ");
             })
@@ -644,7 +644,7 @@ class ChromeManager {
               {
                 target: { tabId: tab.id! },
                 func: async (cbParams: any) => {
-                  const { action = {} } = cbParams || {};
+                  const { action = {}, stopRuleList = [] } = cbParams || {};
 
                   const element = document.querySelector(action.selector);
 
@@ -657,16 +657,41 @@ class ChromeManager {
 
                   element.scrollIntoView({ behavior: "smooth", block: "center" }); // auto nearest‌
 
-                  if (action.type === "manual") {
-                    return {
-                      type: "manual",
-                    };
+                  for (let indexStopRule = 0; indexStopRule < stopRuleList.length; indexStopRule++) {
+                    const itemStopRule = stopRuleList[indexStopRule];
+                    const { type, method, key, value } = itemStopRule || {};
+                    let isStop = false;
+
+                    if (!element[key]) {
+                      continue;
+                    }
+
+                    switch (method) {
+                      case "endsWith": {
+                        isStop = new RegExp(value + "$").test(element[key]);
+                        break;
+                      }
+                      default: {
+                        isStop = element[key] === value;
+                        break;
+                      }
+                    }
+
+                    if (isStop) {
+                      return {
+                        type,
+                      };
+                    }
                   }
 
                   if (action.type === "click") {
                     element.click();
                   } else if (action.type === "input") {
                     element.value = action.value;
+                  } else if (action.type === "manual") {
+                    return {
+                      type: "manual",
+                    };
                   }
 
                   return {
