@@ -241,7 +241,6 @@ class BackgroundEventManager {
 
   onConnectCommon = async (message: any, port: chrome.runtime.Port) => {
     const { type, ...otherInfo } = message || {};
-    const [_, source, target] = type?.split("-");
     const typeNew = type.replace(/ginkgoo-([^-]+)-/, "ginkgoo-background-");
     const messageNew = {
       ...(message || {}),
@@ -249,7 +248,6 @@ class BackgroundEventManager {
     };
 
     // console.log("onConnectCommon", type, otherInfo);
-
     switch (type) {
       case "ginkgoo-page-background-auth-check":
       case "ginkgoo-sidepanel-background-auth-check": {
@@ -282,8 +280,8 @@ class BackgroundEventManager {
         ChromeManager.updateTab(tabId, updateProperties);
         break;
       }
-      case "ginkgoo-page-all-case-start":
-      case "ginkgoo-sidepanel-all-case-start": {
+      case "ginkgoo-page-all-pilot-start":
+      case "ginkgoo-sidepanel-all-pilot-start": {
         const {
           url: urlMsg = "",
           caseInfo: caseInfoMsg = {},
@@ -292,7 +290,6 @@ class BackgroundEventManager {
           actionlistPre: actionlistPreMsg,
         } = otherInfo || {};
 
-        // console.log("ginkgoo-sidepanel-all-case-start actionlistPre", message, otherInfo, actionlistPreMsg);
         if (!actionlistPreMsg) {
           PilotManager.clear();
         }
@@ -304,97 +301,26 @@ class BackgroundEventManager {
           pilotId: pilotIdMsg,
           actionlistPre: actionlistPreMsg,
         });
-
-        // let tabInfo = null;
-        // let pilotInfo = PilotManager.getPilot({ caseId: caseIdMsg, workflowId: workflowIdMsg });
-
-        // if (pilotInfo) {
-        //   tabInfo = pilotInfo.tabInfo;
-        // } else {
-        //   const resTabs = await ChromeManager.queryTabs({
-        //     url: urlMsg,
-        //   });
-        //   tabInfo = resTabs?.[0];
-        // }
-
-        // if (tabInfo) {
-        //   PilotManager.start({
-        //     caseId: pilotInfo ? pilotInfo.caseId : caseIdMsg,
-        //     workflowId: pilotInfo ? pilotInfo.workflowId : workflowIdMsg,
-        //     tabInfo: tabInfo,
-        //     fill_data: pilotInfo ? pilotInfo.fill_data : fill_dataMsg,
-        //     actionlistPre: actionlistPreMsg,
-        //   });
-        // } else {
-        //   this.postConnectMessage({
-        //     type: `ginkgoo-background-all-case-error`,
-        //     caseId: caseIdMsg,
-        //     workflowId: workflowIdMsg,
-        //     content: "No matching page found.",
-        //   });
-        // }
-
-        // const pilotInfo = PilotManager.getPilot({ caseId: caseIdMsg, workflowId: workflowIdMsg });
-
-        // if (!!pilotInfo) {
-        //   PilotManager.start({
-        //     caseId: pilotInfo.caseId,
-        //     workflowId: pilotInfo.workflowId,
-        //     tabInfo: pilotInfo.tabInfo,
-        //     fill_data: fill_dataMsg,
-        //   });
-        // } else {
-        //   PilotManager.open({
-        //     caseId: caseIdMsg,
-        //     workflowId: workflowIdMsg,
-        //     fill_data: fill_dataMsg,
-        //   });
-        // }
         break;
       }
-      case "ginkgoo-page-all-case-stop":
-      case "ginkgoo-sidepanel-all-case-stop": {
+      case "ginkgoo-page-all-pilot-stop":
+      case "ginkgoo-sidepanel-all-pilot-stop": {
         const { workflowId: workflowIdMsg } = otherInfo || {};
-
-        console.log("ginkgoo-sidepanel-all-case-stop", workflowIdMsg);
 
         PilotManager.stop({ workflowId: workflowIdMsg });
         break;
       }
-      case "ginkgoo-page-background-case-query":
-      case "ginkgoo-sidepanel-background-case-query": {
-        const { workflowId: workflowIdMsg, tabId: tabIdMsg } = otherInfo || {};
-        const pilotInfo = PilotManager.getPilot({
-          workflowId: workflowIdMsg,
-          tabId: tabIdMsg,
-        });
+      case "ginkgoo-page-background-pilot-query":
+      case "ginkgoo-sidepanel-background-pilot-query": {
+        const { workflowId: workflowIdMsg } = otherInfo || {};
+        const pilotInfo = workflowIdMsg
+          ? PilotManager.getPilot({
+              workflowId: workflowIdMsg,
+            })
+          : PilotManager.getPilotActived();
 
         this.postConnectMessage({
-          type: `ginkgoo-background-all-case-update`,
-          pilotInfo,
-        });
-        break;
-      }
-      case "ginkgoo-page-background-polit-query-actived":
-      case "ginkgoo-sidepanel-background-polit-query-actived": {
-        const pilotInfo = PilotManager.getPilotActived();
-
-        this.postConnectMessage({
-          type: `ginkgoo-background-all-polit-query-actived`,
-          pilotInfo,
-        });
-        break;
-      }
-      case "ginkgoo-page-background-polit-query":
-      case "ginkgoo-sidepanel-background-polit-query": {
-        const { workflowId: workflowIdMsg, tabId: tabIdMsg } = otherInfo || {};
-        const pilotInfo = PilotManager.getPilot({
-          workflowId: workflowIdMsg,
-          tabId: tabIdMsg,
-        });
-
-        this.postConnectMessage({
-          type: `ginkgoo-background-all-polit-query`,
+          type: `ginkgoo-background-all-pilot-update`,
           pilotInfo,
         });
         break;
@@ -413,8 +339,8 @@ class BackgroundEventManager {
         });
         break;
       }
-      case "ginkgoo-page-background-polit-step-query":
-      case "ginkgoo-sidepanel-background-polit-step-query": {
+      case "ginkgoo-page-background-pilot-step-query":
+      case "ginkgoo-sidepanel-background-pilot-step-query": {
         const { workflowId: workflowIdMsg, stepKey: stepKeyMsg } = otherInfo || {};
 
         PilotManager.queryWorkflowStep({
@@ -437,10 +363,13 @@ class BackgroundEventManager {
         console.log("background-sidepanel-open", options);
         await ChromeManager.openSidePanel(options as chrome.sidePanel.OpenOptions);
 
-        setTimeout(() => {
-          this.postConnectMessage({
-            type: `ginkgoo-background-sidepanel-page-reload`,
-          });
+        setTimeout(async () => {
+          const isCheckAuth = await UserManager.checkAuth();
+          if (!isCheckAuth) {
+            this.postConnectMessage({
+              type: `ginkgoo-background-sidepanel-page-reload`,
+            });
+          }
         }, 500);
         break;
       }

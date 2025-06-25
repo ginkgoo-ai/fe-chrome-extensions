@@ -18,7 +18,7 @@ export default function Entry() {
     const { workflow_instance_id: workflowIdMsg } = pilotWorkflowInfoMsg || {};
 
     switch (typeMsg) {
-      case "ginkgoo-background-all-polit-query-actived": {
+      case "ginkgoo-background-all-pilot-update": {
         const trackTmp = !!pilotInfoMsg
           ? UtilsManager.router2url("/case-detail", {
               caseId: caseIdMsg,
@@ -38,7 +38,7 @@ export default function Entry() {
   const init = async () => {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-background-polit-query-actived",
+        type: "ginkgoo-sidepanel-background-pilot-query",
       });
     } catch (error) {
       console.debug("[Ginkgoo] CaseDetail init", error);

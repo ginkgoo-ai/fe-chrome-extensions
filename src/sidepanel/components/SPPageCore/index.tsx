@@ -1,22 +1,17 @@
 import { LoadingOutlined } from "@ant-design/icons";
 import { message as messageAntd } from "antd";
 import { Spin } from "antd";
-import { useSelector } from "react-redux";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useEventManager } from "@/common/hooks/useEventManager";
 import { usePageParams } from "@/common/hooks/usePageParams";
-import GlobalManager from "@/common/kits/GlobalManager";
 import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
-import { PilotStatusEnum } from "@/common/types/casePilot";
-import { IRootStateType } from "@/sidepanel/types/redux";
 import "./index.less";
 
 interface SPPageCoreProps {
   track?: string;
   renderPageHeader?: () => React.ReactNode;
   renderPageFooter?: () => React.ReactNode;
-  onAuthCompleted?: () => void;
   children: React.ReactNode;
 }
 
@@ -24,24 +19,28 @@ interface SPPageCoreProps {
  * 页面容器组件
  */
 export default function SPPageCore(props: SPPageCoreProps) {
-  const { track, renderPageHeader, renderPageFooter, onAuthCompleted, children } = props || {};
+  const { track, renderPageHeader, renderPageFooter, children } = props || {};
   const { location, pathRouter, paramsRouter } = usePageParams();
 
-  const isLoadCompleted = useRef<boolean>(false);
-
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const { x_tabActivated } = useSelector((state: IRootStateType) => state.appInfo);
 
   useEventManager("ginkgoo-message", async (message) => {
     const { type: typeMsg } = message;
 
     switch (typeMsg) {
+      case "ginkgoo-background-all-auth-check": {
+        const { value: valueMsg } = message;
+        if (!valueMsg) {
+          window.location.reload();
+        }
+        break;
+      }
       case "ginkgoo-background-sidepanel-page-reload": {
         window.location.reload();
         break;
       }
-      case "ginkgoo-background-all-case-done":
-      case "ginkgoo-background-all-case-update": {
+      case "ginkgoo-background-all-pilot-done":
+      case "ginkgoo-background-all-pilot-update": {
         const { pilotInfo: pilotInfoMsg } = message;
         const { pilotCaseInfo: pilotCaseInfoMsg, pilotWorkflowInfo: pilotWorkflowInfoMsg } = pilotInfoMsg || {};
         const { id: caseIdMsg } = pilotCaseInfoMsg || {};
@@ -62,22 +61,6 @@ export default function SPPageCore(props: SPPageCoreProps) {
 
         break;
       }
-      // case "ginkgoo-background-all-polit-query": {
-      //   // console.log("PageCoreSidePanel useEventManager", pilotInfoMsg);
-      //   if (pilotInfoMsg?.timer) {
-      //     const { caseId: caseIdMsg, workflowId: workflowIdMsg } = pilotInfoMsg || {};
-      //     routerCompleted(
-      //       UtilsManager.router2url("/case-detail", {
-      //         caseId: caseIdMsg,
-      //         workflowId: workflowIdMsg,
-      //       })
-      //     );
-      //   } else {
-      //     routerCompleted("/case-portal");
-      //   }
-
-      //   break;
-      // }
       case "ginkgoo-background-all-toast": {
         const { typeToast, contentToast } = message || {};
         messageAntd.open({
@@ -111,42 +94,9 @@ export default function SPPageCore(props: SPPageCoreProps) {
     }
   };
 
-  const routerCompleted = (url: string) => {
-    UtilsManager.redirectTo(url);
-    checkAuth();
-  };
-
   useEffect(() => {
     checkAuth();
-    // const { caseId: caseIdRouter, workflowId: workflowIdRouter } = paramsRouter || {};
-    // try {
-    //   GlobalManager.g_backgroundPort?.postMessage({
-    //     type: "ginkgoo-sidepanel-background-polit-query",
-    //     caseId: caseIdRouter,
-    //     workflowId: workflowIdRouter,
-    //   });
-    // } catch (error) {
-    //   console.log("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
-    // }
-    // setTimeout(() => {
-    //   isLoadCompleted.current = true;
-    // }, 500);
   }, []);
-
-  // Check Activated Page
-  // useEffect(() => {
-  //   if (!x_tabActivated?.id || !isLoadCompleted.current) {
-  //     return;
-  //   }
-  //   try {
-  //     GlobalManager.g_backgroundPort?.postMessage({
-  //       type: "ginkgoo-sidepanel-background-polit-query",
-  //       tabId: x_tabActivated?.id,
-  //     });
-  //   } catch (error) {
-  //     console.log("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
-  //   }
-  // }, [x_tabActivated?.id]);
 
   if (isAuthenticated === null) {
     // 正在检查登录状态

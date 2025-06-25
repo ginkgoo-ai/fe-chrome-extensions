@@ -1,5 +1,6 @@
-import { Button, Checkbox, Form, Input, Radio, Select } from "antd";
+import { Checkbox, Form, Input, Radio, Select } from "antd";
 import { memo, useRef } from "react";
+import { Button } from "@/common/components/ui/button";
 import { IActionItemType } from "@/common/types/case";
 import { IWorkflowStepDataFormDataType } from "@/common/types/casePilot";
 import "./index.css";
@@ -142,7 +143,7 @@ function PurePilotStepBodyNormalInterrupt(props: PilotStepBodyNormalInterruptPro
         );
       })}
 
-      <Button color="default" variant="dashed" className="-mt-4 h-9 w-full" htmlType="submit">
+      <Button variant="ghost" className="-mt-4 h-9 w-full border border-solid border-primary" type="submit">
         <span className="truncate text-primary">Sync & Continue Filling</span>
       </Button>
     </Form>
