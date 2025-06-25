@@ -2,19 +2,19 @@
 
 import { Button, Card } from "antd";
 import dayjs from "dayjs";
-import { MouseEventHandler, memo, useEffect, useState } from "react";
+import utc from "dayjs/plugin/utc";
+import { MouseEventHandler, memo } from "react";
 // import { Button } from "@/common/components/ui/button";
 import { IconCardEdit, IconMagic } from "@/common/components/ui/icon";
-import UserManager from "@/common/kits/UserManager";
-import Api from "@/common/kits/api";
 import { ICaseItemType } from "@/common/types/case";
-import { TagStatus } from "@/sidepanel/components/case/TagStatus";
 
 interface CardCaseProps {
   itemCase: ICaseItemType;
   onCardStartClick: MouseEventHandler<HTMLButtonElement>;
   onCardEditClick?: MouseEventHandler<HTMLButtonElement>;
 }
+
+dayjs.extend(utc);
 
 function PureCardCase(props: CardCaseProps) {
   const { itemCase, onCardStartClick, onCardEditClick } = props;
@@ -71,7 +71,7 @@ function PureCardCase(props: CardCaseProps) {
         <div className="mt-1 flex w-full flex-row items-center justify-between">
           <span className="text-sm">
             <span className="text-[#B4B3B3]">Created at </span>
-            <span className="text-[#1F2937]">{dayjs(itemCase.createdAt).format("DD MMM YYYY")}</span>
+            <span className="text-[#1F2937]">{dayjs.utc(itemCase.createdAt).local().format("DD MMM YYYY")}</span>
           </span>
           {/* <TagStatus
             colorBackground={itemCase.caseStatusForFront?.colorBackground}

@@ -143,39 +143,22 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
       const currentStep = workflowSteps?.find((itemStep) => {
         return itemStep.step_key === workflowInfo?.current_step_key;
       });
-
-      // console.log(
-      //   'workflowInfo?.pilotInfo?.pilotStatus 0',
-      //   workflowInfo?.current_step_key,
-      //   currentStep
-      // );
       const isInterrupt = currentStep?.data?.form_data?.some((itemFormData) => {
         return itemFormData.question.type === "interrupt";
       });
 
-      console.log("workflowInfo?.pilotInfo?.pilotStatus 1", isInterrupt);
-
       if (isInterrupt) {
         setStepListActiveKeyBody(pilotInfo?.pilotWorkflowInfo?.current_step_key || "");
-        // setStepListActiveKeyBody(prev => {
-        //   const currentKey = workflowInfo?.current_step_key;
-        //   if (!currentKey) {
-        //     return prev;
-        //   }
-        //   const newKeys = Array.from(new Set([...(prev || []), currentKey]));
-
-        //   console.log('workflowInfo?.pilotInfo?.pilotStatus 2', newKeys);
-        //   return newKeys;
-        // });
+        setTimeout(() => {
+          window.document
+            .getElementById(`step-item-${workflowInfo?.current_step_key}`)
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 500);
+        return;
       }
-
-      setTimeout(() => {
-        window.document
-          .getElementById(`step-item-${workflowInfo?.current_step_key}`)
-          ?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 500);
     }
-  }, [pilotInfo]);
+    setStepListActiveKeyBody("");
+  }, [pilotInfo, workflowSteps]);
 
   return stepListItemsBody && stepListItemsBody.length > 0 ? (
     <div className="relative box-border flex w-full flex-col items-center justify-start rounded-lg border border-[#D8DFF5] p-2">

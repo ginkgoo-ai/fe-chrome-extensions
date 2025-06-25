@@ -85,6 +85,7 @@ export interface IWorkflowsProcessFormParamsType {
   workflowId: string;
   form_html: string;
   fill_data: Record<string, unknown>;
+  profile_dmmy_data: Record<string, unknown>;
 }
 
 export interface IWorkflowsUploadProgressFileParamsType {

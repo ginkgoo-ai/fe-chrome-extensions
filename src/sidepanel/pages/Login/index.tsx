@@ -2,6 +2,7 @@ import { Button } from "antd";
 import { message } from "antd";
 import { useState } from "react";
 import { IconGoogle } from "@/common/components/ui/icon";
+import { MESSAGE } from "@/common/config/message";
 import { usePageParams } from "@/common/hooks/usePageParams";
 import GlobalManager from "@/common/kits/GlobalManager";
 import UserManager from "@/common/kits/UserManager";
@@ -42,8 +43,8 @@ export default function Login() {
     }
 
     message.open({
-      content: `There seems to be a little problem.`,
       type: "error",
+      content: MESSAGE.TOAST_PROBLEM,
     });
   };
 

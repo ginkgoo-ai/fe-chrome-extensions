@@ -224,7 +224,7 @@ class PilotManager {
       BackgroundEventManager.postConnectMessage({
         type: `ginkgoo-background-all-toast`,
         typeToast: "error",
-        contentToast: "Create workflow failed.",
+        contentToast: MESSAGE.TOAST_CREATE_WORKFLOW_FAILED,
       });
       return null;
     }
@@ -420,6 +420,7 @@ class PilotManager {
       workflowId,
       form_html: htmlCleansing,
       fill_data: pilotInfo.pilotCaseInfo?.profileData || {},
+      profile_dmmy_data: pilotInfo.pilotCaseInfo?.profileDummyData || {},
     });
 
     actionlist = resWorkflowsProcessForm?.actions;
@@ -529,7 +530,7 @@ class PilotManager {
       BackgroundEventManager.postConnectMessage({
         type: `ginkgoo-background-all-toast`,
         typeToast: "error",
-        contentToast: "Upload PDF failed.",
+        contentToast: MESSAGE.TOAST_UPLOAD_PDF_FILE_FAILED,
       });
       return;
     }
@@ -543,7 +544,7 @@ class PilotManager {
       BackgroundEventManager.postConnectMessage({
         type: `ginkgoo-background-all-toast`,
         typeToast: "error",
-        contentToast: "Bind PDF failed.",
+        contentToast: MESSAGE.TOAST_BIND_PDF_FILE_FAILED,
       });
       return;
     }

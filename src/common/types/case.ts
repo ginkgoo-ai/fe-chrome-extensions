@@ -52,6 +52,7 @@ export interface ICaseItemType {
   };
   timestamp?: number;
   profileData?: Record<string, unknown>;
+  profileDummyData?: Record<string, unknown>;
   [key: string]: unknown;
 }
 
