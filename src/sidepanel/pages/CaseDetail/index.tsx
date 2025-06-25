@@ -1,9 +1,8 @@
+import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useEventManager } from "@/common/hooks/useEventManager";
 import { usePageParams } from "@/common/hooks/usePageParams";
 import GlobalManager from "@/common/kits/GlobalManager";
-import UtilsManager from "@/common/kits/UtilsManager";
-import { IActionItemType } from "@/common/types/case";
 import { IPilotType } from "@/common/types/casePilot";
 import SPPageCore from "@/sidepanel/components/SPPageCore";
 import SPPageHeader from "@/sidepanel/components/SPPageHeader";
@@ -17,26 +16,28 @@ export default function CaseDetail() {
   const [pilotInfo, setPilotInfo] = useState<IPilotType | null>(null);
 
   useEventManager("ginkgoo-message", (message) => {
-    // console.log('🚀 ~ useEventManager ~ data:', message);
-
-    const { type: typeMsg, pilotInfo: pilotInfoMsg } = message || {};
+    const { type: typeMsg } = message || {};
 
     switch (typeMsg) {
-      case "ginkgoo-background-all-case-update": {
-        setPilotInfo(pilotInfoMsg);
+      case "ginkgoo-background-all-pilot-update": {
+        console.log("ginkgoo-background-all-pilot-update", message);
+        const { pilotInfo: pilotInfoMsg } = message;
+        const {
+          // pilotStatus: pilotStatusMsg,
+          pilotCaseInfo: pilotCaseInfoMsg,
+          pilotWorkflowInfo: pilotWorkflowInfoMsg,
+        } = pilotInfoMsg || {};
+        const { id: caseIdMsg } = pilotCaseInfoMsg || {};
+        const { workflow_instance_id: workflowIdMsg } = pilotWorkflowInfoMsg || {};
 
-        // if (stepListCurrentMsg >= 0 && stepListItemsMsg?.length > 0 && !!stepListItemsMsg[stepListCurrentMsg]) {
-        //   setTimeout(() => {
-        //     const { actioncurrent, actionlist } = stepListItemsMsg[stepListCurrentMsg] || {};
-        //     if (actioncurrent >= 0 && actionlist?.length > 0) {
-        //       document
-        //         .getElementById(`action-item-${stepListCurrentMsg}-${actioncurrent}`)
-        //         ?.scrollIntoView({ behavior: "smooth", block: "center" });
-        //     } else {
-        //       document.getElementById(`step-item-${stepListCurrentMsg}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-        //     }
-        //   }, 40);
-        // }
+        if (caseIdMsg !== caseId || workflowIdMsg !== workflowId || !pilotCaseInfoMsg) {
+          break;
+        }
+
+        setPilotInfo({
+          ...pilotInfoMsg,
+          pilotRefreshTS: +dayjs(),
+        });
         break;
       }
       default: {
@@ -48,8 +49,7 @@ export default function CaseDetail() {
   useEffect(() => {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-background-case-query",
-        caseId,
+        type: "ginkgoo-sidepanel-background-pilot-query",
         workflowId,
       });
     } catch (error) {
@@ -57,28 +57,16 @@ export default function CaseDetail() {
     }
   }, []);
 
-  const handleBtnBackClick = () => {
-    try {
-      GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-all-case-stop",
-        workflowId,
-      });
-    } catch (error) {
-      console.log("[Ginkgoo] Sidepanel handleBtnBackClick error", error);
-    }
-    UtilsManager.redirectTo("/case-portal");
-  };
-
-  // const handleStepCollapseChange = async (stepKey: string) => {
+  // const handleBtnBackClick = () => {
   //   try {
   //     GlobalManager.g_backgroundPort?.postMessage({
-  //       type: "ginkgoo-sidepanel-background-polit-step-query",
+  //       type: "ginkgoo-sidepanel-all-pilot-stop",
   //       workflowId,
-  //       stepKey,
   //     });
   //   } catch (error) {
-  //     console.log("[Ginkgoo] Sidepanel handleStepCollapseChange error", error);
+  //     console.log("[Ginkgoo] Sidepanel handleBtnBackClick error", error);
   //   }
+  //   UtilsManager.redirectTo("/case-portal");
   // };
 
   return (

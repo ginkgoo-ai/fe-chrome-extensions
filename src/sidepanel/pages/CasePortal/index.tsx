@@ -86,7 +86,7 @@ export default function CasePortal() {
 
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-all-case-start",
+        type: "ginkgoo-sidepanel-all-pilot-start",
         url,
         caseInfo: refCaseInfoSelect.current,
         workflowDefinitionId: refWorkflowDefinitionId.current,

@@ -1,6 +1,10 @@
 export const MESSAGE = {
   // 通用提示
   TOAST_PROBLEM: "An unexpected problem has occurred.", // 发生了一个意外问题。
+
+  // 用户
+  TOAST_USER_ID_EMPTY: "User information could not be retrieved. Please try again later.", // 无法获取用户信息，请稍后重试。
+
   // Case 管理
   TOAST_CREATE_CASE_FAILED: "Case creation failed.", // Case 创建失败。
   TOAST_REFRESH_CASE_DETAIL_FAILED: "Failed to refresh case details.", // 刷新 Case 详情失败。
@@ -13,8 +17,7 @@ export const MESSAGE = {
   TOAST_REFRESH_WORKFLOW_DETAIL_FAILED: "Failed to refresh workflow details.", // 刷新 Workflow 详情失败。
   TOAST_REFRESH_WORKFLOW_LIST_FAILED: "Failed to refresh the workflow list.", // 刷新 Workflow 列表失败。
 
-  // 用户及文件操作
-  TOAST_USER_ID_EMPTY: "User information could not be retrieved. Please try again later.", // 无法获取用户信息，请稍后重试。
+  // 文件操作
   TOAST_UPLOAD_FILE_FAILED: "File upload failed.", // 文件上传失败。
   TOAST_UPLOAD_PDF_FILE_FAILED: "Failed to retrieve the PDF from the source system.", // 从源系统获取 PDF 失败。
   TOAST_BIND_PDF_FILE_FAILED: "Failed to attach the PDF to the workflow.", // 将 PDF 附加到 Workflow 失败。

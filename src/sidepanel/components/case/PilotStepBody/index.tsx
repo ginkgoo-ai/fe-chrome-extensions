@@ -41,7 +41,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
 
     try {
       GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-all-case-start",
+        type: "ginkgoo-sidepanel-all-pilot-start",
         pilotId: pilotInfo?.pilotWorkflowInfo?.workflow_instance_id,
         actionlistPre,
       });
@@ -88,7 +88,8 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
                 <>
                   {itemStep.status === "COMPLETED_SUCCESS" ? (
                     <Check size={16} color="#00ff00" />
-                  ) : pilotInfo?.pilotStatus !== PilotStatusEnum.HOLD && itemStep.status === "ACTIVE" ? (
+                  ) : pilotInfo?.pilotStatus !== PilotStatusEnum.HOLD &&
+                    itemStep.step_key === pilotInfo?.pilotWorkflowInfo?.current_step_key ? (
                     <IconLoading size={16} className="animate-spin" />
                   ) : (
                     <IconStepDot size={16} />

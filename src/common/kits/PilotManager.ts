@@ -81,7 +81,7 @@ class PilotManager {
       }
     } finally {
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgoo-background-all-case-update`,
+        type: `ginkgoo-background-all-pilot-update`,
         pilotInfo,
       });
 
@@ -467,7 +467,7 @@ class PilotManager {
             //   type: "declaration",
             //   method: "endsWith",
             //   key: "href",
-            //   value: "/already-have-their-visa",
+            //   value: "/travelInformationAppendixFm",
             // },
             {
               type: "declaration",
@@ -660,41 +660,6 @@ class PilotManager {
     console.log("main 9");
   };
 
-  // open = async (params: { caseId: string; workflowId: string; fill_data: Record<string, unknown> }) => {
-  //   const { caseId, workflowId, fill_data } = params || {};
-
-  //   const tabInfo = await ChromeManager.createTab({
-  //     url: "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk",
-  //     active: false,
-  //   });
-  //   const pilotInfo: IPilotType = {
-  //     id: uuidV4(),
-  //     caseId,
-  //     workflowId,
-  //     fill_data,
-  //     progress_file_id: "",
-  //     dummy_data_usage: [],
-  //     tabInfo,
-  //     timer: null,
-  //     pilotStatus: PilotStatusEnum.OPEN,
-  //     pilotLastMessage: "",
-  //     steps: [],
-  //     repeatHash: "",
-  //     repeatCurrent: 0,
-  //     pdfUrl: "",
-  //     cookiesStr: "",
-  //     csrfToken: "",
-  //   };
-
-  //   this.pilotMap.set(workflowId, pilotInfo);
-
-  //   BackgroundEventManager.postConnectMessage({
-  //     type: `ginkgoo-background-all-case-open`,
-  //     caseId,
-  //     pilotInfo,
-  //   });
-  // };
-
   start = async (params: {
     url?: string; // 'create'
     caseInfo?: ICaseItemType; // 'create'
@@ -730,7 +695,7 @@ class PilotManager {
 
     if (!tabInfo) {
       BackgroundEventManager.postConnectMessage({
-        type: `ginkgoo-background-all-case-no-match-page`,
+        type: `ginkgoo-background-all-pilot-no-match-page`,
         typeToast: "error",
         contentToast: "No matching page found.",
       });
@@ -829,7 +794,7 @@ class PilotManager {
     }
 
     BackgroundEventManager.postConnectMessage({
-      type: `ginkgoo-background-all-case-done`,
+      type: `ginkgoo-background-all-pilot-done`,
       pilotInfo,
     });
 

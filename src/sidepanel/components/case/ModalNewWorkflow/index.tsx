@@ -21,7 +21,7 @@ function PureModalNewWorkflow(props: ModalNewWorkflowProps) {
     const { type: typeMsg } = message;
 
     switch (typeMsg) {
-      case "ginkgoo-background-all-case-no-match-page": {
+      case "ginkgoo-background-all-pilot-no-match-page": {
         const { typeToast, contentToast } = message || {};
         messageAntd.open({
           type: typeToast,
