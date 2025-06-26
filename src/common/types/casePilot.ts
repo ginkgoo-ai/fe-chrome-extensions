@@ -110,6 +110,20 @@ export interface IWorkflowStepDataFormDataType {
     };
     type?: string; // "interrupt";
   };
+  _metadata?: {
+    id: string;
+    field_selector: string;
+    field_name: string;
+    field_type: string;
+    field_label: string;
+    required: boolean;
+    options: unknown[];
+    confidence: number;
+    reasoning: string;
+    needs_intervention: boolean;
+    has_valid_answer: boolean;
+    grouped_fields: unknown;
+  };
 }
 
 export interface IWorkflowStepDataType {
