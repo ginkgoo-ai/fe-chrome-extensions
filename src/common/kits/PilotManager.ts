@@ -116,6 +116,7 @@ class PilotManager {
         workflowId,
         update: {
           pilotStatus: PilotStatusEnum.HOLD,
+          pilotLastMessage: MESSAGE.TOAST_REFRESH_WORKFLOW_DETAIL_FAILED,
         },
       });
       return { result: false };
@@ -133,6 +134,7 @@ class PilotManager {
         workflowId,
         update: {
           pilotStatus: PilotStatusEnum.HOLD,
+          pilotLastMessage: MESSAGE.ALERT_MANUAL_TIP,
           pilotWorkflowInfo: resWorkflowDetail,
         },
       });
@@ -473,7 +475,7 @@ class PilotManager {
               type: "declaration",
               method: "endsWith",
               key: "href",
-              value: "/declaration",
+              value: "/declaration/standard-conditions",
             },
           ],
         },
@@ -487,7 +489,7 @@ class PilotManager {
           workflowId,
           update: {
             pilotStatus: PilotStatusEnum.HOLD,
-            pilotLastMessage: MESSAGE.ALERT_DECLARATION_TIP,
+            pilotLastMessage: MESSAGE.ALERT_MANUAL_TIP,
           },
         });
         return { result: false };

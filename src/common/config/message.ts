@@ -24,7 +24,7 @@ export const MESSAGE = {
   TOAST_DOWNLOAD_PDF_FILE_FAILED: "The PDF file could not be downloaded. Please try again later.", // PDF 文件无法下载，请稍后重试。
 
   // 警告及用户操作提示
-  ALERT_DECLARATION_TIP: "This step requires manual operation to continue.", // 此步骤需要手动操作才能继续。
+  ALERT_MANUAL_TIP: "This step requires manual operation to continue.", // 此步骤需要手动操作才能继续。
   ALERT_QUERY_HTML_FAILED: "Failed to load page content. Please try again later.", // 加载页面内容失败，请稍后重试。
   ALERT_REPEAT_MAX: "Automation could not proceed. Please operate manually and then restart the process.", // 自动化流程无法继续。请手动操作，然后重启流程。
 };
