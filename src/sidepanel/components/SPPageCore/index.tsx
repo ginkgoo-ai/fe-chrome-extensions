@@ -1,7 +1,7 @@
 import { LoadingOutlined } from "@ant-design/icons";
 import { message as messageAntd } from "antd";
 import { Spin } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useEventManager } from "@/common/hooks/useEventManager";
 import { usePageParams } from "@/common/hooks/usePageParams";
 import UserManager from "@/common/kits/UserManager";
@@ -21,6 +21,10 @@ interface SPPageCoreProps {
 export default function SPPageCore(props: SPPageCoreProps) {
   const { track, renderPageHeader, renderPageFooter, children } = props || {};
   const { location, pathRouter, paramsRouter } = usePageParams();
+
+  const locationRef = useRef(location);
+  const pathRouterRef = useRef(pathRouter);
+  const paramsRouterRef = useRef(paramsRouter);
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
@@ -46,10 +50,27 @@ export default function SPPageCore(props: SPPageCoreProps) {
         const { id: caseIdMsg } = pilotCaseInfoMsg || {};
         const { workflow_instance_id: workflowIdMsg } = pilotWorkflowInfoMsg || {};
 
-        const { caseId: caseIdRouter, workflowId: workflowIdRouter } = paramsRouter || {};
+        const { caseId: caseIdRouter, workflowId: workflowIdRouter } = paramsRouterRef.current || {};
         const isAuthSimple = await UserManager.checkAuth();
 
-        if (isAuthSimple && (location.pathname !== "/case-detail" || caseIdMsg !== caseIdRouter || workflowIdMsg !== workflowIdRouter)) {
+        if (!isAuthSimple) {
+          UtilsManager.redirectTo("/login", {
+            track: encodeURIComponent(UtilsManager.router2url(pathRouterRef.current, paramsRouterRef.current)),
+          });
+          return;
+        }
+
+        if (!workflowIdMsg && locationRef.current.pathname !== "/case-portal") {
+          setTimeout(() => {
+            UtilsManager.redirectTo("/case-portal");
+          }, 500);
+          return;
+        }
+
+        if (
+          workflowIdMsg &&
+          (locationRef.current.pathname !== "/case-detail" || caseIdRouter !== caseIdMsg || workflowIdRouter !== workflowIdMsg)
+        ) {
           setTimeout(() => {
             UtilsManager.redirectTo("/case-detail", {
               caseId: caseIdMsg,
@@ -85,14 +106,19 @@ export default function SPPageCore(props: SPPageCoreProps) {
         UtilsManager.redirectTo(track);
       }
     } else {
-      // UtilsManager.redirectTo("/entry", {
-      //   track: encodeURIComponent(UtilsManager.router2url(pathRouter, paramsRouter)),
-      // });
       UtilsManager.redirectTo("/login", {
-        track: track || encodeURIComponent(UtilsManager.router2url(pathRouter, paramsRouter)),
+        track: track || encodeURIComponent(UtilsManager.router2url(pathRouterRef.current, paramsRouterRef.current)),
       });
     }
+
+    return isAuthenticatedTmp;
   };
+
+  useEffect(() => {
+    locationRef.current = location;
+    pathRouterRef.current = pathRouter;
+    paramsRouterRef.current = paramsRouter;
+  }, [location, pathRouter, paramsRouter]);
 
   useEffect(() => {
     checkAuth();

@@ -1,9 +1,9 @@
-import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { Alert } from "antd";
+import { useEffect, useRef, useState } from "react";
 import { useEventManager } from "@/common/hooks/useEventManager";
 import { usePageParams } from "@/common/hooks/usePageParams";
 import GlobalManager from "@/common/kits/GlobalManager";
-import { IPilotType } from "@/common/types/casePilot";
+import { IPilotType, PilotStatusEnum } from "@/common/types/casePilot";
 import SPPageCore from "@/sidepanel/components/SPPageCore";
 import SPPageHeader from "@/sidepanel/components/SPPageHeader";
 import { PilotStepBody } from "@/sidepanel/components/case/PilotStepBody";
@@ -11,7 +11,10 @@ import "./index.less";
 
 export default function CaseDetail() {
   const { paramsRouter } = usePageParams();
-  const { caseId, workflowId } = paramsRouter || {};
+
+  const locationRef = useRef(location);
+  const paramsRouterRef = useRef(paramsRouter);
+  const { caseId, workflowId } = paramsRouterRef.current || {};
 
   const [pilotInfo, setPilotInfo] = useState<IPilotType | null>(null);
 
@@ -30,14 +33,13 @@ export default function CaseDetail() {
         const { id: caseIdMsg } = pilotCaseInfoMsg || {};
         const { workflow_instance_id: workflowIdMsg } = pilotWorkflowInfoMsg || {};
 
-        if (caseIdMsg !== caseId || workflowIdMsg !== workflowId || !pilotCaseInfoMsg) {
+        const { caseId: caseIdRouter, workflowId: workflowIdRouter } = paramsRouterRef.current || {};
+
+        if (caseIdMsg !== caseIdRouter || workflowIdMsg !== workflowIdRouter || !pilotInfoMsg) {
           break;
         }
 
-        setPilotInfo({
-          ...pilotInfoMsg,
-          pilotRefreshTS: +dayjs(),
-        });
+        setPilotInfo(pilotInfoMsg);
         break;
       }
       default: {
@@ -45,6 +47,11 @@ export default function CaseDetail() {
       }
     }
   });
+
+  useEffect(() => {
+    locationRef.current = location;
+    paramsRouterRef.current = paramsRouter;
+  }, [location, paramsRouter]);
 
   useEffect(() => {
     try {
@@ -75,9 +82,12 @@ export default function CaseDetail() {
         return (
           <div className="flex w-full flex-col">
             <SPPageHeader
-              title={`CaseDetail-${pilotInfo?.pilotStatus}`}
+              title={`CaseDetail-${pilotInfo?.pilotStatus || ""}`}
               // onBtnBackClick={handleBtnBackClick}
             />
+            {pilotInfo?.pilotStatus === PilotStatusEnum.HOLD && !!pilotInfo?.pilotLastMessage ? (
+              <Alert message={pilotInfo?.pilotLastMessage} type="warning" showIcon closable />
+            ) : null}
           </div>
         );
       }}
