@@ -422,7 +422,7 @@ class PilotManager {
       workflowId,
       form_html: htmlCleansing,
       fill_data: pilotInfo.pilotCaseInfo?.profileData || {},
-      profile_dmmy_data: pilotInfo.pilotCaseInfo?.profileDummyData || {},
+      profile_dummy_data: pilotInfo.pilotCaseInfo?.profileDummyData || {},
     });
 
     actionlist = resWorkflowsProcessForm?.actions;
