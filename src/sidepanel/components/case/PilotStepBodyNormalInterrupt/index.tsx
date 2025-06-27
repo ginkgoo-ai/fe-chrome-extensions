@@ -101,17 +101,17 @@ function PurePilotStepBodyNormalInterrupt(props: PilotStepBodyNormalInterruptPro
             label={
               <div className="flex w-full flex-row items-center">
                 <Tooltip
-                  color="#e0e0e0"
+                  mouseEnterDelay={1}
                   title={() => {
                     return (
                       <div className="flex flex-col gap-1">
                         <div className="break-all text-xs">
-                          <span className="mr-1 font-bold text-[#333]">confidence:</span>
-                          <span className="text-[#555]">{confidence}</span>
+                          <span className="mr-1 font-bold">confidence:</span>
+                          <span className="">{confidence}</span>
                         </div>
                         <div className="break-all text-xs">
-                          <span className="mr-1 font-bold text-[#333]">reasoning:</span>
-                          <span className="text-[#555]">{reasoning}</span>
+                          <span className="mr-1 font-bold">reasoning:</span>
+                          <span className="">{reasoning}</span>
                         </div>
                       </div>
                     );
