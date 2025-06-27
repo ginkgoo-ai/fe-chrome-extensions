@@ -1,5 +1,5 @@
 import type { CollapseProps } from "antd";
-import { Alert, Button, Collapse, Spin } from "antd";
+import { Alert, Button, Collapse, Progress, Spin } from "antd";
 import { Check } from "lucide-react";
 import { memo, useEffect, useMemo, useState } from "react";
 import { IconInfo, IconLoading, IconStepDeclaration, IconStepDot } from "@/common/components/ui/icon";
@@ -19,14 +19,15 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
 
   const [stepListActiveKeyBody, setStepListActiveKeyBody] = useState<string>("");
   const [stepListItemsBody, setStepListItemsBody] = useState<CollapseProps["items"]>([]);
+  const [percent, setPercent] = useState(0);
 
-  const workflowInfo = useMemo(() => {
-    let result: IWorkflowType | null | undefined = null;
+  // const workflowInfo = useMemo(() => {
+  //   let result: IWorkflowType | null | undefined = null;
 
-    result = pilotInfo?.pilotWorkflowInfo;
+  //   result = pilotInfo?.pilotWorkflowInfo;
 
-    return result;
-  }, [pilotInfo]);
+  //   return result;
+  // }, [pilotInfo]);
 
   const workflowSteps = useMemo(() => {
     let result: IWorkflowStepType[] | undefined = void 0;
@@ -140,29 +141,43 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
   }, [workflowSteps]);
 
   useEffect(() => {
-    if (pilotInfo?.pilotStatus === PilotStatusEnum.HOLD) {
-      const currentStep = workflowSteps?.find((itemStep) => {
-        return itemStep.step_key === workflowInfo?.current_step_key;
-      });
-      const isInterrupt = currentStep?.data?.form_data?.some((itemFormData) => {
-        return itemFormData.question.type === "interrupt";
-      });
+    if (Number(workflowSteps?.length) > 0) {
+      const indexCurrentStep: number = Number(
+        workflowSteps?.findIndex((itemStep) => {
+          return itemStep.step_key === pilotInfo?.pilotWorkflowInfo?.current_step_key;
+        })
+      );
 
-      if (isInterrupt) {
-        setStepListActiveKeyBody(pilotInfo?.pilotWorkflowInfo?.current_step_key || "");
-        setTimeout(() => {
-          window.document
-            .getElementById(`step-item-${workflowInfo?.current_step_key}`)
-            ?.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 500);
+      if (!(indexCurrentStep >= 0)) {
         return;
       }
+
+      const currentStep = workflowSteps?.[indexCurrentStep];
+      const percentTmp = ((indexCurrentStep + 1) / Number(workflowSteps?.length)) * 100;
+      setPercent(percentTmp);
+
+      if (pilotInfo?.pilotStatus === PilotStatusEnum.HOLD) {
+        const isInterrupt = currentStep?.data?.form_data?.some((itemFormData) => {
+          return itemFormData.question.type === "interrupt";
+        });
+        if (isInterrupt && pilotInfo.pilotWorkflowInfo?.current_step_key) {
+          setStepListActiveKeyBody(pilotInfo.pilotWorkflowInfo?.current_step_key || "");
+          setTimeout(() => {
+            window.document
+              .getElementById(`step-item-${pilotInfo?.pilotWorkflowInfo?.current_step_key}`)
+              ?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 500);
+          return;
+        }
+      }
     }
+
     setStepListActiveKeyBody("");
   }, [pilotInfo, workflowSteps]);
 
   return stepListItemsBody && stepListItemsBody.length > 0 ? (
     <div className="relative box-border flex w-full flex-col items-center justify-start rounded-lg border border-[#D8DFF5] p-2">
+      <Progress percent={percent} showInfo={false} />
       <Collapse className="w-full" activeKey={stepListActiveKeyBody} ghost items={stepListItemsBody} />
       {pilotInfo?.pilotTabInfo?.id ? (
         <Alert

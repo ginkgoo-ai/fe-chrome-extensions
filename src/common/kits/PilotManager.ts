@@ -348,8 +348,9 @@ class PilotManager {
       return { result: false };
     }
 
-    const type = "EU";
+    let type = "NOT_EU";
     let thirdPartUrl = "";
+    let thirdPartMethod = "";
 
     switch (type) {
       case "EU": {
@@ -368,6 +369,7 @@ class PilotManager {
         if (id) {
           thirdPartUrl = `https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/form/api/applications/download-partial-pdf/${id}`;
         }
+        thirdPartMethod = "POST";
         break;
       }
       default: {
@@ -383,6 +385,7 @@ class PilotManager {
           },
         });
         thirdPartUrl = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.href as string;
+        thirdPartMethod = "GET";
         break;
       }
     }
@@ -392,6 +395,7 @@ class PilotManager {
         workflowId,
         update: {
           pilotThirdPartUrl: thirdPartUrl,
+          pilotThirdPartMethod: thirdPartMethod,
         },
       });
     }
@@ -518,11 +522,12 @@ class PilotManager {
     return { result: true };
   };
 
-  uploadAndBindPDF = async (params: { workflowId: string; thirdPartUrl: string; cookie: string; csrfToken: string }) => {
-    const { workflowId, thirdPartUrl, cookie, csrfToken } = params || {};
+  uploadAndBindPDF = async (params: { workflowId: string; method: string; thirdPartUrl: string; cookie: string; csrfToken: string }) => {
+    const { workflowId, method, thirdPartUrl, cookie, csrfToken } = params || {};
 
     const resFilesThirdPart = await Api.Ginkgoo.postFilesThirdPart({
       thirdPartUrl,
+      method,
       cookie,
       csrfToken,
     });
@@ -732,6 +737,7 @@ class PilotManager {
         pilotLastMessage: "",
         pilotRepeatHash: "",
         pilotRepeatCurrent: 0,
+        pilotThirdPartMethod: "",
         pilotThirdPartUrl: "",
         pilotCookie: "",
         pilotCsrfToken: "",
@@ -786,9 +792,10 @@ class PilotManager {
     });
 
     // 上传 pdf 文件 Cookie ，以及将文件 fileId 同 workflow 绑定
-    if (pilotInfo?.pilotThirdPartUrl && pilotInfo?.pilotCookie && pilotInfo?.pilotCsrfToken) {
+    if (pilotInfo?.pilotThirdPartUrl && pilotInfo?.pilotCookie) {
       await this.uploadAndBindPDF({
         workflowId,
+        method: pilotInfo?.pilotThirdPartMethod,
         thirdPartUrl: pilotInfo?.pilotThirdPartUrl,
         cookie: pilotInfo.pilotCookie,
         csrfToken: pilotInfo.pilotCsrfToken,
