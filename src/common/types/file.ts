@@ -70,6 +70,7 @@ export interface IFileItemType {
 
 export interface IFilesThirdPartParamsType {
   thirdPartUrl: string;
+  method: string;
   cookie: string;
   csrfToken: string;
 }

@@ -40,6 +40,7 @@ export interface IPilotType {
   pilotLastMessage: string;
   pilotRepeatHash: string;
   pilotRepeatCurrent: number;
+  pilotThirdPartMethod: string;
   pilotThirdPartUrl: string;
   pilotCookie: string;
   pilotCsrfToken: string;

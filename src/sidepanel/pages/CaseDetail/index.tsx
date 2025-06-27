@@ -86,7 +86,9 @@ export default function CaseDetail() {
               // onBtnBackClick={handleBtnBackClick}
             />
             {pilotInfo?.pilotStatus === PilotStatusEnum.HOLD && !!pilotInfo?.pilotLastMessage ? (
-              <Alert message={pilotInfo?.pilotLastMessage} type="warning" showIcon closable />
+              <div className="box-border flex w-full px-4">
+                <Alert style={{ width: "100%" }} message={pilotInfo?.pilotLastMessage} type="warning" showIcon closable />
+              </div>
             ) : null}
           </div>
         );
