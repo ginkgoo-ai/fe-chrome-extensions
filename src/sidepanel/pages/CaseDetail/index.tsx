@@ -82,7 +82,7 @@ export default function CaseDetail() {
         return (
           <div className="flex w-full flex-col">
             <SPPageHeader
-              title={`CaseDetail-${pilotInfo?.pilotStatus || ""}`}
+              title={`CaseDetail - ${pilotInfo?.pilotStatus || ""}`}
               // onBtnBackClick={handleBtnBackClick}
             />
             {pilotInfo?.pilotStatus === PilotStatusEnum.HOLD && !!pilotInfo?.pilotLastMessage ? (
