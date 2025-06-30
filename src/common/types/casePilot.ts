@@ -46,6 +46,7 @@ export interface IPilotType {
   pilotCsrfToken: string;
   pilotCaseInfo: ICaseItemType | null;
   pilotWorkflowInfo: IWorkflowType | null;
+  pilotRefreshTS?: number;
 }
 
 export interface IStepResultType {

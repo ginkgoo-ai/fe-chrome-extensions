@@ -15,7 +15,7 @@ function PurePilotStepBodyDeclaration(props: PilotStepBodyDeclarationProps) {
     if (!!pilotInfo?.pilotTabInfo?.id) {
       try {
         GlobalManager.g_backgroundPort?.postMessage({
-          type: "ginkgoo-page-background-tab-update",
+          type: "ginkgoo-sidepanel-background-tab-update",
           tabId: pilotInfo?.pilotTabInfo?.id,
           updateProperties: { active: true },
         });

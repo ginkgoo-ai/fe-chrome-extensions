@@ -276,6 +276,8 @@ class PilotManager {
 
     const hash = md5(title + htmlCleansing);
 
+    console.log("queryHtmlInfo", hash, pilotInfo?.pilotRepeatHash, Number(pilotInfo?.pilotRepeatCurrent));
+
     if (hash === pilotInfo?.pilotRepeatHash) {
       await this.updatePilotMap({
         workflowId,
@@ -292,8 +294,6 @@ class PilotManager {
         },
       });
     }
-
-    console.log("queryHtmlInfo", hash, pilotInfo?.pilotRepeatHash, Number(pilotInfo?.pilotRepeatCurrent));
 
     if (Number(pilotInfo?.pilotRepeatCurrent) > this.REPEAT_MAX) {
       // Max

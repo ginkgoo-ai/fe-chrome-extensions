@@ -54,7 +54,7 @@ class GlobalManager {
       this.instance.g_whiteListForRegister = [
         "https://legal-dashboard.ginkgoo.dev", // Saas 页面
         "https://local.up.railway.app", // 开发页面
-        "http://localhost:3000", // 开发页面
+        // "http://localhost:3000", // 开发页面
       ];
     }
     return this.instance;

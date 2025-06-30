@@ -214,7 +214,7 @@ const getWorkflowDetail = async (params: IGetWorkflowDetailParamsType): Promise<
 
   if (IS_MOCK_LIST.includes("getWorkflowDetail")) {
     return new Promise((resolve) => {
-      resolve(mockGetWorkflowDetail);
+      resolve(mockGetWorkflowDetail as IWorkflowType);
     });
   }
 

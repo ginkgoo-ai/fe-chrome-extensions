@@ -164,10 +164,10 @@ class BackgroundEventManager {
       // dosomething on tab updated
       // console.log("BackgroundEventManager onTabsUpdated 1", tab);
       // 发送 tab 完成事件
-      // this.postConnectMessage({
-      //   type: "ginkgoo-background-all-tab-complete",
-      //   tabInfo: tab,
-      // });
+      this.postConnectMessage({
+        type: "ginkgoo-background-all-tab-complete",
+        tabInfo: tab,
+      });
       // 判断是否存在 pilot
       // const pilotInfo = PilotManager.getPilot({ tabId: tab.id });
       // if (pilotInfo?.pilotStatus === PilotStatusEnum.OPEN) {
@@ -312,16 +312,21 @@ class BackgroundEventManager {
       }
       case "ginkgoo-page-background-pilot-query":
       case "ginkgoo-sidepanel-background-pilot-query": {
-        const { workflowId: workflowIdMsg } = otherInfo || {};
-        const pilotInfo = workflowIdMsg
-          ? PilotManager.getPilot({
-              workflowId: workflowIdMsg,
-            })
-          : PilotManager.getPilotActived();
+        const { workflowId: workflowIdMsg, tabId: tabIdMsg } = otherInfo || {};
+        const pilotInfo =
+          workflowIdMsg || tabIdMsg
+            ? PilotManager.getPilot({
+                tabId: tabIdMsg,
+                workflowId: workflowIdMsg,
+              })
+            : PilotManager.getPilotActived();
+        console.log("xxx-ginkgoo-sidepanel-background-pilot-query 0", tabIdMsg, pilotInfo);
+        console.log("xxx-ginkgoo-sidepanel-background-pilot-query 1", PilotManager.pilotMap);
 
         this.postConnectMessage({
           type: `ginkgoo-background-all-pilot-update`,
           pilotInfo,
+          sourceMessage: message,
         });
         break;
       }
