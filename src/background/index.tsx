@@ -1,6 +1,5 @@
 /*global chrome*/
 // manifest.json的Permissions配置需添加declarativeContent权限
-import { v4 as uuidv4 } from "uuid";
 import BackgroundEventManager from "@/common/kits/BackgroundEventManager";
 
 chrome.runtime.onInstalled.addListener((): void => {

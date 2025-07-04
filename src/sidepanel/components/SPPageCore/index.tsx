@@ -51,14 +51,12 @@ export default function SPPageCore(props: SPPageCoreProps) {
       case "ginkgoo-background-all-tab-complete": {
         const { tabInfo } = message || {};
 
-        console.log("xxx-SPPageCore ginkgoo-background-all-tab-complete", tabInfo);
         redirectToPage({ tabInfo });
         break;
       }
       case "ginkgoo-background-all-tab-activated": {
         const { tabInfo } = message || {};
 
-        console.log("xxx-SPPageCore ginkgoo-background-all-tab-activated", tabInfo, pilotInfoCalcTrackRef.current);
         redirectToPage({ tabInfo });
         break;
       }
@@ -66,7 +64,6 @@ export default function SPPageCore(props: SPPageCoreProps) {
         const { pilotInfo: pilotInfoMsg, sourceMessage: sourceMessageMsg } = message || {};
         const { tabId: tabIdMsg } = sourceMessageMsg || {};
 
-        console.log("xxx-SPPageCore ginkgoo-background-all-pilot-update", tabIdMsg, message);
         if (!!tabIdMsg) {
           pilotInfoCalcTrackRef.current = {
             pilotInfo: pilotInfoMsg,
@@ -140,7 +137,6 @@ export default function SPPageCore(props: SPPageCoreProps) {
         type: "ginkgoo-sidepanel-background-pilot-query",
         tabId: activeTabInfo.id,
       });
-      console.log("xxx-calcTrack 0", activeTabInfo.id, activeTabInfo);
     } catch (error) {
       console.log("[Ginkgoo] Sidepanel ginkgoo-sidepanel-background-pilot-query error", error);
     }
@@ -152,16 +148,12 @@ export default function SPPageCore(props: SPPageCoreProps) {
       });
     }
 
-    console.log("xxx-calcTrack 1", pilotInfoCalcTrackRef.current);
-
     for (let i = 0; i < 30; i++) {
       if (!!pilotInfoCalcTrackRef.current) {
         break;
       }
       await UtilsManager.sleep(200);
     }
-
-    console.log("xxx-calcTrack 2", pilotInfoCalcTrackRef.current);
 
     const caseId = (pilotInfoCalcTrackRef.current?.pilotInfo as IPilotType)?.pilotCaseInfo?.id || "";
 
@@ -176,11 +168,9 @@ export default function SPPageCore(props: SPPageCoreProps) {
   };
 
   const redirectToPage = async (params?: { tabInfo?: chrome.tabs.Tab }) => {
-    console.log("xxx-redirectToPage", params, pilotInfoCalcTrackRef.current);
     const newTrack = await calcTrack(params);
     const oldTrack = UtilsManager.router2url(pathRouterRef.current, paramsRouterRef.current);
     if (newTrack !== oldTrack) {
-      console.log("xxx-SPPageCore redirectToPage", oldTrack, "=>", newTrack);
       UtilsManager.redirectTo(newTrack);
     }
   };

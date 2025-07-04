@@ -320,8 +320,6 @@ class BackgroundEventManager {
                 workflowId: workflowIdMsg,
               })
             : PilotManager.getPilotActived();
-        console.log("xxx-ginkgoo-sidepanel-background-pilot-query 0", tabIdMsg, pilotInfo);
-        console.log("xxx-ginkgoo-sidepanel-background-pilot-query 1", PilotManager.pilotMap);
 
         this.postConnectMessage({
           type: `ginkgoo-background-all-pilot-update`,
