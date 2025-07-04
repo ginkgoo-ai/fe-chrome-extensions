@@ -192,8 +192,8 @@ class BackgroundEventManager {
       if (resWindowInfo?.type === "popup" && ChromeManager.whiteListForAuth.some((whiteUrl) => resTabInfo.url?.startsWith(whiteUrl))) {
         console.log("resWindowInfo", resWindowInfo);
         await ChromeManager.updateWindow(windowId, {
-          width: 300,
-          height: 600,
+          width: 480,
+          height: 840,
         });
       }
 
