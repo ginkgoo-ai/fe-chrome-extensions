@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, message as messageAntd } from "antd";
+import { Button, Progress, message as messageAntd } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { ChevronRight, Download } from "lucide-react";
@@ -129,6 +129,10 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
               />
             </div>
           </div>
+
+          {Number(pilotInfo.pilotWorkflowInfo?.progress_percentage) >= 0 ? (
+            <Progress percent={pilotInfo.pilotWorkflowInfo?.progress_percentage} showInfo={false} />
+          ) : null}
 
           {!isFold ? <PilotStepBody pilotInfo={pilotInfo} /> : null}
 

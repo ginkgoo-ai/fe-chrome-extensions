@@ -1,12 +1,12 @@
 import type { CollapseProps } from "antd";
-import { Alert, Button, Collapse, Progress, Spin } from "antd";
+import { Alert, Button, Collapse, Spin } from "antd";
 import { Check } from "lucide-react";
 import { memo, useEffect, useMemo, useState } from "react";
 import { IconInfo, IconLoading, IconStepDeclaration, IconStepDot } from "@/common/components/ui/icon";
 import { cn } from "@/common/kits";
 import GlobalManager from "@/common/kits/GlobalManager";
 import { IActionItemType } from "@/common/types/case";
-import { IPilotType, IWorkflowStepType, IWorkflowType, PilotStatusEnum } from "@/common/types/casePilot";
+import { IPilotType, IWorkflowStepType, PilotStatusEnum } from "@/common/types/casePilot";
 import { PilotStepBodyNormal } from "@/sidepanel/components/case/PilotStepBodyNormal";
 import "./index.css";
 
@@ -177,7 +177,6 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
 
   return stepListItemsBody && stepListItemsBody.length > 0 ? (
     <div className="relative box-border flex w-full flex-col items-center justify-start rounded-lg border border-[#D8DFF5] p-2">
-      <Progress percent={percent} showInfo={false} />
       <Collapse className="w-full" activeKey={stepListActiveKeyBody} ghost items={stepListItemsBody} />
       {pilotInfo?.pilotTabInfo?.id ? (
         <Alert

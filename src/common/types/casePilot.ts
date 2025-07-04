@@ -168,6 +168,7 @@ export interface IWorkflowType {
   completed_at: string | null;
   dummy_data_usage?: IWorkflowDummyDataType[];
   progress_file_id?: string;
+  progress_percentage?: number;
   workflow_definition_id?: string;
   steps?: IWorkflowStepType[];
 }
