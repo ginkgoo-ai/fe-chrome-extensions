@@ -21,7 +21,7 @@ function PureModalNewWorkflow(props: ModalNewWorkflowProps) {
     const { type: typeMsg } = message;
 
     switch (typeMsg) {
-      case "ginkgoo-background-all-pilot-no-match-page": {
+      case "ginkgoo-background-all-pilot-start-failed": {
         const { typeToast, contentToast } = message || {};
         messageAntd.open({
           type: typeToast,
@@ -74,49 +74,9 @@ function PureModalNewWorkflow(props: ModalNewWorkflowProps) {
         onFinish={handleFormFinish}
         autoComplete="off"
       >
-        {/* <div className="mb-4 text-sm text-[#1A1A1AB2]">
-          Enter the URL below. Please keep the target page open for the auto-fill to work.
-        </div> */}
-
-        {/* <Form.Item
-          label="URL"
-          name="url"
-          validateTrigger="onSubmit"
-          validateFirst={true}
-          rules={[
-            { required: true, message: "Please input URL" },
-            { type: "url", message: "Please input a valid URL" },
-            // {
-            //   validator: (_, value) => {
-            //     if (!value) return Promise.resolve();
-            //     try {
-            //       // 使用URL构造函数校验
-            //       new URL(value);
-            //       return Promise.resolve();
-            //     } catch (e) {
-            //       return Promise.reject(new Error("Please enter a valid URL"));
-            //     }
-            //   },
-            // },
-          ]}
-        >
-          <Input className="!px-3" autoFocus prefix={<IconFormItemLink className="mr-1" size={20} />} placeholder="URL" />
-        </Form.Item> */}
-
-        <Alert
-          message={<div className="text-base text-[#075985]">Start Autofill with Incomplete Information?</div>}
-          icon={<IconInfo size={16} className="mr-2 mt-1" />}
-          description={
-            <div className="-ml-8 flex flex-col items-start gap-2">
-              <div className="text-sm text-[#0369A1]">
-                We've noticed some of your information is missing. To proceed now, we will temporarily fill these gaps with dummy data.
-              </div>
-            </div>
-          }
-          type="info"
-          showIcon
-          closable
-        />
+        <div className="mb-4 text-sm text-[#1A1A1AB2]">
+          We've noticed some of your information is missing. To proceed now, we will temporarily fill these gaps with dummy data.
+        </div>
 
         <div className="mt-2 flex flex-row items-center justify-between gap-6">
           <Button type="default" className="h-[44px] flex-1" onClick={handleNewWorkflowCancel}>

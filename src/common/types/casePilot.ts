@@ -35,7 +35,7 @@ export enum WorkflowTypeEnum {
 export interface IPilotType {
   pilotId: string;
   pilotTimer: NodeJS.Timeout | null;
-  pilotTabInfo: chrome.tabs.Tab;
+  pilotTabInfo: chrome.tabs.Tab | null;
   pilotStatus: PilotStatusEnum;
   pilotLastMessage: string;
   pilotRepeatHash: string;

@@ -104,9 +104,13 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
       className="relative flex w-full flex-[0_0_auto] items-center justify-center overflow-hidden rounded-lg"
     >
       <div
-        className={cn("workflow-wrap absolute left-[50%] top-[50%] h-[800%] min-w-full overflow-hidden rounded-lg pr-[800%]", {
-          "animate-spin-workflow": isCurrentPilot && pilotInfo?.pilotStatus !== PilotStatusEnum.HOLD,
-        })}
+        className={cn(
+          "absolute left-0 top-0 h-full w-full overflow-hidden rounded-lg bg-[#E2E4E8] pr-[800%]"
+          // {
+          //   'animate-spin-workflow':
+          //     isCurrentPilot && pilotInfo?.pilotStatus !== PilotStatusEnum.HOLD,
+          // }
+        )}
       ></div>
       <div className="relative box-border flex w-full flex-col bg-[rgba(0,0,0,0)] p-0.5">
         <div className="box-border flex h-full w-full flex-col gap-3 overflow-hidden rounded-lg bg-[#ffffff] p-3">
@@ -116,9 +120,10 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
             </div>
             <div className="flex w-0 flex-1 flex-col">
               <span className="w-full truncate text-sm text-[#4E4E4E]">
-                {`${caseInfo?.clientName || ""}` + ` - ${caseInfo?.visaType || ""}` + ` - ${pilotInfo?.pilotStatus || ""}`}
+                {/* {`${caseInfo?.clientName || ""}` + ` - ${caseInfo?.visaType || ""}` + ` - ${pilotInfo?.pilotStatus || ""}`} */}
+                {pilotInfo?.pilotStatus || "--"}
               </span>
-              <div className="w-full truncate text-sm text-[#98A1B7]">{workflowUpdateTime}</div>
+              <div className="w-full truncate text-sm font-bold text-[#2665FF]">{workflowUpdateTime}</div>
             </div>
             <div className="flex-[0_0_auto]">
               <ChevronRight
