@@ -14,6 +14,7 @@ import CaseManager from "@/common/kits/CaseManager";
 import GlobalManager from "@/common/kits/GlobalManager";
 import LockManager from "@/common/kits/LockManager";
 import UserManager from "@/common/kits/UserManager";
+import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { ICaseItemType } from "@/common/types/case";
 import { IPilotType, PilotStatusEnum, WorkflowTypeEnum } from "@/common/types/casePilot";
@@ -261,6 +262,10 @@ export default function CaseDetail() {
     }
   }, [pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id]);
 
+  const handleBtnBackClick = () => {
+    UtilsManager.redirectTo("/case-portal");
+  };
+
   const handleBtnExtensionStartClick = () => {
     if (workflowDefinitionId) {
       setModalNewWorkflowOpen(true);
@@ -380,7 +385,7 @@ export default function CaseDetail() {
                   </div>
                 );
               }}
-              // onBtnBackClick={handleBtnBackClick}
+              onBtnBackClick={handleBtnBackClick}
             />
           </div>
         );

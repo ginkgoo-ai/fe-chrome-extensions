@@ -33,12 +33,13 @@ export default function Login() {
       } catch (error) {
         console.debug("[Ginkgoo] handleLoginClick", error);
       }
-      if (track) {
-        UtilsManager.redirectTo(track);
-      } else {
-        // UtilsManager.redirectTo("/case-portal");
-        UtilsManager.navigateBack();
-      }
+      // if (track) {
+      //   UtilsManager.redirectTo(track);
+      // } else {
+      //   UtilsManager.redirectTo("/case-portal");
+      //   // UtilsManager.navigateBack();
+      // }
+      UtilsManager.navigateBack();
       return;
     }
 

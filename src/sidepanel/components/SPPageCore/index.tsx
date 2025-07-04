@@ -13,6 +13,7 @@ import "./index.less";
 
 interface SPPageCoreProps {
   track?: string;
+  isEntry?: boolean;
   renderPageHeader?: () => React.ReactNode;
   renderPageFooter?: () => React.ReactNode;
   children: React.ReactNode;
@@ -22,7 +23,7 @@ interface SPPageCoreProps {
  * 页面容器组件
  */
 export default function SPPageCore(props: SPPageCoreProps) {
-  const { track, renderPageHeader, renderPageFooter, children } = props || {};
+  const { track, isEntry, renderPageHeader, renderPageFooter, children } = props || {};
   const { location, pathRouter, paramsRouter } = usePageParams();
 
   const locationRef = useRef(location);
@@ -71,41 +72,6 @@ export default function SPPageCore(props: SPPageCoreProps) {
         }
         break;
       }
-      // case "ginkgoo-background-all-pilot-done":
-      // case "ginkgoo-background-all-pilot-update": {
-      //   const { pilotInfo: pilotInfoMsg } = message;
-      //   const { pilotCaseInfo: pilotCaseInfoMsg, pilotWorkflowInfo: pilotWorkflowInfoMsg } = pilotInfoMsg || {};
-      //   const { id: caseIdMsg } = pilotCaseInfoMsg || {};
-      //   const { workflow_instance_id: workflowIdMsg } = pilotWorkflowInfoMsg || {};
-
-      //   const { caseId: caseIdRouter } = paramsRouterRef.current || {};
-      //   const isAuthSimple = await UserManager.checkAuth();
-
-      //   if (!isAuthSimple) {
-      //     UtilsManager.redirectTo("/login", {
-      //       track: encodeURIComponent(UtilsManager.router2url(pathRouterRef.current, paramsRouterRef.current)),
-      //     });
-      //     return;
-      //   }
-
-      //   if (!caseIdMsg && locationRef.current.pathname !== "/case-portal") {
-      //     setTimeout(() => {
-      //       UtilsManager.redirectTo("/case-portal");
-      //     }, 500);
-      //     return;
-      //   }
-
-      //   if (workflowIdMsg && (locationRef.current.pathname !== "/case-detail" || caseIdRouter !== caseIdMsg)) {
-      //     setTimeout(() => {
-      //       UtilsManager.redirectTo("/case-detail", {
-      //         caseId: caseIdMsg,
-      //       });
-      //     }, 500);
-      //     return;
-      //   }
-
-      //   break;
-      // }
       case "ginkgoo-background-all-toast": {
         const { typeToast, contentToast } = message || {};
         messageAntd.open({
@@ -179,10 +145,12 @@ export default function SPPageCore(props: SPPageCoreProps) {
     const isAuthenticatedTmp = await UserManager.checkAuth(); // await UserManager.isAuth();
     if (isAuthenticatedTmp) {
       setIsAuthenticated(isAuthenticatedTmp);
-      redirectToPage();
+      if (isEntry) {
+        redirectToPage();
+      }
     } else {
-      UtilsManager.redirectTo("/login", {
-        track: track || encodeURIComponent(UtilsManager.router2url(pathRouterRef.current, paramsRouterRef.current)),
+      UtilsManager.navigateTo("/login", {
+        track: track ?? encodeURIComponent(UtilsManager.router2url(pathRouterRef.current, paramsRouterRef.current)),
       });
     }
 
