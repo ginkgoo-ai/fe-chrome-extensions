@@ -3,7 +3,7 @@
 import { Button, Progress, message as messageAntd } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { ChevronRight, Download } from "lucide-react";
+import { ChevronRight, Download, Play } from "lucide-react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { IconCompleted, IconIncompleted } from "@/common/components/ui/icon";
 import { MESSAGE } from "@/common/config/message";
@@ -18,29 +18,27 @@ import "./index.css";
 interface PilotWorkflowProps {
   caseInfo: ICaseItemType | null;
   pilotInfo: IPilotType;
-  pilotInfoCurrent: IPilotType | null;
   indexPilot: number;
   onQueryWorkflowDetail: (params: { workflowId: string }) => void;
+  onBtnContinueClick: (params: { workflowId: string }) => void;
 }
 
 dayjs.extend(utc);
 
 function PurePilotWorkflow(props: PilotWorkflowProps) {
-  const { caseInfo, pilotInfo, pilotInfoCurrent, indexPilot, onQueryWorkflowDetail } = props;
-
-  const isFoldInit = useRef<boolean>(true);
+  const { caseInfo, pilotInfo, indexPilot, onQueryWorkflowDetail, onBtnContinueClick } = props;
 
   const [isFold, setFold] = useState<boolean>(true);
   const [isDisableBtnDownload, setDisableBtnDownload] = useState<boolean>(true);
   const [isLoadingDownload, setLoadingDownload] = useState<boolean>(false);
 
+  const isShowBtnContinue = useMemo(() => {
+    return indexPilot === 0 && !!pilotInfo?.pilotTabInfo?.id && pilotInfo?.pilotStatus === PilotStatusEnum.HOLD;
+  }, [pilotInfo, indexPilot]);
+
   const workflowUpdateTime = useMemo(() => {
     return dayjs.utc(pilotInfo.pilotWorkflowInfo?.updated_at).local().format("MMM DD, YYYY HH: mm");
   }, [pilotInfo.pilotWorkflowInfo?.updated_at]);
-
-  const isCurrentPilot = useMemo(() => {
-    return pilotInfo?.pilotWorkflowInfo?.workflow_instance_id === pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id;
-  }, [pilotInfo?.pilotWorkflowInfo?.workflow_instance_id, pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id]);
 
   useEffect(() => {
     setDisableBtnDownload(!pilotInfo.pilotWorkflowInfo?.progress_file_id);
@@ -98,6 +96,12 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
     }, 200);
   };
 
+  const handleBtnContinueClick = () => {
+    onBtnContinueClick?.({
+      workflowId: pilotInfo.pilotWorkflowInfo?.workflow_instance_id || "",
+    });
+  };
+
   return (
     <div
       id={`workflow-item-${indexPilot}`}
@@ -141,17 +145,26 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
 
           {!isFold ? <PilotStepBody pilotInfo={pilotInfo} /> : null}
 
-          <Button
-            id={`pilot-item-btn-download-${indexPilot}`}
-            type="primary"
-            className=""
-            disabled={isDisableBtnDownload}
-            loading={isLoadingDownload}
-            onClick={handleBtnPDFDownloadClick}
-          >
-            <Download size={20} />
-            <span className="font-bold">Download PDF</span>
-          </Button>
+          <div className="flex w-full flex-row items-center justify-between gap-2">
+            <Button
+              id={`pilot-item-btn-download-${indexPilot}`}
+              type="default"
+              className="flex-1"
+              disabled={isDisableBtnDownload}
+              loading={isLoadingDownload}
+              onClick={handleBtnPDFDownloadClick}
+            >
+              <Download size={20} />
+              <span className="font-bold">Download</span>
+              {!isShowBtnContinue ? <span className="font-bold"> PDF</span> : null}
+            </Button>
+            {isShowBtnContinue ? (
+              <Button id={`pilot-item-btn-continue-${indexPilot}`} type="default" className="flex-1" onClick={handleBtnContinueClick}>
+                <Play size={20} />
+                <span className="font-bold">Continue</span>
+              </Button>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>

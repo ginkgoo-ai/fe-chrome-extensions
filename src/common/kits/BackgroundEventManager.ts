@@ -293,9 +293,10 @@ class BackgroundEventManager {
       case "ginkgoo-page-all-pilot-start":
       case "ginkgoo-sidepanel-all-pilot-start": {
         const {
+          isNewWorkflow,
           caseInfo: caseInfoMsg = {},
           workflowDefinitionId: workflowDefinitionIdMsg = "",
-          // pilotId: pilotIdMsg = "",
+          workflowId: workflowIdMsg = "",
           actionlistPre: actionlistPreMsg,
         } = otherInfo || {};
 
@@ -318,11 +319,11 @@ class BackgroundEventManager {
 
         // Step2: 判断是否有本次运行过的 pilot ，以 caseId 为依据。 没有则创建一个workflow，新打开一个tab
         // Step3: 该pilot绑定的tabId目前是否存在。 如果不存在则创建一个workflow，新打开一个tab
-        const pilotInfo = PilotManager.getPilot({ caseId: caseInfoMsg.id });
+        const pilotInfo = PilotManager.getPilot({ caseId: caseInfoMsg.id, workflowId: workflowIdMsg });
         const tabInfoForPilot = pilotInfo?.pilotTabInfo?.id && (await ChromeManager.getTabInfo(pilotInfo?.pilotTabInfo?.id));
 
         console.log("pilot-start 2", pilotInfo, tabInfoForPilot);
-        if (!pilotInfo || !tabInfoForPilot) {
+        if (isNewWorkflow || !pilotInfo || !tabInfoForPilot) {
           const pilotInfoNew = await PilotManager.createPilot({
             caseInfo: caseInfoMsg,
             workflowDefinitionId: workflowDefinitionIdMsg,

@@ -43,7 +43,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgoo-sidepanel-all-pilot-start",
-        pilotId: pilotInfo?.pilotWorkflowInfo?.workflow_instance_id,
+        workflowId: pilotInfo?.pilotWorkflowInfo?.workflow_instance_id,
         actionlistPre,
       });
     } catch (error) {

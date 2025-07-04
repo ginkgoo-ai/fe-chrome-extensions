@@ -291,9 +291,7 @@ export default function CaseDetail() {
     }
   };
 
-  const handleNewWorkflowFinish = async (values: Record<string, string>) => {
-    const { url } = values;
-
+  const handleNewWorkflowFinish = async () => {
     if (!workflowDefinitionId) {
       messageAntd.open({
         type: "error",
@@ -303,20 +301,28 @@ export default function CaseDetail() {
       return;
     }
 
-    // const url = "https://visas-immigration.service.gov.uk/next"; // test
-    // const url = "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk"; // start
-    // const url = "https://visas-immigration.service.gov.uk/resume/3a0bec84-a910-4f74-b4de-763b458e770e"; // return
-    // const url = "https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/SKILLED_WORK/3434-4632-5724-0670/"; // uk
-
     try {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgoo-sidepanel-all-pilot-start",
-        url,
+        isNewWorkflow: true,
         caseInfo,
         workflowDefinitionId,
       });
     } catch (error) {
       console.log("[Ginkgoo] Sidepanel CaseDetail handleNewWorkflowFinish error", error);
+    }
+  };
+
+  const handleBtnContinueClick = async (params: { workflowId: string }) => {
+    const { workflowId } = params || {};
+
+    try {
+      GlobalManager.g_backgroundPort?.postMessage({
+        type: "ginkgoo-sidepanel-all-pilot-start",
+        workflowId,
+      });
+    } catch (error) {
+      console.error("[Ginkgoo] Sidepanel CaseDetail handleBtnContinueClick error", error);
     }
   };
 
@@ -410,9 +416,9 @@ export default function CaseDetail() {
                     key={`pilot-item-${indexPilot}`}
                     caseInfo={caseInfo}
                     pilotInfo={itemPilot}
-                    pilotInfoCurrent={pilotInfoCurrent}
                     indexPilot={indexPilot}
                     onQueryWorkflowDetail={handleQueryWorkflowDetail}
+                    onBtnContinueClick={handleBtnContinueClick}
                   />
                 );
               })}
