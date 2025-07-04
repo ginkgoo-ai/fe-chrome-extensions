@@ -584,6 +584,10 @@ class PilotManager {
               type: "click",
             },
             {
+              selector: "input[type='submit']",
+              type: "click",
+            },
+            {
               selector: "button[type='submit']",
               type: "click",
             },

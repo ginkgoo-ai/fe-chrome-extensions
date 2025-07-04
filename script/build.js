@@ -49,10 +49,18 @@ const copyDirectory = (srcDir, destDir) => {
       // 递归复制子目录
       copyDirectory(srcPath, destPath);
     } else {
-      // 复制文件
+      // Copy files
       if (file === "manifest.json") {
-        // 替换manifest.json中的版本号
+        // Replace version number and remove key field for production build
         copyAndReplaceFile(srcPath, destPath, /"version": ".*"/, `"version": "${process.env.npm_package_version}"`);
+        
+        // Remove key field from manifest.json for Chrome Web Store compatibility
+        const manifestContent = fs.readFileSync(destPath, "utf8");
+        const manifestJson = JSON.parse(manifestContent);
+        if (manifestJson.key) {
+          delete manifestJson.key;
+          fs.writeFileSync(destPath, JSON.stringify(manifestJson, null, 2));
+        }
       } else {
         fs.copyFileSync(srcPath, destPath);
       }
