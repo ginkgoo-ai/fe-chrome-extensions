@@ -178,7 +178,7 @@ export default function CaseDetail() {
   const refreshWorkflowList = async (params?: { cb?: () => void }) => {
     const { cb } = params || {};
 
-    setLoadingQueryWorkflowList(true);
+    // setLoadingQueryWorkflowList(true);
 
     const resWorkflowList = await Api.Ginkgoo.getWorkflowList({
       userId: UserManager.userInfo?.id || "",
@@ -367,7 +367,7 @@ export default function CaseDetail() {
         return (
           <div className="flex w-full flex-col">
             <SPPageHeader
-              title={`${caseInfo?.title || ""}${pilotInfoCurrent?.pilotStatus ? " - " + pilotInfoCurrent?.pilotStatus : ""}`}
+              title={`${caseInfo?.title || ""}`}
               renderTitleExtend={() => {
                 return (
                   <div className="flex flex-row items-center justify-between gap-2.5">

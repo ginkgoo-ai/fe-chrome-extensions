@@ -52,13 +52,13 @@ export default function SPPageCore(props: SPPageCoreProps) {
       case "ginkgoo-background-all-tab-complete": {
         const { tabInfo } = message || {};
 
-        redirectToPage({ tabInfo });
+        redirectToPage({ tabInfo }, "tab-complete");
         break;
       }
       case "ginkgoo-background-all-tab-activated": {
         const { tabInfo } = message || {};
 
-        redirectToPage({ tabInfo });
+        redirectToPage({ tabInfo }, "tab-activated");
         break;
       }
       case "ginkgoo-background-all-pilot-update": {
@@ -114,9 +114,12 @@ export default function SPPageCore(props: SPPageCoreProps) {
       });
     }
 
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; ; i++) {
       if (!!pilotInfoCalcTrackRef.current) {
         break;
+      }
+      if (i >= 30) {
+        return "";
       }
       await UtilsManager.sleep(200);
     }
@@ -133,11 +136,14 @@ export default function SPPageCore(props: SPPageCoreProps) {
     return "/case-portal";
   };
 
-  const redirectToPage = async (params?: { tabInfo?: chrome.tabs.Tab }) => {
+  const redirectToPage = async (params?: { tabInfo?: chrome.tabs.Tab }, extend?: string) => {
     const newTrack = await calcTrack(params);
+    if (!newTrack) {
+      return;
+    }
     const oldTrack = UtilsManager.router2url(pathRouterRef.current, paramsRouterRef.current);
     if (newTrack !== oldTrack) {
-      UtilsManager.redirectTo(newTrack);
+      UtilsManager.redirectTo(newTrack, {}, extend);
     }
   };
 
@@ -146,7 +152,7 @@ export default function SPPageCore(props: SPPageCoreProps) {
     if (isAuthenticatedTmp) {
       setIsAuthenticated(isAuthenticatedTmp);
       if (isEntry) {
-        redirectToPage();
+        redirectToPage({}, "checkAuth");
       }
     } else {
       UtilsManager.navigateTo("/login", {

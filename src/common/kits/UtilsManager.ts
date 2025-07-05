@@ -338,7 +338,7 @@ class UtilsManager {
     window.location.href = href;
   };
 
-  redirectTo = (url: string, params?: Record<string, string>) => {
+  redirectTo = (url: string, params?: Record<string, string>, extend?: string) => {
     if (!window) {
       return;
     }
@@ -346,7 +346,7 @@ class UtilsManager {
     const path = this.router2url(url, params);
     const href = `${html}#${path}`;
 
-    console.log("redirectTo", href, window?.location?.href);
+    console.log("redirectTo", extend, window?.location?.href, "=>", href);
     // if (window?.location?.href !== href) {
     //   window.location.replace(href);
     //   return true;

@@ -69,6 +69,11 @@ class PilotManager {
     };
     this.pilotMap.set(resWorkflowInfo.workflow_instance_id, newPilot);
 
+    BackgroundEventManager.postConnectMessage({
+      type: `ginkgoo-background-all-pilot-update`,
+      pilotInfo: newPilot,
+    });
+
     return newPilot;
   };
 
@@ -285,6 +290,35 @@ class PilotManager {
     return resWorkflow;
   };
 
+  queryTabInfo = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }): Promise<IStepResultType> => {
+    const { workflowId } = params || {};
+    const pilotInfo = this.getPilot({ workflowId });
+
+    if (!pilotInfo?.pilotTabInfo?.id) {
+      return { result: false };
+    }
+
+    await this.updatePilotMap({
+      workflowId,
+      update: {
+        pilotStatus: PilotStatusEnum.QUERY_TAB,
+      },
+    });
+
+    const resTabInfo = await ChromeManager.getTabInfo(pilotInfo.pilotTabInfo.id);
+
+    if (resTabInfo) {
+      await this.updatePilotMap({
+        workflowId,
+        update: {
+          pilotTabInfo: resTabInfo,
+        },
+      });
+    }
+
+    return { result: true };
+  };
+
   queryHtmlInfo = async (params: {
     workflowId: string;
     tabInfo: chrome.tabs.Tab;
@@ -369,15 +403,22 @@ class PilotManager {
       return { result: false };
     }
 
+    await this.updatePilotMap({
+      workflowId,
+      update: {
+        pilotStatus: PilotStatusEnum.QUERY_COOKIES,
+      },
+    });
+
     const resCookies = await ChromeManager.getSyncCookiesCore(tabInfo);
     const { cookies, cookiesStr } = resCookies || {};
+
+    console.log("queryCookies", cookies, cookiesStr);
 
     if (cookiesStr) {
       const objCsrfToken = cookies.find((item) => {
         return item.name.toLocaleUpperCase() === "CSRF-TOKEN";
       });
-
-      // console.log("queryCookies", cookies, objCsrfToken);
 
       await this.updatePilotMap({
         workflowId,
@@ -454,6 +495,13 @@ class PilotManager {
     if (!pilotInfo) {
       return { result: false };
     }
+
+    await this.updatePilotMap({
+      workflowId,
+      update: {
+        pilotStatus: PilotStatusEnum.QUERY_PDF,
+      },
+    });
 
     let thirdPartUrl = "";
     let thirdPartMethod = "";
@@ -693,6 +741,14 @@ class PilotManager {
     console.log("main 0");
 
     while (timerSource === pilotInfo?.pilotTimer) {
+      console.log("main 1");
+
+      // 查询并更新tabInfo
+      const resUpdateTabInfo = await this.queryTabInfo({ workflowId, tabInfo: tabInfo! });
+      if (timerSource !== pilotInfo?.pilotTimer || !resUpdateTabInfo.result) {
+        break;
+      }
+
       console.log("main 1");
       // 查询页面
       const resQueryHtmlInfo = await this.queryHtmlInfo({ workflowId, tabInfo: tabInfo! });
