@@ -404,7 +404,7 @@ export default function CaseDetail() {
       ) : (
         <>
           {pilotList?.length === 0 ? (
-            <PilotReady onBtnStartClick={handleBtnExtensionStartClick} />
+            <PilotReady />
           ) : (
             <div className={cn("box-border flex flex-1 flex-col gap-3 overflow-y-auto p-4")}>
               {pilotInfoCurrent?.pilotStatus === PilotStatusEnum.HOLD && !!pilotInfoCurrent?.pilotLastMessage ? (

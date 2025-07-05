@@ -19,7 +19,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
 
   const [stepListActiveKeyBody, setStepListActiveKeyBody] = useState<string>("");
   const [stepListItemsBody, setStepListItemsBody] = useState<CollapseProps["items"]>([]);
-  const [percent, setPercent] = useState(0);
+  // const [percent, setPercent] = useState(0);
 
   // const workflowInfo = useMemo(() => {
   //   let result: IWorkflowType | null | undefined = null;
@@ -153,8 +153,8 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
       }
 
       const currentStep = workflowSteps?.[indexCurrentStep];
-      const percentTmp = ((indexCurrentStep + 1) / Number(workflowSteps?.length)) * 100;
-      setPercent(percentTmp);
+      // const percentTmp = ((indexCurrentStep + 1) / Number(workflowSteps?.length)) * 100;
+      // setPercent(percentTmp);
 
       if (pilotInfo?.pilotStatus === PilotStatusEnum.HOLD) {
         const isInterrupt = currentStep?.data?.form_data?.some((itemFormData) => {

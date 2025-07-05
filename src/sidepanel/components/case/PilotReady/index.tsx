@@ -1,14 +1,8 @@
 "use client";
 
-import { MouseEventHandler, memo } from "react";
+import { memo } from "react";
 
-interface PilotReadyProps {
-  onBtnStartClick?: MouseEventHandler<HTMLButtonElement> | undefined;
-}
-
-function PurePilotReady(props: PilotReadyProps) {
-  // const { onBtnStartClick } = props;
-
+function PurePilotReady() {
   return (
     <div className="flex flex-col">
       <div className="mb-4 mt-[2.75rem] flex w-full items-center justify-center font-bold">You're all set! 🎉️</div>
