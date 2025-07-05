@@ -73,8 +73,8 @@ export default function Login() {
         </div> */}
 
         <Button className="h-10 w-full max-w-[300px]" type="default" block={true} loading={isLoading} onClick={handleLoginClick}>
-          <IconGoogle size={20} className="mr-1" />
-          <span>Continue with Google</span>
+          {/* <IconGoogle size={20} className="mr-1" /> */}
+          <span>Sign in</span>
         </Button>
       </div>
     </div>
