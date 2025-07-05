@@ -51,11 +51,11 @@ export default function SPPageHeader(props: SPPageHeaderProps) {
         )}
         <div className="box-border w-0 flex-1 truncate pl-1 text-start text-xl font-bold">{title}</div>
         <div className="flex-0">{renderTitleExtend?.()}</div>
-        <div className="flex-0 w-auto">
+        {/* <div className="flex-0 w-auto">
           <MKButton type="primary" shape="circle">
             {profileName}
           </MKButton>
-        </div>
+        </div> */}
       </div>
     </div>
   );

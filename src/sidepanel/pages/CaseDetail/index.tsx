@@ -257,10 +257,10 @@ export default function CaseDetail() {
   }, [location.search]);
 
   useEffect(() => {
-    if (!!pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id) {
+    if (!!pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id && pilotInfoCurrent?.pilotStatus !== PilotStatusEnum.HOLD) {
       setLoadingExtensionStop(false);
     }
-  }, [pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id]);
+  }, [pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id, pilotInfoCurrent?.pilotStatus]);
 
   const handleBtnBackClick = () => {
     UtilsManager.redirectTo("/case-portal");
@@ -417,6 +417,7 @@ export default function CaseDetail() {
                     caseInfo={caseInfo}
                     pilotInfo={itemPilot}
                     indexPilot={indexPilot}
+                    pilotInfoCurrent={pilotInfoCurrent}
                     onQueryWorkflowDetail={handleQueryWorkflowDetail}
                     onBtnContinueClick={handleBtnContinueClick}
                   />

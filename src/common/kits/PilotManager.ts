@@ -391,6 +391,62 @@ class PilotManager {
     return { result: true };
   };
 
+  queryDomForEU = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }) => {
+    let thirdPartUrl = "";
+    let thirdPartMethod = "";
+
+    const { tabInfo } = params || {};
+    const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
+      cbName: "querySelectors",
+      cbParams: {
+        selectors: [
+          {
+            selector: `#task-list-subtitle h2 span[class="govuk-body-m"]`,
+            attr: [{ key: "innerText" }],
+          },
+        ],
+      },
+    });
+    const id = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.innerText as string;
+    if (id) {
+      thirdPartUrl = `https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/form/api/applications/download-partial-pdf/${id}`;
+      thirdPartMethod = "POST";
+    }
+
+    return {
+      thirdPartUrl,
+      thirdPartMethod,
+    };
+  };
+
+  queryDomForNotEU = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }) => {
+    let thirdPartUrl = "";
+    let thirdPartMethod = "";
+
+    const { tabInfo } = params || {};
+    const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
+      cbName: "querySelectors",
+      cbParams: {
+        selectors: [
+          {
+            selector: `a[id="pdfLink"]`,
+            attr: [{ key: "href" }],
+          },
+        ],
+      },
+    });
+    const href = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.href as string;
+    if (href) {
+      thirdPartUrl = href;
+      thirdPartMethod = "GET";
+    }
+
+    return {
+      thirdPartUrl,
+      thirdPartMethod,
+    };
+  };
+
   queryDom = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }): Promise<IStepResultType> => {
     const { workflowId, tabInfo } = params || {};
     const pilotInfo = this.getPilot({ workflowId });
@@ -399,46 +455,18 @@ class PilotManager {
       return { result: false };
     }
 
-    let type = "NOT_EU";
     let thirdPartUrl = "";
     let thirdPartMethod = "";
 
-    switch (type) {
-      case "EU": {
-        const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
-          cbName: "querySelectors",
-          cbParams: {
-            selectors: [
-              {
-                selector: `#task-list-subtitle h2 span[class="govuk-body-m"]`,
-                attr: [{ key: "innerText" }],
-              },
-            ],
-          },
-        });
-        const id = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.innerText as string;
-        if (id) {
-          thirdPartUrl = `https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/form/api/applications/download-partial-pdf/${id}`;
-        }
-        thirdPartMethod = "POST";
-        break;
-      }
-      default: {
-        const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
-          cbName: "querySelectors",
-          cbParams: {
-            selectors: [
-              {
-                selector: `a[id="pdfLink"]`,
-                attr: [{ key: "href" }],
-              },
-            ],
-          },
-        });
-        thirdPartUrl = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.href as string;
-        thirdPartMethod = "GET";
-        break;
-      }
+    if (!thirdPartUrl) {
+      const { thirdPartUrl: thirdPartUrlForEU, thirdPartMethod: thirdPartMethodForEU } = await this.queryDomForEU(params);
+      thirdPartUrl = thirdPartUrlForEU;
+      thirdPartMethod = thirdPartMethodForEU;
+    }
+    if (!thirdPartUrl) {
+      const { thirdPartUrl: thirdPartUrlForNotEU, thirdPartMethod: thirdPartMethodForNotEU } = await this.queryDomForNotEU(params);
+      thirdPartUrl = thirdPartUrlForNotEU;
+      thirdPartMethod = thirdPartMethodForNotEU;
     }
 
     if (thirdPartUrl) {
