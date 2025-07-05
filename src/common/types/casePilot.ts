@@ -35,7 +35,7 @@ export enum WorkflowTypeEnum {
 export interface IPilotType {
   pilotId: string;
   pilotTimer: NodeJS.Timeout | null;
-  pilotTabInfo: chrome.tabs.Tab;
+  pilotTabInfo: chrome.tabs.Tab | null;
   pilotStatus: PilotStatusEnum;
   pilotLastMessage: string;
   pilotRepeatHash: string;
@@ -46,6 +46,7 @@ export interface IPilotType {
   pilotCsrfToken: string;
   pilotCaseInfo: ICaseItemType | null;
   pilotWorkflowInfo: IWorkflowType | null;
+  pilotRefreshTS?: number;
 }
 
 export interface IStepResultType {
@@ -167,6 +168,7 @@ export interface IWorkflowType {
   completed_at: string | null;
   dummy_data_usage?: IWorkflowDummyDataType[];
   progress_file_id?: string;
+  progress_percentage?: number;
   workflow_definition_id?: string;
   steps?: IWorkflowStepType[];
 }

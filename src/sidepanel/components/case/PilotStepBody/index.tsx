@@ -1,12 +1,12 @@
 import type { CollapseProps } from "antd";
-import { Alert, Button, Collapse, Progress, Spin } from "antd";
+import { Alert, Button, Collapse, Spin } from "antd";
 import { Check } from "lucide-react";
 import { memo, useEffect, useMemo, useState } from "react";
 import { IconInfo, IconLoading, IconStepDeclaration, IconStepDot } from "@/common/components/ui/icon";
 import { cn } from "@/common/kits";
 import GlobalManager from "@/common/kits/GlobalManager";
 import { IActionItemType } from "@/common/types/case";
-import { IPilotType, IWorkflowStepType, IWorkflowType, PilotStatusEnum } from "@/common/types/casePilot";
+import { IPilotType, IWorkflowStepType, PilotStatusEnum } from "@/common/types/casePilot";
 import { PilotStepBodyNormal } from "@/sidepanel/components/case/PilotStepBodyNormal";
 import "./index.css";
 
@@ -19,7 +19,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
 
   const [stepListActiveKeyBody, setStepListActiveKeyBody] = useState<string>("");
   const [stepListItemsBody, setStepListItemsBody] = useState<CollapseProps["items"]>([]);
-  const [percent, setPercent] = useState(0);
+  // const [percent, setPercent] = useState(0);
 
   // const workflowInfo = useMemo(() => {
   //   let result: IWorkflowType | null | undefined = null;
@@ -43,7 +43,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
     try {
       GlobalManager.g_backgroundPort?.postMessage({
         type: "ginkgoo-sidepanel-all-pilot-start",
-        pilotId: pilotInfo?.pilotWorkflowInfo?.workflow_instance_id,
+        workflowId: pilotInfo?.pilotWorkflowInfo?.workflow_instance_id,
         actionlistPre,
       });
     } catch (error) {
@@ -55,7 +55,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
     if (!!pilotInfo?.pilotTabInfo?.id) {
       try {
         GlobalManager.g_backgroundPort?.postMessage({
-          type: "ginkgoo-page-background-tab-update",
+          type: "ginkgoo-sidepanel-background-tab-update",
           tabId: pilotInfo?.pilotTabInfo?.id,
           updateProperties: { active: true },
         });
@@ -153,8 +153,8 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
       }
 
       const currentStep = workflowSteps?.[indexCurrentStep];
-      const percentTmp = ((indexCurrentStep + 1) / Number(workflowSteps?.length)) * 100;
-      setPercent(percentTmp);
+      // const percentTmp = ((indexCurrentStep + 1) / Number(workflowSteps?.length)) * 100;
+      // setPercent(percentTmp);
 
       if (pilotInfo?.pilotStatus === PilotStatusEnum.HOLD) {
         const isInterrupt = currentStep?.data?.form_data?.some((itemFormData) => {
@@ -177,7 +177,6 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
 
   return stepListItemsBody && stepListItemsBody.length > 0 ? (
     <div className="relative box-border flex w-full flex-col items-center justify-start rounded-lg border border-[#D8DFF5] p-2">
-      <Progress percent={percent} showInfo={false} />
       <Collapse className="w-full" activeKey={stepListActiveKeyBody} ghost items={stepListItemsBody} />
       {pilotInfo?.pilotTabInfo?.id ? (
         <Alert

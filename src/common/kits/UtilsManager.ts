@@ -276,6 +276,7 @@ class UtilsManager {
       search: "", // ?q=2
       searchParams: {}, // URLSearchParams {size: 1}
       username: "", // ""
+      path: "", // http://localhost:3000/en/
     };
 
     try {
@@ -294,6 +295,7 @@ class UtilsManager {
       result.search = search;
       result.searchParams = searchParams;
       result.username = username;
+      result.path = href?.split("?")?.[0];
     } catch (error) {
       console.log("[Ginkgoo] UtilsManager getUrlInfo", error);
     }
@@ -376,7 +378,7 @@ class UtilsManager {
     window.URL.revokeObjectURL(url);
   };
 
-  saveBlob = (params: { blobPart: BlobPart; fileName?: string }) => {
+  downloadBlob = (params: { blobPart: BlobPart; fileName?: string }) => {
     const { blobPart, fileName } = params;
     const blob = new Blob([blobPart]);
 

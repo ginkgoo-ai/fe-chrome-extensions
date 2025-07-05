@@ -42,6 +42,11 @@ export default function SidePanel(): JSX.Element {
         token: {
           colorPrimary,
         },
+        components: {
+          Button: {
+            borderRadius: 12,
+          },
+        },
       }}
     >
       <App

@@ -55,7 +55,8 @@ class CaseManager {
   parseCaseInfo = (caseInfo: ICaseItemType): ICaseItemType => {
     return {
       ...caseInfo,
-      caseStatusForFront: this.CASE_STATUS_MAP[caseInfo.status] || this.CASE_STATUS_MAP[CaseStatusEnum.DEFAULT],
+      caseStatusForFront:
+        this.CASE_STATUS_MAP[caseInfo?.status as keyof typeof this.CASE_STATUS_MAP] || this.CASE_STATUS_MAP[CaseStatusEnum.DEFAULT],
       timestamp: +dayjs(),
     };
   };

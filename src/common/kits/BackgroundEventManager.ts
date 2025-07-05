@@ -4,6 +4,8 @@ import FetchManager from "@/common/kits/FetchManager";
 import PilotManager from "@/common/kits/PilotManager";
 import UserManager from "@/common/kits/UserManager";
 import Api from "@/common/kits/api";
+import { MESSAGE } from "../config/message";
+import { PilotStatusEnum } from "../types/casePilot";
 
 interface IMessageType {
   type: string;
@@ -164,15 +166,23 @@ class BackgroundEventManager {
       // dosomething on tab updated
       // console.log("BackgroundEventManager onTabsUpdated 1", tab);
       // 发送 tab 完成事件
-      // this.postConnectMessage({
-      //   type: "ginkgoo-background-all-tab-complete",
-      //   tabInfo: tab,
-      // });
+      this.postConnectMessage({
+        type: "ginkgoo-background-all-tab-complete",
+        tabInfo: tab,
+      });
       // 判断是否存在 pilot
-      // const pilotInfo = PilotManager.getPilot({ tabId: tab.id });
-      // if (pilotInfo?.pilotStatus === PilotStatusEnum.OPEN) {
-      //   PilotManager.start({ tabInfo: tab });
-      // }
+      const pilotInfo = PilotManager.getPilot({ tabId: tab.id });
+      if (pilotInfo?.pilotStatus === PilotStatusEnum.OPEN) {
+        await PilotManager.updatePilotMap({
+          workflowId: pilotInfo.pilotWorkflowInfo?.workflow_instance_id || "",
+          update: {
+            pilotTabInfo: tab,
+          },
+        });
+        PilotManager.start({
+          pilotInfo,
+        });
+      }
     }
   };
 
@@ -192,8 +202,8 @@ class BackgroundEventManager {
       if (resWindowInfo?.type === "popup" && ChromeManager.whiteListForAuth.some((whiteUrl) => resTabInfo.url?.startsWith(whiteUrl))) {
         console.log("resWindowInfo", resWindowInfo);
         await ChromeManager.updateWindow(windowId, {
-          width: 300,
-          height: 600,
+          width: 480,
+          height: 840,
         });
       }
 
@@ -283,24 +293,82 @@ class BackgroundEventManager {
       case "ginkgoo-page-all-pilot-start":
       case "ginkgoo-sidepanel-all-pilot-start": {
         const {
-          url: urlMsg = "",
+          isNewWorkflow,
           caseInfo: caseInfoMsg = {},
           workflowDefinitionId: workflowDefinitionIdMsg = "",
-          pilotId: pilotIdMsg = "",
+          workflowId: workflowIdMsg = "",
           actionlistPre: actionlistPreMsg,
         } = otherInfo || {};
 
-        if (!actionlistPreMsg) {
-          PilotManager.clear();
+        // if (!actionlistPreMsg) {
+        //   PilotManager.clear();
+        // }
+
+        // Step1: 插件是否登陆。 没登陆则广播
+        console.log("pilot-start 0");
+        const isCheckAuth = await UserManager.checkAuth();
+
+        console.log("pilot-start 1", isCheckAuth);
+        if (!isCheckAuth) {
+          this.postConnectMessage({
+            type: `ginkgoo-background-all-auth-check`,
+            value: isCheckAuth,
+          });
+          return;
         }
 
+        // Step2: 判断是否有本次运行过的 pilot ，以 caseId 为依据。 没有则创建一个workflow，新打开一个tab
+        // Step3: 该pilot绑定的tabId目前是否存在。 如果不存在则创建一个workflow，新打开一个tab
+        const pilotInfo = PilotManager.getPilot({ caseId: caseInfoMsg.id, workflowId: workflowIdMsg });
+        const tabInfoForPilot = pilotInfo?.pilotTabInfo?.id && (await ChromeManager.getTabInfo(pilotInfo?.pilotTabInfo?.id));
+
+        console.log("pilot-start 2", pilotInfo, tabInfoForPilot);
+        if (isNewWorkflow || !pilotInfo || !tabInfoForPilot) {
+          const pilotInfoNew = await PilotManager.createPilot({
+            caseInfo: caseInfoMsg,
+            workflowDefinitionId: workflowDefinitionIdMsg,
+            pilot: {
+              pilotStatus: PilotStatusEnum.OPEN,
+            },
+          });
+
+          console.log("pilot-start 3", pilotInfoNew);
+          if (!pilotInfoNew) {
+            this.postConnectMessage({
+              type: `ginkgoo-background-all-pilot-start-failed`,
+              typeToast: "error",
+              contentToast: MESSAGE.TOAST_CREATE_WORKFLOW_FAILED,
+            });
+            return;
+          }
+
+          const tabInfo = await ChromeManager.createTab({
+            url: PilotManager.getPilotHostUrl({
+              caseInfo: caseInfoMsg,
+            }),
+            active: false,
+          });
+          console.log("pilot-start 4", tabInfo);
+
+          await PilotManager.updatePilotMap({
+            workflowId: pilotInfoNew.pilotWorkflowInfo?.workflow_instance_id || "",
+            update: {
+              pilotTabInfo: tabInfo,
+            },
+          });
+          console.log("pilot-start 5");
+
+          return;
+        }
+
+        console.log("pilot-start 6");
+
         await PilotManager.start({
-          url: urlMsg,
-          caseInfo: caseInfoMsg,
-          workflowDefinitionId: workflowDefinitionIdMsg,
-          pilotId: pilotIdMsg,
+          pilotInfo,
           actionlistPre: actionlistPreMsg,
         });
+
+        console.log("pilot-start 7");
         break;
       }
       case "ginkgoo-page-all-pilot-stop":
@@ -312,16 +380,19 @@ class BackgroundEventManager {
       }
       case "ginkgoo-page-background-pilot-query":
       case "ginkgoo-sidepanel-background-pilot-query": {
-        const { workflowId: workflowIdMsg } = otherInfo || {};
-        const pilotInfo = workflowIdMsg
-          ? PilotManager.getPilot({
-              workflowId: workflowIdMsg,
-            })
-          : PilotManager.getPilotActived();
+        const { workflowId: workflowIdMsg, tabId: tabIdMsg } = otherInfo || {};
+        const pilotInfo =
+          workflowIdMsg || tabIdMsg
+            ? PilotManager.getPilot({
+                tabId: tabIdMsg,
+                workflowId: workflowIdMsg,
+              })
+            : PilotManager.getPilotActived();
 
         this.postConnectMessage({
           type: `ginkgoo-background-all-pilot-update`,
           pilotInfo,
+          sourceMessage: message,
         });
         break;
       }

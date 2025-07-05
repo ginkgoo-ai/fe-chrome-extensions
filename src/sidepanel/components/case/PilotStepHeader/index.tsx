@@ -21,35 +21,36 @@ function PurePilotStepHeader(props: PilotStepHeaderProps) {
 
   const handleBtnDownloadPdfClick = async () => {
     console.log("handleBtnDownloadPdfClick");
-    if (!pilotInfo?.progress_file_id) {
+    if (!pilotInfo?.pilotWorkflowInfo?.progress_file_id) {
       return;
     }
     const resFilesPDFHighlight = await Api.Ginkgoo.postFilesPDFHighlight({
-      fileId: pilotInfo?.progress_file_id,
-      highlightData: pilotInfo?.dummy_data_usage,
+      fileId: pilotInfo?.pilotWorkflowInfo?.progress_file_id || "",
+      highlightData: pilotInfo?.pilotWorkflowInfo?.dummy_data_usage || [],
     });
     console.log("handleBtnDownloadPdfClick", resFilesPDFHighlight);
     if (resFilesPDFHighlight) {
-      UtilsManager.saveBlob({
+      UtilsManager.downloadBlob({
         blobPart: resFilesPDFHighlight,
       });
     }
   };
 
   // const handleBtnGotoOfficialClick = () => {
-  //   console.log("handleBtnGotoOfficialClick");
+  //   console.log('handleBtnGotoOfficialClick');
   // };
 
   const handleBtnViewClick = () => {
-    if (!!pilotInfo?.tabInfo?.url) {
+    console.log("handleBtnViewClick");
+    if (!!pilotInfo?.pilotTabInfo?.id) {
       try {
         GlobalManager.g_backgroundPort?.postMessage({
-          type: "ginkgoo-page-background-tab-update",
-          tabId: pilotInfo?.tabInfo?.id,
+          type: "ginkgoo-sidepanel-background-tab-update",
+          tabId: pilotInfo?.pilotTabInfo?.id,
           updateProperties: { active: true },
         });
       } catch (error) {
-        console.log("[Ginkgoo] Sidepanel handleBtnJumpClick error", error);
+        console.log("[Ginkgoo] Sidepanel handleBtnViewClick error", error);
       }
     }
   };

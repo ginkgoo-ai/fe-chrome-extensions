@@ -32,23 +32,64 @@ class PilotManager {
     return this.instance;
   }
 
-  genPilot = (pilot: IPilotType): IPilotType => {
-    return pilot;
+  createPilot = async (params: {
+    caseInfo: ICaseItemType | null;
+    workflowDefinitionId: string;
+    pilot: Partial<IPilotType>;
+  }): Promise<IPilotType | undefined> => {
+    const { caseInfo, workflowDefinitionId, pilot } = params || {};
+
+    const [resCaseInfo, resWorkflowInfo] = await Promise.all([
+      this.queryCaseDetail({ caseId: caseInfo?.id || "" }),
+      this.createWorkflow({
+        caseId: caseInfo?.id || "",
+        workflowDefinitionId,
+      }),
+    ]);
+
+    if (!resWorkflowInfo) {
+      return void 0;
+    }
+
+    const newPilot = {
+      pilotId: resWorkflowInfo.workflow_instance_id,
+      pilotTimer: null,
+      pilotTabInfo: null,
+      pilotStatus: PilotStatusEnum.INIT,
+      pilotLastMessage: "",
+      pilotRepeatHash: "",
+      pilotRepeatCurrent: 0,
+      pilotThirdPartMethod: "",
+      pilotThirdPartUrl: "",
+      pilotCookie: "",
+      pilotCsrfToken: "",
+      pilotCaseInfo: resCaseInfo || caseInfo,
+      pilotWorkflowInfo: resWorkflowInfo,
+      ...pilot,
+    };
+    this.pilotMap.set(resWorkflowInfo.workflow_instance_id, newPilot);
+
+    return newPilot;
   };
 
-  getPilot = (params: { pilotId?: string; tabId?: number; workflowId?: string }): IPilotType | undefined => {
-    const { pilotId, tabId, workflowId } = params || {};
+  getPilot = (params: { caseId?: string; pilotId?: string; tabId?: number; workflowId?: string }): IPilotType | undefined => {
+    const { caseId, pilotId, tabId, workflowId } = params || {};
 
-    if (!pilotId && !tabId && !workflowId) {
+    if (!caseId && !pilotId && !tabId && !workflowId) {
       return void 0;
     }
 
     return Array.from(this.pilotMap.values()).find((pilot) => {
-      // 如果提供了 id
+      // 如果提供了 caseId
+      if (caseId && pilot.pilotCaseInfo?.id !== caseId) {
+        return false;
+      }
+
+      // 如果提供了 pilotId
       if (pilotId && pilot.pilotId !== pilotId) {
         return false;
       }
-      // 如果提供了 tabId，则必须匹配
+      // 如果提供了 tabId
       if (tabId && pilot.pilotTabInfo?.id !== tabId) {
         return false;
       }
@@ -63,6 +104,16 @@ class PilotManager {
 
   getPilotActived = (): IPilotType | undefined => {
     return Array.from(this.pilotMap.values()).find((pilot) => !!pilot.pilotTimer);
+  };
+
+  getPilotHostUrl = (params: { caseInfo: ICaseItemType }) => {
+    const { caseInfo } = params || {};
+
+    switch (caseInfo.visaType) {
+      default: {
+        return "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk";
+      }
+    }
   };
 
   updatePilotMap = async (params: { workflowId: string; update: Partial<IPilotType> }) => {
@@ -276,6 +327,8 @@ class PilotManager {
 
     const hash = md5(title + htmlCleansing);
 
+    console.log("queryHtmlInfo", hash, pilotInfo?.pilotRepeatHash, Number(pilotInfo?.pilotRepeatCurrent));
+
     if (hash === pilotInfo?.pilotRepeatHash) {
       await this.updatePilotMap({
         workflowId,
@@ -292,8 +345,6 @@ class PilotManager {
         },
       });
     }
-
-    console.log("queryHtmlInfo", hash, pilotInfo?.pilotRepeatHash, Number(pilotInfo?.pilotRepeatCurrent));
 
     if (Number(pilotInfo?.pilotRepeatCurrent) > this.REPEAT_MAX) {
       // Max
@@ -340,6 +391,62 @@ class PilotManager {
     return { result: true };
   };
 
+  queryDomForEU = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }) => {
+    let thirdPartUrl = "";
+    let thirdPartMethod = "";
+
+    const { tabInfo } = params || {};
+    const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
+      cbName: "querySelectors",
+      cbParams: {
+        selectors: [
+          {
+            selector: `#task-list-subtitle h2 span[class="govuk-body-m"]`,
+            attr: [{ key: "innerText" }],
+          },
+        ],
+      },
+    });
+    const id = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.innerText as string;
+    if (id) {
+      thirdPartUrl = `https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/form/api/applications/download-partial-pdf/${id}`;
+      thirdPartMethod = "POST";
+    }
+
+    return {
+      thirdPartUrl,
+      thirdPartMethod,
+    };
+  };
+
+  queryDomForNotEU = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }) => {
+    let thirdPartUrl = "";
+    let thirdPartMethod = "";
+
+    const { tabInfo } = params || {};
+    const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
+      cbName: "querySelectors",
+      cbParams: {
+        selectors: [
+          {
+            selector: `a[id="pdfLink"]`,
+            attr: [{ key: "href" }],
+          },
+        ],
+      },
+    });
+    const href = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.href as string;
+    if (href) {
+      thirdPartUrl = href;
+      thirdPartMethod = "GET";
+    }
+
+    return {
+      thirdPartUrl,
+      thirdPartMethod,
+    };
+  };
+
   queryDom = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }): Promise<IStepResultType> => {
     const { workflowId, tabInfo } = params || {};
     const pilotInfo = this.getPilot({ workflowId });
@@ -348,46 +455,18 @@ class PilotManager {
       return { result: false };
     }
 
-    let type = "NOT_EU";
     let thirdPartUrl = "";
     let thirdPartMethod = "";
 
-    switch (type) {
-      case "EU": {
-        const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
-          cbName: "querySelectors",
-          cbParams: {
-            selectors: [
-              {
-                selector: `#task-list-subtitle h2 span[class="govuk-body-m"]`,
-                attr: [{ key: "innerText" }],
-              },
-            ],
-          },
-        });
-        const id = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.innerText as string;
-        if (id) {
-          thirdPartUrl = `https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/form/api/applications/download-partial-pdf/${id}`;
-        }
-        thirdPartMethod = "POST";
-        break;
-      }
-      default: {
-        const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
-          cbName: "querySelectors",
-          cbParams: {
-            selectors: [
-              {
-                selector: `a[id="pdfLink"]`,
-                attr: [{ key: "href" }],
-              },
-            ],
-          },
-        });
-        thirdPartUrl = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.href as string;
-        thirdPartMethod = "GET";
-        break;
-      }
+    if (!thirdPartUrl) {
+      const { thirdPartUrl: thirdPartUrlForEU, thirdPartMethod: thirdPartMethodForEU } = await this.queryDomForEU(params);
+      thirdPartUrl = thirdPartUrlForEU;
+      thirdPartMethod = thirdPartMethodForEU;
+    }
+    if (!thirdPartUrl) {
+      const { thirdPartUrl: thirdPartUrlForNotEU, thirdPartMethod: thirdPartMethodForNotEU } = await this.queryDomForNotEU(params);
+      thirdPartUrl = thirdPartUrlForNotEU;
+      thirdPartMethod = thirdPartMethodForNotEU;
     }
 
     if (thirdPartUrl) {
@@ -577,7 +656,7 @@ class PilotManager {
         // 执行动作
         const resExecuteActionList = await this.executeActionList({
           workflowId,
-          tabInfo,
+          tabInfo: tabInfo!,
           actionlist: actionlistPre.concat([
             {
               selector: "input[id='submit']",
@@ -616,21 +695,21 @@ class PilotManager {
     while (timerSource === pilotInfo?.pilotTimer) {
       console.log("main 1");
       // 查询页面
-      const resQueryHtmlInfo = await this.queryHtmlInfo({ workflowId, tabInfo });
+      const resQueryHtmlInfo = await this.queryHtmlInfo({ workflowId, tabInfo: tabInfo! });
       if (timerSource !== pilotInfo?.pilotTimer || !resQueryHtmlInfo.result) {
         break;
       }
 
       console.log("main 2");
       // 查询cookies
-      const resQueryCookies = await this.queryCookies({ workflowId, tabInfo });
+      const resQueryCookies = await this.queryCookies({ workflowId, tabInfo: tabInfo! });
       if (timerSource !== pilotInfo?.pilotTimer || !resQueryCookies.result) {
         break;
       }
 
       console.log("main 3");
       // 查询pdf Url
-      const resQueryDom = await this.queryDom({ workflowId, tabInfo });
+      const resQueryDom = await this.queryDom({ workflowId, tabInfo: tabInfo! });
       if (timerSource !== pilotInfo?.pilotTimer || !resQueryDom.result) {
         break;
       }
@@ -646,7 +725,7 @@ class PilotManager {
       console.log("main 5");
       // 执行动作
       const { actionlist } = resQueryActionList;
-      const resExecuteActionList = await this.executeActionList({ workflowId, tabInfo, actionlist });
+      const resExecuteActionList = await this.executeActionList({ workflowId, tabInfo: tabInfo!, actionlist });
       if (timerSource !== pilotInfo?.pilotTimer || !resExecuteActionList.result) {
         break;
       }
@@ -672,83 +751,15 @@ class PilotManager {
   };
 
   start = async (params: {
-    url?: string; // 'create'
-    caseInfo?: ICaseItemType; // 'create'
-    workflowDefinitionId?: string; // 'create'
-    pilotId?: string; // 'continue'
+    pilotInfo: IPilotType;
     actionlistPre?: IActionItemType[]; // 'continue'
   }) => {
-    const { url = "", caseInfo = null, workflowDefinitionId = "", pilotId = "", actionlistPre } = params || {};
-    let pilotInfo = this.getPilot({ pilotId });
+    const { pilotInfo, actionlistPre } = params || {};
 
     console.log("start 0", pilotInfo, this.pilotMap);
-    const isCheckAuth = await UserManager.checkAuth();
 
-    console.log("start 1", isCheckAuth);
-
-    if (!isCheckAuth) {
-      BackgroundEventManager.postConnectMessage({
-        type: `ginkgoo-background-all-auth-check`,
-        value: isCheckAuth,
-      });
-      return;
-    }
-
-    const tabInfo = !!pilotInfo?.pilotTabInfo?.id
-      ? await ChromeManager.getTabInfo(pilotInfo?.pilotTabInfo?.id)
-      : (
-          await ChromeManager.queryTabs({
-            url,
-          })
-        )?.[0];
-
-    console.log("start 2", tabInfo);
-
-    if (!tabInfo) {
-      BackgroundEventManager.postConnectMessage({
-        type: `ginkgoo-background-all-pilot-no-match-page`,
-        typeToast: "error",
-        contentToast: "No matching page found.",
-      });
-      return;
-    }
-
-    console.log("start 3", pilotId, pilotInfo, pilotInfo?.pilotTimer);
-
-    if (pilotInfo) {
-      pilotInfo.pilotTabInfo = tabInfo;
-      if (pilotInfo.pilotTimer) {
-        await this.stop({ workflowId: pilotInfo.pilotWorkflowInfo?.workflow_instance_id || "" });
-      }
-    } else {
-      const [resCaseInfo, resWorkflowInfo] = await Promise.all([
-        this.queryCaseDetail({ caseId: caseInfo?.id || "" }),
-        this.createWorkflow({
-          caseId: caseInfo?.id || "",
-          workflowDefinitionId,
-        }),
-      ]);
-
-      if (!resWorkflowInfo) {
-        return;
-      }
-
-      pilotInfo = this.genPilot({
-        pilotId: resWorkflowInfo.workflow_instance_id,
-        pilotTimer: null,
-        pilotTabInfo: tabInfo,
-        pilotStatus: PilotStatusEnum.HOLD,
-        pilotLastMessage: "",
-        pilotRepeatHash: "",
-        pilotRepeatCurrent: 0,
-        pilotThirdPartMethod: "",
-        pilotThirdPartUrl: "",
-        pilotCookie: "",
-        pilotCsrfToken: "",
-        pilotCaseInfo: resCaseInfo || caseInfo,
-        pilotWorkflowInfo: resWorkflowInfo,
-      });
-      this.pilotMap.set(resWorkflowInfo.workflow_instance_id, pilotInfo);
+    if (pilotInfo.pilotTimer) {
+      await this.stop({ workflowId: pilotInfo.pilotWorkflowInfo?.workflow_instance_id || "" });
     }
 
     pilotInfo.pilotTimer = setTimeout(async () => {

@@ -53,14 +53,16 @@ const copyDirectory = (srcDir, destDir) => {
       if (file === "manifest.json") {
         // Replace version number and remove key field for production build
         copyAndReplaceFile(srcPath, destPath, /"version": ".*"/, `"version": "${process.env.npm_package_version}"`);
-        
+
         // Remove key field from manifest.json for Chrome Web Store compatibility
-        const manifestContent = fs.readFileSync(destPath, "utf8");
-        const manifestJson = JSON.parse(manifestContent);
-        if (manifestJson.key) {
-          delete manifestJson.key;
-          fs.writeFileSync(destPath, JSON.stringify(manifestJson, null, 2));
-        }
+        // TODO: The "key" field is used to lock the extension ID, which is required for backend login/cross-origin configuration. When publishing to the Chrome Web Store in the future, locking the extension ID will need to be achieved by packaging with a private key.
+
+        // const manifestContent = fs.readFileSync(destPath, "utf8");
+        // const manifestJson = JSON.parse(manifestContent);
+        // if (manifestJson.key) {
+        //   delete manifestJson.key;
+        //   fs.writeFileSync(destPath, JSON.stringify(manifestJson, null, 2));
+        // }
       } else {
         fs.copyFileSync(srcPath, destPath);
       }

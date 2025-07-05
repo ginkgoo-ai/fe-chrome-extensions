@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import ChromeManager from "@/common/kits/ChromeManager";
 import EventManager from "@/common/kits/EventManager";
 import GlobalManager from "@/common/kits/GlobalManager";
+import UtilsManager from "@/common/kits/UtilsManager";
 import "@/common/styles/frame.less";
 import SidePanel from "@/sidepanel";
 import configStore from "@/sidepanel/redux/store";
@@ -42,7 +43,7 @@ const main = async () => {
   // 注册监听 Background 消息
   // chrome?.runtime?.onMessage?.addListener(async (request, sender, sendResponse) => {
   //   if (request.type === "onTabsComplete") {
-  //     const resTabInfo = await ChromeManager.getActiveTabInfo({});
+  //     const resTabInfo = await ChromeManager.getActiveTabInfo();
   //     if (resTabInfo.id !== request?.tabInfo?.id) {
   //       return;
   //     }
@@ -63,11 +64,20 @@ const main = async () => {
     if (!scope || scope.includes(port.name)) {
       // 如果有指定送达范围，则只送达指定范围
       switch (type) {
+        case "ginkgoo-background-all-tab-complete": {
+          const { tabInfo } = message || {};
+          const { origin } = UtilsManager.getUrlInfo(tabInfo?.url);
+          if (GlobalManager.g_whiteListForRegister.includes(origin)) {
+            EventManager.emit("ginkgoo-message", message);
+          }
+          break;
+        }
         case "ginkgoo-background-all-tab-activated": {
           store.dispatch({
             type: "UPDATE_TAB_ACTIVATED",
             payload: message?.tabInfo,
           });
+          EventManager.emit("ginkgoo-message", message);
           break;
         }
         default: {

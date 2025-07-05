@@ -5,19 +5,19 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { MouseEventHandler, memo } from "react";
 // import { Button } from "@/common/components/ui/button";
-import { IconCardEdit, IconMagic } from "@/common/components/ui/icon";
+import { IconCardEdit } from "@/common/components/ui/icon";
 import { ICaseItemType } from "@/common/types/case";
 
 interface CardCaseProps {
   itemCase: ICaseItemType;
-  onCardStartClick: MouseEventHandler<HTMLButtonElement>;
+  onCardClick: MouseEventHandler<HTMLButtonElement>;
   onCardEditClick?: MouseEventHandler<HTMLButtonElement>;
 }
 
 dayjs.extend(utc);
 
 function PureCardCase(props: CardCaseProps) {
-  const { itemCase, onCardStartClick, onCardEditClick } = props;
+  const { itemCase, onCardClick, onCardEditClick } = props;
 
   // const [workflowList, setWorkflowList] = useState<any[]>([]);
 
@@ -36,16 +36,17 @@ function PureCardCase(props: CardCaseProps) {
   //   }
   // }, [itemCase.id]);
 
-  const handleBtnStartClick = (e: any) => {
-    onCardStartClick?.(e);
+  const handleCardClick = (e: any) => {
+    onCardClick?.(e);
   };
 
   return (
     <Card
-      hoverable={false}
+      hoverable
       style={{
         borderRadius: "12px",
       }}
+      onClick={handleCardClick}
     >
       <div className="flex w-full flex-col">
         <div className="flex w-full flex-row items-center justify-between">
@@ -79,15 +80,12 @@ function PureCardCase(props: CardCaseProps) {
             text={itemCase.caseStatusForFront?.text}
           /> */}
         </div>
-        <div className="mt-2 flex w-full flex-col">
-          {/* {workflowList.map((itemWorkflow, indexWorkflow) => {
-            return <div key={`workflow-${indexWorkflow}`}>{itemWorkflow.workflow_instance_id}</div>;
-          })} */}
+        {/* <div className="mt-2 flex w-full flex-col">
           <Button color="default" variant="dashed" className="h-8" onClick={handleBtnStartClick}>
             <IconMagic size={24} />
-            <span className="font-semibold text-primary">Start Auto-Fill</span>
+            <span className="font-semibold text-primary">Start auto-Fill</span>
           </Button>
-        </div>
+        </div> */}
       </div>
     </Card>
   );
