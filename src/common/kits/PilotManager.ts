@@ -559,10 +559,18 @@ class PilotManager {
     actionlist = resWorkflowsProcessForm?.actions;
 
     if (!actionlist) {
-      return { result: false };
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgoo-background-all-toast`,
+        typeToast: "error",
+        contentToast: MESSAGE.TOAST_ANALYZE_ACTION_ERROR,
+      });
     }
 
-    return { result: true, actionlist };
+    // if (!actionlist) {
+    //   return { result: false };
+    // }
+
+    return { result: true, actionlist: actionlist || [] };
   };
 
   executeActionList = async (params: {
@@ -706,10 +714,10 @@ class PilotManager {
           workflowId,
           tabInfo: tabInfo!,
           actionlist: actionlistPre.concat([
-            {
-              selector: "input[id='submit']",
-              type: "click",
-            },
+            // {
+            //   selector: "input[id='submit']",
+            //   type: "click",
+            // },
             {
               selector: "input[type='submit']",
               type: "click",
