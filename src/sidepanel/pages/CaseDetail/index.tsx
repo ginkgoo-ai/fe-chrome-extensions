@@ -373,8 +373,10 @@ export default function CaseDetail() {
                   <div className="flex flex-row items-center justify-between gap-2.5">
                     {!pilotInfoCurrent || pilotInfoCurrent?.pilotStatus === PilotStatusEnum.HOLD ? (
                       <Button variant="default" color="primary" className="h-9 flex-1" onClick={handleBtnExtensionStartClick}>
-                        <IconExtensionStart />
-                        <span className="font-bold text-white">Start auto-fill</span>
+                        <div className="text-primary-foreground color-[#F1F1F4] dark:color-[#0D1118] flex flex-row items-center gap-2">
+                          <IconExtensionStart />
+                          <span className="font-bold">Start auto-fill</span>
+                        </div>
                       </Button>
                     ) : (
                       <Button
@@ -384,8 +386,10 @@ export default function CaseDetail() {
                         disabled={isLoadingExtensionStop}
                         onClick={handleBtnExtensionStopClick}
                       >
-                        {isLoadingExtensionStop ? <Loader2Icon className="animate-spin" /> : <IconExtensionStop />}
-                        <span className="font-bold text-white">Stop auto-fill</span>
+                        <div className="text-primary-foreground color-[#F1F1F4] dark:color-[#0D1118] flex flex-row items-center gap-2">
+                          {isLoadingExtensionStop ? <Loader2Icon className="animate-spin" /> : <IconExtensionStop />}
+                          <span className="font-bold">Stop auto-fill</span>
+                        </div>
                       </Button>
                     )}
                   </div>
@@ -399,7 +403,7 @@ export default function CaseDetail() {
     >
       {isLoadingQueryWorkflowList ? (
         <Spin>
-          <div className="h-40 w-full"></div>
+          <div className="min-h-screen w-full bg-transparent"></div>
         </Spin>
       ) : (
         <>

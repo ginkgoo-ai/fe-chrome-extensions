@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Progress, message as messageAntd } from "antd";
+import { Button, Card, Progress, message as messageAntd } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { ChevronRight, Download, Play } from "lucide-react";
@@ -130,7 +130,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
   return (
     <div
       id={`workflow-item-${indexPilot}`}
-      className="relative flex w-full flex-[0_0_auto] items-center justify-center overflow-hidden rounded-lg"
+      className="workflow-wrap relative flex w-full flex-[0_0_auto] items-center justify-center overflow-hidden rounded-lg"
     >
       <div
         className={cn(
@@ -142,66 +142,68 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
         )}
       ></div>
       <div className="relative box-border flex w-full flex-col bg-[rgba(0,0,0,0)] p-0.5">
-        <div className="box-border flex h-full w-full flex-col gap-3 overflow-hidden rounded-lg bg-[#ffffff] p-3">
-          <div className="flex cursor-pointer flex-row items-start justify-between gap-3" onClick={handleHeaderClick}>
-            <div className="flex flex-[0_0_auto]">
-              {pilotInfo.pilotWorkflowInfo?.status === "COMPLETED_SUCCESS" ? <IconCompleted size={40} /> : <IconIncompleted size={40} />}
-            </div>
-            <div className="flex w-0 flex-1 flex-col">
-              <div className="flex flex-row items-center gap-1">
-                {pilotInfo?.pilotStatus !== PilotStatusEnum.HOLD ? <IconLoading size={16} className="animate-spin" /> : null}
-                <span
-                  className={cn("w-full truncate text-sm text-[#4E4E4E]", {
-                    "font-bold": pilotInfo?.pilotStatus !== PilotStatusEnum.HOLD,
+        <Card>
+          <div className="box-border flex h-full w-full flex-col gap-3 overflow-hidden">
+            <div className="flex cursor-pointer flex-row items-start justify-between gap-3" onClick={handleHeaderClick}>
+              <div className="flex flex-[0_0_auto]">
+                {pilotInfo.pilotWorkflowInfo?.status === "COMPLETED_SUCCESS" ? <IconCompleted size={40} /> : <IconIncompleted size={40} />}
+              </div>
+              <div className="flex w-0 flex-1 flex-col">
+                <div className="flex flex-row items-center gap-1">
+                  {pilotInfo?.pilotStatus !== PilotStatusEnum.HOLD ? <IconLoading size={16} className="animate-spin" /> : null}
+                  <span
+                    className={cn("w-full truncate text-sm", {
+                      "font-bold": pilotInfo?.pilotStatus !== PilotStatusEnum.HOLD,
+                    })}
+                  >
+                    {/* {`${caseInfo?.clientName || ""}` + ` - ${caseInfo?.visaType || ""}` + ` - ${pilotInfo?.pilotStatus || ""}`} */}
+                    {pilotInfo?.pilotStatus || "--"}
+                  </span>
+                </div>
+                <div className="w-full truncate text-sm font-bold text-[#2665FF]">{workflowUpdateTime}</div>
+              </div>
+              <div className="flex-[0_0_auto]">
+                <ChevronRight
+                  size={20}
+                  className={cn("transition-all", {
+                    "rotate-90": !isFold,
                   })}
-                >
-                  {/* {`${caseInfo?.clientName || ""}` + ` - ${caseInfo?.visaType || ""}` + ` - ${pilotInfo?.pilotStatus || ""}`} */}
-                  {pilotInfo?.pilotStatus || "--"}
-                </span>
+                />
               </div>
-              <div className="w-full truncate text-sm font-bold text-[#2665FF]">{workflowUpdateTime}</div>
             </div>
-            <div className="flex-[0_0_auto]">
-              <ChevronRight
-                size={20}
-                className={cn("transition-all", {
-                  "rotate-90": !isFold,
-                })}
-              />
-            </div>
-          </div>
 
-          {Number(pilotInfo.pilotWorkflowInfo?.progress_percentage) >= 0 ? (
-            <Progress percent={pilotInfo.pilotWorkflowInfo?.progress_percentage} showInfo={false} />
-          ) : null}
+            {Number(pilotInfo.pilotWorkflowInfo?.progress_percentage) >= 0 ? (
+              <Progress percent={pilotInfo.pilotWorkflowInfo?.progress_percentage} showInfo={false} />
+            ) : null}
 
-          {!isFold ? <PilotStepBody pilotInfo={pilotInfo} /> : null}
+            {!isFold ? <PilotStepBody pilotInfo={pilotInfo} /> : null}
 
-          <div className="flex w-full flex-row items-center justify-between gap-2">
-            <Button
-              id={`pilot-item-btn-download-${indexPilot}`}
-              type="default"
-              className="flex-1"
-              disabled={isDisableBtnDownload}
-              loading={isLoadingDownload}
-              onClick={handleBtnPDFDownloadClick}
-            >
-              <Download size={20} />
-              <div className="truncate">
-                <span className="font-bold">Download</span>
-                {!isShowBtnContinue ? <span className="font-bold"> PDF</span> : null}
-              </div>
-            </Button>
-            {isShowBtnContinue ? (
-              <Button id={`pilot-item-btn-continue-${indexPilot}`} type="default" className="flex-1" onClick={handleBtnContinueClick}>
-                <Play size={20} />
+            <div className="flex w-full flex-row items-center justify-between gap-2">
+              <Button
+                id={`pilot-item-btn-download-${indexPilot}`}
+                type="default"
+                className="flex-1"
+                disabled={isDisableBtnDownload}
+                loading={isLoadingDownload}
+                onClick={handleBtnPDFDownloadClick}
+              >
+                <Download size={20} />
                 <div className="truncate">
-                  <span className="font-bold">Continue</span>
+                  <span className="font-bold">Download</span>
+                  {!isShowBtnContinue ? <span className="font-bold"> PDF</span> : null}
                 </div>
               </Button>
-            ) : null}
+              {isShowBtnContinue ? (
+                <Button id={`pilot-item-btn-continue-${indexPilot}`} type="default" className="flex-1" onClick={handleBtnContinueClick}>
+                  <Play size={20} />
+                  <div className="truncate">
+                    <span className="font-bold">Continue</span>
+                  </div>
+                </Button>
+              ) : null}
+            </div>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

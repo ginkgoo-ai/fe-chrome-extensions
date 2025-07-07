@@ -83,7 +83,7 @@ export default function CasePortal() {
       <div className="-mt-4 box-border flex flex-col gap-3 px-4">
         {isLoadingQueryCaseList ? (
           <Spin>
-            <div className="h-40 w-full"></div>
+            <div className="min-h-screen w-full bg-transparent"></div>
           </Spin>
         ) : (
           <>
