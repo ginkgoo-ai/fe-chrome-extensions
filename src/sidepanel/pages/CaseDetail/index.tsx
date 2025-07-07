@@ -1,9 +1,8 @@
-import { Alert, Spin, message as messageAntd } from "antd";
+import { Alert, Button, Spin, message as messageAntd } from "antd";
 import { produce } from "immer";
 import { cloneDeep } from "lodash";
 import { Loader2Icon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/common/components/ui/button";
 import { IconExtensionStart, IconExtensionStop } from "@/common/components/ui/icon";
 import { MESSAGE } from "@/common/config/message";
 import { useEventManager } from "@/common/hooks/useEventManager";
@@ -372,21 +371,16 @@ export default function CaseDetail() {
                 return (
                   <div className="flex flex-row items-center justify-between gap-2.5">
                     {!pilotInfoCurrent || pilotInfoCurrent?.pilotStatus === PilotStatusEnum.HOLD ? (
-                      <Button variant="default" color="primary" className="h-9 flex-1" onClick={handleBtnExtensionStartClick}>
-                        <div className="text-primary-foreground color-[#F1F1F4] dark:color-[#0D1118] flex flex-row items-center gap-2">
+                      <Button type="primary" className="h-9 flex-1" onClick={handleBtnExtensionStartClick}>
+                        <div className="flex flex-row items-center gap-2">
                           <IconExtensionStart />
                           <span className="font-bold">Start auto-fill</span>
                         </div>
                       </Button>
                     ) : (
-                      <Button
-                        variant="default"
-                        color="primary"
-                        className="h-9 flex-1"
-                        disabled={isLoadingExtensionStop}
-                        onClick={handleBtnExtensionStopClick}
-                      >
-                        <div className="text-primary-foreground color-[#F1F1F4] dark:color-[#0D1118] flex flex-row items-center gap-2">
+                      <Button type="primary" className="h-9 flex-1" disabled={isLoadingExtensionStop} onClick={handleBtnExtensionStopClick}>
+                        {/* color-[#0D1118] dark:color-[#F1F1F4] */}
+                        <div className="flex flex-row items-center gap-2">
                           {isLoadingExtensionStop ? <Loader2Icon className="animate-spin" /> : <IconExtensionStop />}
                           <span className="font-bold">Stop auto-fill</span>
                         </div>
