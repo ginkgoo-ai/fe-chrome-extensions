@@ -60,6 +60,7 @@ export default function SidePanel(): JSX.Element {
           Button: {
             borderRadius: 12,
             defaultBg: isDarkMode ? "oklch(26.9% 0 0)" : "#ffffff",
+            // defaultColor: isDarkMode ? "oklch(26.9% 0 0)" : "#ffffff",
           },
           Input: {
             controlHeight: 36,
@@ -98,7 +99,7 @@ export default function SidePanel(): JSX.Element {
       }}
     >
       <App
-        className="h-screen w-screen bg-[#F1F1F4] dark:bg-[#0D1118]"
+        className="h-screen w-screen bg-[#FFFFFF] dark:bg-[#0D1118]"
         style={{
           ["--color-primary" as string]: colorPrimary,
         }}
