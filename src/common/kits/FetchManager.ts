@@ -16,12 +16,12 @@ class FetchManager {
     return this.instance;
   }
 
-  calcResult(res: Response): Promise<any> {
-    let result = null;
-    if (true) {
-      result = res.json();
+  async calcResult(res: Response, config: IRequestConfigType): Promise<any> {
+    if (config.responseType === "blob") {
+      return await res.blob();
     }
-    return result;
+
+    return await res.json();
   }
 
   /**
@@ -97,7 +97,7 @@ class FetchManager {
         }
       } else {
         const res = await fetch(url, otherConfig as RequestInit);
-        result = await this.calcResult(res);
+        result = await this.calcResult(res, config);
       }
       console.debug("[Debug] FetchManager fetchAPI Res", {
         config,
