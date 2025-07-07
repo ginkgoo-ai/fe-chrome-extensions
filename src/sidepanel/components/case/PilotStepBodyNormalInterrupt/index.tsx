@@ -95,6 +95,10 @@ function PurePilotStepBodyNormalInterrupt(props: PilotStepBodyNormalInterruptPro
           return null;
         }
 
+        if (!["input", "select", "radio", "checkbox"].includes(typeQuestion)) {
+          return null;
+        }
+
         return (
           <Form.Item
             key={`pilot-step-body-form-${indexQuestion}`}
