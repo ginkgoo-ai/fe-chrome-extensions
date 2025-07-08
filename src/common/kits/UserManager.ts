@@ -320,8 +320,7 @@ class UserManager {
   };
 
   async logout(): Promise<void> {
-    const res = await CacheManager.removeSyncStorageChrome(["token", "memberInfo"]);
-    return res;
+    return this.clearTokensAndUserInfo();
   }
 }
 

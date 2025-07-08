@@ -346,7 +346,7 @@ class BackgroundEventManager {
             url: PilotManager.getPilotHostUrl({
               caseInfo: caseInfoMsg,
             }),
-            active: false,
+            active: true,
           });
           console.log("pilot-start 4", tabInfo);
 
@@ -362,6 +362,10 @@ class BackgroundEventManager {
         }
 
         console.log("pilot-start 6");
+
+        if (pilotInfo.pilotTabInfo?.id) {
+          ChromeManager.updateTab(pilotInfo.pilotTabInfo?.id, { active: true });
+        }
 
         await PilotManager.start({
           pilotInfo,
@@ -454,6 +458,10 @@ class BackgroundEventManager {
         this.postConnectMessage({
           type: `ginkgoo-background-all-sidepanel-destory`,
         });
+        break;
+      }
+      case "ginkgoo-sidepanel-logout": {
+        UserManager.logout();
         break;
       }
       default: {
