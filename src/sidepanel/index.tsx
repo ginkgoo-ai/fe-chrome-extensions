@@ -60,7 +60,7 @@ export default function SidePanel(): JSX.Element {
           Button: {
             borderRadius: 12,
             defaultBg: isDarkMode ? "oklch(26.9% 0 0)" : "#ffffff",
-            // defaultColor: isDarkMode ? "oklch(26.9% 0 0)" : "#ffffff",
+            primaryColor: isDarkMode ? "oklch(26.9% 0 0)" : "#ffffff",
           },
           Input: {
             controlHeight: 36,
