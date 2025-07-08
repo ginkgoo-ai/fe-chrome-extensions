@@ -1,0 +1,88 @@
+name: Deploy
+
+run-name: Manual Deploy by ${{ github.actor }} prod ${{ github.event.inputs.branch }} ${{ github.event.inputs.commit }}
+
+env:
+  BUILD_OUTPUT_PATH: "build/"
+  BUILD_NAME: ""
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Version increment type (major, feat, fix, repeat)"
+        required: true
+        type: choice
+        options:
+          - major
+          - feat
+          - fix
+          - repeat
+        default: "fix"
+
+permissions:
+  contents: write
+  id-token: write
+  actions: read
+  deployments: write
+
+jobs:
+  increment-tag:
+    uses: Xshuliner/workflows/.github/workflows/auto-increment-tag.yml@master
+    with:
+      version_type: ${{ github.event.inputs.version_type }}
+      updatePackageJson: true
+    secrets: inherit
+
+  build:
+    needs: [increment-tag]
+    runs-on: ubuntu-latest
+    outputs:
+      build_name: ${{ env.BUILD_NAME }}
+      download_dist_name: ${{ steps.repo.outputs.download_dist_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Pull latest code
+        run: |
+          git fetch origin ${{ github.ref_name }}
+          git reset --hard origin/${{ github.ref_name }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build
+        run: yarn build
+
+      - name: List build result
+        run: ls -la ${{ env.BUILD_OUTPUT_PATH }}
+
+      - name: Get repository name
+        id: repo
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          REPO_NAME=$(echo "${{ github.repository }}" | tr '/' '_')
+          DOWNLOAD_DIST_NAME="${REPO_NAME}-${TIMESTAMP}"
+
+          echo "download_dist_name=$DOWNLOAD_DIST_NAME" >> $GITHUB_OUTPUT
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.repo.outputs.download_dist_name }}
+          path: ${{ env.BUILD_OUTPUT_PATH }}
+
+  deploy:
+    needs: [increment-tag, build]
+    uses: Xshuliner/workflows/.github/workflows/deploy-release.yml@master
+    with:
+      version: ${{ needs.increment-tag.outputs.new_version }}
+      repository_name: ${{ needs.build.outputs.build_name }}
+      download_dist_name: ${{ needs.build.outputs.download_dist_name }}
