@@ -460,7 +460,7 @@ class BackgroundEventManager {
         });
         break;
       }
-      case "ginkgoo-sidepanel-logout": {
+      case "ginkgoo-page-background-logout": {
         UserManager.logout();
         break;
       }
