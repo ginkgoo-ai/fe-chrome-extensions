@@ -58,8 +58,8 @@ const main = async () => {
   // });
 
   // 注册监听 Background 消息
-  GlobalManager.g_backgroundPort = chrome?.runtime?.connect?.({ name: `ginkgoo-sidepanel-${uuidv4()}` });
-  GlobalManager.g_backgroundPort?.onMessage?.addListener(async (message, port: chrome.runtime.Port) => {
+  GlobalManager.g_handleBackgroundMessage = async (message: any, port: chrome.runtime.Port) => {
+    // console.log("GlobalManager.g_handleBackgroundMessage", message);
     const { type, scope } = message || {};
     if (!scope || scope.includes(port.name)) {
       // 如果有指定送达范围，则只送达指定范围
@@ -68,7 +68,7 @@ const main = async () => {
           const { tabInfo } = message || {};
           const { origin } = UtilsManager.getUrlInfo(tabInfo?.url);
           if (GlobalManager.g_whiteListForRegister.includes(origin)) {
-            EventManager.emit("ginkgoo-message", message);
+            EventManager.emit("ginkgoo-extensions", message);
           }
           break;
         }
@@ -77,16 +77,17 @@ const main = async () => {
             type: "UPDATE_TAB_ACTIVATED",
             payload: message?.tabInfo,
           });
-          EventManager.emit("ginkgoo-message", message);
+          EventManager.emit("ginkgoo-extensions", message);
           break;
         }
         default: {
-          EventManager.emit("ginkgoo-message", message);
+          EventManager.emit("ginkgoo-extensions", message);
           break;
         }
       }
     }
-  });
+  };
+  GlobalManager.connectBackground();
 };
 
 main();

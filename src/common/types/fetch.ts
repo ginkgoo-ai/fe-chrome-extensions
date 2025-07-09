@@ -14,4 +14,5 @@ export interface IRequestConfigType {
   background?: boolean;
   orz2?: boolean;
   responseType?: string;
+  controller?: AbortController;
 }

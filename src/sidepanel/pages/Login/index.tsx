@@ -25,13 +25,10 @@ export default function Login() {
     setLoading(false);
 
     if (resLogin) {
-      try {
-        GlobalManager.g_backgroundPort?.postMessage({
-          type: "ginkgoo-sidepanel-background-auth-check",
-        });
-      } catch (error) {
-        console.debug("[Ginkgoo] handleLoginClick", error);
-      }
+      GlobalManager.postMessage({
+        type: "ginkgoo-sidepanel-background-auth-check",
+      });
+
       // if (track) {
       //   UtilsManager.redirectTo(track);
       // } else {

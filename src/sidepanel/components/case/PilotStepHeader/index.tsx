@@ -43,15 +43,11 @@ function PurePilotStepHeader(props: PilotStepHeaderProps) {
   const handleBtnViewClick = () => {
     console.log("handleBtnViewClick");
     if (!!pilotInfo?.pilotTabInfo?.id) {
-      try {
-        GlobalManager.g_backgroundPort?.postMessage({
-          type: "ginkgoo-sidepanel-background-tab-update",
-          tabId: pilotInfo?.pilotTabInfo?.id,
-          updateProperties: { active: true },
-        });
-      } catch (error) {
-        console.log("[Ginkgoo] Sidepanel handleBtnViewClick error", error);
-      }
+      GlobalManager.postMessage({
+        type: "ginkgoo-sidepanel-background-tab-update",
+        tabId: pilotInfo?.pilotTabInfo?.id,
+        updateProperties: { active: true },
+      });
     }
   };
 

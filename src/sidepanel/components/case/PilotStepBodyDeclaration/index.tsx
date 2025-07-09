@@ -13,15 +13,11 @@ function PurePilotStepBodyDeclaration(props: PilotStepBodyDeclarationProps) {
 
   const handleBtnJumpClick = useCallback(async () => {
     if (!!pilotInfo?.pilotTabInfo?.id) {
-      try {
-        GlobalManager.g_backgroundPort?.postMessage({
-          type: "ginkgoo-sidepanel-background-tab-update",
-          tabId: pilotInfo?.pilotTabInfo?.id,
-          updateProperties: { active: true },
-        });
-      } catch (error) {
-        console.log("[Ginkgoo] Sidepanel handleBtnJumpClick error", error);
-      }
+      GlobalManager.postMessage({
+        type: "ginkgoo-sidepanel-background-tab-update",
+        tabId: pilotInfo?.pilotTabInfo?.id,
+        updateProperties: { active: true },
+      });
     }
   }, [pilotInfo?.pilotTabInfo?.id]);
 

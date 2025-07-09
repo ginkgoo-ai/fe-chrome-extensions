@@ -26,23 +26,16 @@ export default function SidePanel(): JSX.Element {
 
     mediaQuery.addEventListener("change", handler);
 
-    try {
-      GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-background-sidepanel-mounted",
-      });
-    } catch (error) {
-      console.log("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
-    }
+    GlobalManager.postMessage({
+      type: "ginkgoo-sidepanel-background-sidepanel-mounted",
+    });
 
     return () => {
       mediaQuery.removeEventListener("change", handler);
-      try {
-        GlobalManager.g_backgroundPort?.postMessage({
-          type: "ginkgoo-sidepanel-background-sidepanel-destory",
-        });
-      } catch (error) {
-        console.log("[Ginkgoo] Sidepanel handleBtnStartClick error", error);
-      }
+
+      GlobalManager.postMessage({
+        type: "ginkgoo-sidepanel-background-sidepanel-destory",
+      });
     };
   }, []);
 

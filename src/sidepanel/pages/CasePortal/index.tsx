@@ -48,32 +48,6 @@ export default function CasePortal() {
     });
   };
 
-  // const handleNewWorkflowFinish = async (values: Record<string, string>) => {
-  //   const { url } = values;
-
-  //   // const url = "https://visas-immigration.service.gov.uk/next"; // test
-  //   // const url = "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk"; // start
-  //   // const url = "https://visas-immigration.service.gov.uk/resume/3a0bec84-a910-4f74-b4de-763b458e770e"; // return
-  //   // const url = "https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/SKILLED_WORK/3434-4632-5724-0670/"; // uk
-  //   if (!refWorkflowDefinitionId.current) {
-  //     messageAntd.open({
-  //       type: "error",
-  //       content: MESSAGE.TOAST_REFRESH_WORKFLOW_DEFINITIONS_FAILED,
-  //     });
-  //   }
-
-  //   try {
-  //     GlobalManager.g_backgroundPort?.postMessage({
-  //       type: "ginkgoo-sidepanel-all-pilot-start",
-  //       url,
-  //       caseInfo: refCaseInfoSelect.current,
-  //       workflowDefinitionId: refWorkflowDefinitionId.current,
-  //     });
-  //   } catch (error) {
-  //     console.log("[Ginkgoo] Sidepanel handleCardClick error", error);
-  //   }
-  // };
-
   return (
     <SPPageCore
       renderPageHeader={() => {

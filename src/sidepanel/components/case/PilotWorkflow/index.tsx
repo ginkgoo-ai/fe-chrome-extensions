@@ -149,7 +149,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
                 {pilotInfo.pilotWorkflowInfo?.status === "COMPLETED_SUCCESS" ? <IconCompleted size={40} /> : <IconIncompleted size={40} />}
               </div>
               <div className="flex w-0 flex-1 flex-col">
-                <div className="flex flex-row items-center gap-1">
+                <div className="flex flex-row items-center gap-2">
                   {pilotInfo?.pilotStatus !== PilotStatusEnum.HOLD ? <IconLoading size={16} className="animate-spin" /> : null}
                   <span
                     className={cn("w-full truncate text-sm", {
@@ -176,7 +176,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
               <Progress percent={pilotInfo.pilotWorkflowInfo?.progress_percentage} showInfo={false} />
             ) : null}
 
-            {!isFold ? <PilotStepBody pilotInfo={pilotInfo} /> : null}
+            {!isFold ? <PilotStepBody caseId={caseInfo?.id || ""} pilotInfo={pilotInfo} /> : null}
 
             <div className="flex w-full flex-row items-center justify-between gap-2">
               <Button

@@ -3,6 +3,7 @@ import { cloneDeep } from "lodash";
 import { MESSAGE } from "@/common/config/message";
 import BackgroundEventManager from "@/common/kits/BackgroundEventManager";
 import ChromeManager from "@/common/kits/ChromeManager";
+import FetchManager from "@/common/kits/FetchManager";
 import HTMLManager from "@/common/kits/HTMLManager";
 import LockManager from "@/common/kits/LockManager";
 import UserManager from "@/common/kits/UserManager";
@@ -33,18 +34,40 @@ class PilotManager {
   }
 
   createPilot = async (params: {
-    caseInfo: ICaseItemType | null;
+    caseId: string;
     workflowDefinitionId: string;
     pilot: Partial<IPilotType>;
   }): Promise<IPilotType | undefined> => {
-    const { caseInfo, workflowDefinitionId, pilot } = params || {};
+    const { caseId, workflowDefinitionId, pilot } = params || {};
 
-    const resWorkflowInfo = await this.createWorkflow({
-      caseId: caseInfo?.id || "",
-      workflowDefinitionId,
-    });
+    // const resWorkflowInfo = await this.createWorkflow({
+    //   caseId: caseInfo?.id || "",
+    //   workflowDefinitionId,
+    // });
+
+    const [resWorkflowInfo, resCaseDetail] = await Promise.all([
+      this.createWorkflow({
+        caseId,
+        workflowDefinitionId,
+      }),
+      this.queryCaseDetail({ caseId }),
+    ]);
 
     if (!resWorkflowInfo) {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgoo-background-all-pilot-start-failed`,
+        typeToast: "error",
+        contentToast: MESSAGE.TOAST_CREATE_WORKFLOW_FAILED,
+      });
+      return void 0;
+    }
+
+    if (!resCaseDetail) {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgoo-background-all-pilot-start-failed`,
+        typeToast: "error",
+        contentToast: MESSAGE.TOAST_REFRESH_CASE_DETAIL_FAILED,
+      });
       return void 0;
     }
 
@@ -60,7 +83,7 @@ class PilotManager {
       pilotThirdPartUrl: "",
       pilotCookie: "",
       pilotCsrfToken: "",
-      pilotCaseInfo: caseInfo,
+      pilotCaseInfo: resCaseDetail,
       pilotWorkflowInfo: resWorkflowInfo,
       ...pilot,
     };
@@ -108,10 +131,10 @@ class PilotManager {
     return Array.from(this.pilotMap.values()).find((pilot) => !!pilot.pilotTimer);
   };
 
-  getPilotHostUrl = (params: { caseInfo: ICaseItemType }) => {
+  getPilotHostUrl = (params: { caseInfo: ICaseItemType | null }) => {
     const { caseInfo } = params || {};
 
-    switch (caseInfo.visaType) {
+    switch (caseInfo?.visaType) {
       default: {
         return "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk";
       }
@@ -555,7 +578,7 @@ class PilotManager {
 
     actionlist = resWorkflowsProcessForm?.actions;
 
-    if (!actionlist) {
+    if (pilotInfo.pilotStatus !== PilotStatusEnum.HOLD && !actionlist) {
       BackgroundEventManager.postConnectMessage({
         type: `ginkgoo-background-all-toast`,
         typeToast: "error",
@@ -762,64 +785,72 @@ class PilotManager {
       // 查询并更新tabInfo
       const resUpdateTabInfo = await this.queryTabInfo({ workflowId, tabInfo: tabInfo! });
       if (timerSource !== pilotInfo?.pilotTimer || !resUpdateTabInfo.result) {
-        break;
-      }
-
-      console.log("main 1");
-      // 查询页面
-      const resQueryHtmlInfo = await this.queryHtmlInfo({ workflowId, tabInfo: tabInfo! });
-      if (timerSource !== pilotInfo?.pilotTimer || !resQueryHtmlInfo.result) {
+        console.log("main 1", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
         break;
       }
 
       console.log("main 2");
-      // 查询cookies
-      const resQueryCookies = await this.queryCookies({ workflowId, tabInfo: tabInfo! });
-      if (timerSource !== pilotInfo?.pilotTimer || !resQueryCookies.result) {
+      // 查询页面
+      const resQueryHtmlInfo = await this.queryHtmlInfo({ workflowId, tabInfo: tabInfo! });
+      if (timerSource !== pilotInfo?.pilotTimer || !resQueryHtmlInfo.result) {
+        console.log("main 2", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
         break;
       }
 
       console.log("main 3");
-      // 查询pdf Url
-      const resQueryDom = await this.queryDom({ workflowId, tabInfo: tabInfo! });
-      if (timerSource !== pilotInfo?.pilotTimer || !resQueryDom.result) {
+      // 查询cookies
+      const resQueryCookies = await this.queryCookies({ workflowId, tabInfo: tabInfo! });
+      if (timerSource !== pilotInfo?.pilotTimer || !resQueryCookies.result) {
+        console.log("main 3", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
         break;
       }
 
       console.log("main 4");
-      // 分析页面
-      const { htmlCleansing } = resQueryHtmlInfo;
-      const resQueryActionList = await this.queryActionList({ workflowId, htmlCleansing });
-      if (timerSource !== pilotInfo?.pilotTimer || !resQueryActionList.result) {
+      // 查询pdf Url
+      const resQueryDom = await this.queryDom({ workflowId, tabInfo: tabInfo! });
+      if (timerSource !== pilotInfo?.pilotTimer || !resQueryDom.result) {
+        console.log("main 4", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
         break;
       }
 
       console.log("main 5");
-      // 执行动作
-      const { actionlist } = resQueryActionList;
-      const resExecuteActionList = await this.executeActionList({ workflowId, tabInfo: tabInfo!, actionlist });
-      if (timerSource !== pilotInfo?.pilotTimer || !resExecuteActionList.result) {
+      // 分析页面
+      const { htmlCleansing } = resQueryHtmlInfo;
+      const resQueryActionList = await this.queryActionList({ workflowId, htmlCleansing });
+      if (timerSource !== pilotInfo?.pilotTimer || !resQueryActionList.result) {
+        console.log("main 5", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
         break;
       }
 
       console.log("main 6");
-      // 等待
-      const resDelayStep = await this.delayStep({ workflowId });
-      if (timerSource !== pilotInfo?.pilotTimer || !resDelayStep.result) {
+      // 执行动作
+      const { actionlist } = resQueryActionList;
+      const resExecuteActionList = await this.executeActionList({ workflowId, tabInfo: tabInfo!, actionlist });
+      if (timerSource !== pilotInfo?.pilotTimer || !resExecuteActionList.result) {
+        console.log("main 6", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
         break;
       }
 
       console.log("main 7");
-
-      // 查询 Workflow Detail
-      const resQueryWorkflowDetail = await this.queryWorkflowDetail({ workflowId });
-      if (timerSource !== pilotInfo?.pilotTimer || !resQueryWorkflowDetail.result) {
+      // 等待
+      const resDelayStep = await this.delayStep({ workflowId });
+      if (timerSource !== pilotInfo?.pilotTimer || !resDelayStep.result) {
+        console.log("main 7", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
         break;
       }
 
       console.log("main 8");
+
+      // 查询 Workflow Detail
+      const resQueryWorkflowDetail = await this.queryWorkflowDetail({ workflowId });
+      if (timerSource !== pilotInfo?.pilotTimer || !resQueryWorkflowDetail.result) {
+        console.log("main 8", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
+        break;
+      }
+
+      console.log("main 9");
     }
-    console.log("main 9");
+    console.log("main 10");
   };
 
   start = async (params: {
@@ -877,6 +908,8 @@ class PilotManager {
         pilotRepeatCurrent: 0,
       },
     });
+
+    FetchManager.cancelAll();
 
     // 上传 pdf 文件 Cookie ，以及将文件 fileId 同 workflow 绑定
     if (pilotInfo?.pilotThirdPartUrl && pilotInfo?.pilotCookie) {
