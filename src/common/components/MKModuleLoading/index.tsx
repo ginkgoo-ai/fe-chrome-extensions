@@ -1,4 +1,3 @@
-// import imgLogo from "@/resource/oss/assets/app.png";
 import "./index.less";
 
 interface IModuleLoadingProps {

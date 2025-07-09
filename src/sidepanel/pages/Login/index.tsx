@@ -1,13 +1,12 @@
 import { Button } from "antd";
 import { message } from "antd";
 import { useState } from "react";
-import { IconGoogle } from "@/common/components/ui/icon";
 import { MESSAGE } from "@/common/config/message";
 import { usePageParams } from "@/common/hooks/usePageParams";
 import GlobalManager from "@/common/kits/GlobalManager";
 import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
-import imgLogo from "@/resource/oss/assets/imgLogo.png";
+import imgApp from "@/resource/oss/assets/app.png";
 import "./index.less";
 
 export default function Login() {
@@ -51,7 +50,11 @@ export default function Login() {
 
   return (
     <div className="P-login box-border flex flex-col items-center justify-center px-10">
-      <img src={imgLogo} alt="logo" />
+      <div className="flex flex-row items-center gap-2">
+        <img src={imgApp} className="h-10 w-10" alt="logo" />
+        <div className="text-3xl">Ginkgoo</div>
+        <div className="text-3xl text-[#B3B3B3]">Legal</div>
+      </div>
       <div className="mt-[320px] box-border flex w-full flex-col items-center justify-center px-10">
         {/* <div className="ipt-con">
           <Input
@@ -72,7 +75,7 @@ export default function Login() {
           />
         </div> */}
 
-        <Button className="h-10 w-full max-w-[300px]" type="default" block={true} loading={isLoading} onClick={handleLoginClick}>
+        <Button className="h-10 w-full max-w-[300px]" type="primary" block={true} loading={isLoading} onClick={handleLoginClick}>
           {/* <IconGoogle size={20} className="mr-1" /> */}
           <span>Sign in</span>
         </Button>

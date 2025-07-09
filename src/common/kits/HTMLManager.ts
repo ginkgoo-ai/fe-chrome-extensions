@@ -57,7 +57,7 @@ class HTMLManager {
         node.childNodes = node.childNodes.filter((child) => {
           const tagName = child?.nodeName?.toLowerCase();
           // 保留更多必要的元素
-          return !["head", "meta", "script", "noscript", "style", "link", "svg"].includes(tagName);
+          return !["head", "meta", "script", "noscript", "style", "link", "svg", "img"].includes(tagName);
         });
 
         // 处理当前节点的属性：移除style属性

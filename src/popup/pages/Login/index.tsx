@@ -1,9 +1,8 @@
 import { Button, Input } from "antd";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import imgLogo from "@/resource/oss/assets/app.webp";
+import { useState } from "react";
+import imgLogo from "@/resource/oss/assets/app.png";
 import "./index.less";
-
 
 export default function Login() {
   const navigate = useNavigate();

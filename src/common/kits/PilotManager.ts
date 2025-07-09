@@ -39,13 +39,10 @@ class PilotManager {
   }): Promise<IPilotType | undefined> => {
     const { caseInfo, workflowDefinitionId, pilot } = params || {};
 
-    const [resCaseInfo, resWorkflowInfo] = await Promise.all([
-      this.queryCaseDetail({ caseId: caseInfo?.id || "" }),
-      this.createWorkflow({
-        caseId: caseInfo?.id || "",
-        workflowDefinitionId,
-      }),
-    ]);
+    const resWorkflowInfo = await this.createWorkflow({
+      caseId: caseInfo?.id || "",
+      workflowDefinitionId,
+    });
 
     if (!resWorkflowInfo) {
       return void 0;
@@ -63,7 +60,7 @@ class PilotManager {
       pilotThirdPartUrl: "",
       pilotCookie: "",
       pilotCsrfToken: "",
-      pilotCaseInfo: resCaseInfo || caseInfo,
+      pilotCaseInfo: caseInfo,
       pilotWorkflowInfo: resWorkflowInfo,
       ...pilot,
     };
@@ -695,15 +692,26 @@ class PilotManager {
   };
 
   main = async (pilotInfo: IPilotType, actionlistPre?: IActionItemType[]) => {
-    const { pilotTabInfo: tabInfo, pilotWorkflowInfo } = pilotInfo || {};
+    const { pilotTabInfo: tabInfo, pilotCaseInfo, pilotWorkflowInfo } = pilotInfo || {};
     const { workflow_instance_id: workflowId = "" } = pilotWorkflowInfo || {};
     const timerSource = cloneDeep(pilotInfo?.pilotTimer);
+
+    const resCaseDetail = await this.queryCaseDetail({ caseId: pilotCaseInfo?.id || "" });
+    if (!resCaseDetail) {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgoo-background-all-toast`,
+        typeToast: "error",
+        contentToast: MESSAGE.TOAST_REFRESH_CASE_DETAIL_FAILED,
+      });
+      return;
+    }
 
     await this.updatePilotMap({
       workflowId,
       update: {
         pilotStatus: PilotStatusEnum.START,
         pilotLastMessage: "",
+        pilotCaseInfo: resCaseDetail || pilotCaseInfo,
       },
     });
 

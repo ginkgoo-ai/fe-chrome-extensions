@@ -3,7 +3,7 @@ import MKIcon from "@/common/components/MKIcon";
 import MKModuleSupport from "@/common/components/MKModuleSupport";
 import MKPageCore from "@/common/components/MKPageCore";
 import GlobalManager from "@/common/kits/GlobalManager";
-import imgLogo from "@/resource/oss/assets/app.webp";
+import imgLogo from "@/resource/oss/assets/app.png";
 import "./index.less";
 
 export default function About(): JSX.Element {
