@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import ChromeManager from "@/common/kits/ChromeManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
@@ -8,6 +9,8 @@ import { IRequestConfigType } from "@/common/types/fetch";
  */
 class FetchManager {
   static instance: FetchManager | null = null;
+
+  controllerMap = new Map<string, AbortController>();
 
   static getInstance(): FetchManager {
     if (!this.instance) {
@@ -49,6 +52,7 @@ class FetchManager {
       let {
         url = "",
         callbackStream,
+        controller,
         ...otherConfig
       } = {
         // ...defaultConfig,
@@ -96,7 +100,7 @@ class FetchManager {
           }
         }
       } else {
-        const res = await fetch(url, otherConfig as RequestInit);
+        const res = await fetch(url, { ...otherConfig, signal: controller?.signal } as RequestInit);
         result = await this.calcResult(res, config);
       }
       console.debug("[Debug] FetchManager fetchAPI Res", {
@@ -125,7 +129,11 @@ class FetchManager {
   async fetchAPI(config: IRequestConfigType = { url: "" }): Promise<any> {
     const { background, orz2, ...otherConfig } = config || {};
     const isLocal = otherConfig.url?.includes("//localhost:");
+    const controller = new AbortController();
+    const uuid = uuidv4();
     let result = null;
+
+    this.controllerMap.set(uuid, controller);
 
     try {
       if (orz2 && !isLocal) {
@@ -133,17 +141,26 @@ class FetchManager {
       } else {
         if (background) {
           // [适用于build环境的content script]委托background script发起请求，此种方式只能传递普通json数据，不能传递函数及file类型数据。
-          result = await this.sendRequestToBackground(otherConfig);
+          result = await this.sendRequestToBackground({ ...otherConfig, controller });
         } else {
           // [适用于popup及开发环境的content script]发起请求
-          result = await this.sendRequest(otherConfig);
+          result = await this.sendRequest({ ...otherConfig, controller });
         }
       }
     } catch (e) {
       console.debug("[Debug] fetchAPI Error", e);
+    } finally {
+      this.controllerMap.delete(uuid);
     }
 
     return result;
+  }
+
+  cancelAll() {
+    this.controllerMap.forEach((controller) => {
+      controller.abort();
+    });
+    this.controllerMap.clear();
   }
 }
 

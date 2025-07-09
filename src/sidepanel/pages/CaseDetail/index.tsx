@@ -40,7 +40,7 @@ export default function CaseDetail() {
 
   const lockId = "pilot-workflow-list";
 
-  useEventManager("ginkgoo-message", async (message) => {
+  useEventManager("ginkgoo-extensions", async (message) => {
     const { type: typeMsg } = message || {};
 
     switch (typeMsg) {
@@ -67,14 +67,10 @@ export default function CaseDetail() {
         if (pilotStatusMsg === PilotStatusEnum.START) {
           refreshWorkflowList({
             cb: () => {
-              try {
-                GlobalManager.g_backgroundPort?.postMessage({
-                  type: "ginkgoo-sidepanel-background-pilot-query",
-                  workflowId: workflowIdMsg,
-                });
-              } catch (error) {
-                console.log("[Ginkgoo] Sidepanel ginkgoo-sidepanel-background-pilot-query error", error);
-              }
+              GlobalManager.postMessage({
+                type: "ginkgoo-sidepanel-background-pilot-query",
+                workflowId: workflowIdMsg,
+              });
             },
           });
           break;
@@ -108,8 +104,12 @@ export default function CaseDetail() {
         setPilotList(
           (prev) =>
             produce(prev, (draft) => {
-              const indexPilot = draft.findIndex((itemPilot) => {
-                return itemPilot?.pilotWorkflowInfo?.workflow_instance_id === workflowIdMsg;
+              let indexPilot = -1;
+              draft.forEach((itemDraft, indexDraft) => {
+                if (itemDraft?.pilotWorkflowInfo?.workflow_instance_id === workflowIdMsg) {
+                  indexPilot = indexDraft;
+                }
+                itemDraft.pilotStatus = PilotStatusEnum.HOLD;
               });
 
               console.log("ginkgoo-background-all-pilot-done", workflowIdMsg, indexPilot);
@@ -235,13 +235,9 @@ export default function CaseDetail() {
     refreshWorkflowDefinitions();
     refreshWorkflowList({
       cb: () => {
-        try {
-          GlobalManager.g_backgroundPort?.postMessage({
-            type: "ginkgoo-sidepanel-background-pilot-query",
-          });
-        } catch (error) {
-          console.log("[Ginkgoo] Sidepanel CaseDetail init error", error);
-        }
+        GlobalManager.postMessage({
+          type: "ginkgoo-sidepanel-background-pilot-query",
+        });
       },
     });
   };
@@ -280,14 +276,10 @@ export default function CaseDetail() {
   const handleBtnExtensionStopClick = () => {
     setLoadingExtensionStop(true);
 
-    try {
-      GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-all-pilot-stop",
-        workflowId: pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id,
-      });
-    } catch (error) {
-      console.log("[Ginkgoo] Sidepanel CaseDetail handleBtnExtensionStopClick error", error);
-    }
+    GlobalManager.postMessage({
+      type: "ginkgoo-sidepanel-all-pilot-stop",
+      workflowId: pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id,
+    });
   };
 
   const handleNewWorkflowFinish = async () => {
@@ -300,29 +292,22 @@ export default function CaseDetail() {
       return;
     }
 
-    try {
-      GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-all-pilot-start",
-        isNewWorkflow: true,
-        caseInfo,
-        workflowDefinitionId,
-      });
-    } catch (error) {
-      console.log("[Ginkgoo] Sidepanel CaseDetail handleNewWorkflowFinish error", error);
-    }
+    GlobalManager.postMessage({
+      type: "ginkgoo-sidepanel-all-pilot-start",
+      isNewWorkflow: true,
+      caseId: caseInfo?.id || "",
+      workflowDefinitionId,
+    });
   };
 
   const handleBtnContinueClick = async (params: { workflowId: string }) => {
     const { workflowId } = params || {};
 
-    try {
-      GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-all-pilot-start",
-        workflowId,
-      });
-    } catch (error) {
-      console.error("[Ginkgoo] Sidepanel CaseDetail handleBtnContinueClick error", error);
-    }
+    GlobalManager.postMessage({
+      type: "ginkgoo-sidepanel-all-pilot-start",
+      workflowId,
+      caseId: caseInfo?.id || "",
+    });
   };
 
   const handleQueryWorkflowDetail = async (params: { workflowId: string }) => {

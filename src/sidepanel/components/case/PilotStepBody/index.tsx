@@ -11,11 +11,12 @@ import { PilotStepBodyNormal } from "@/sidepanel/components/case/PilotStepBodyNo
 import "./index.css";
 
 interface PilotStepBodyProps {
+  caseId: string;
   pilotInfo: IPilotType | null;
 }
 
 function PurePilotStepBody(props: PilotStepBodyProps) {
-  const { pilotInfo } = props;
+  const { caseId, pilotInfo } = props;
 
   const [stepListActiveKeyBody, setStepListActiveKeyBody] = useState<string>("");
   const [stepListItemsBody, setStepListItemsBody] = useState<CollapseProps["items"]>([]);
@@ -40,28 +41,21 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
   const handleContinueFilling = (params: { actionlistPre: IActionItemType[] }) => {
     const { actionlistPre } = params || {};
 
-    try {
-      GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-all-pilot-start",
-        workflowId: pilotInfo?.pilotWorkflowInfo?.workflow_instance_id,
-        actionlistPre,
-      });
-    } catch (error) {
-      console.log("[Ginkgoo] Sidepanel handleContinueFilling error", error);
-    }
+    GlobalManager.postMessage({
+      type: "ginkgoo-sidepanel-all-pilot-start",
+      workflowId: pilotInfo?.pilotWorkflowInfo?.workflow_instance_id,
+      caseId,
+      actionlistPre,
+    });
   };
 
   const handleBtnProceedToFormClick = () => {
     if (!!pilotInfo?.pilotTabInfo?.id) {
-      try {
-        GlobalManager.g_backgroundPort?.postMessage({
-          type: "ginkgoo-sidepanel-background-tab-update",
-          tabId: pilotInfo?.pilotTabInfo?.id,
-          updateProperties: { active: true },
-        });
-      } catch (error) {
-        console.log("[Ginkgoo] Sidepanel handleBtnJumpClick error", error);
-      }
+      GlobalManager.postMessage({
+        type: "ginkgoo-sidepanel-background-tab-update",
+        tabId: pilotInfo?.pilotTabInfo?.id,
+        updateProperties: { active: true },
+      });
     }
   };
 

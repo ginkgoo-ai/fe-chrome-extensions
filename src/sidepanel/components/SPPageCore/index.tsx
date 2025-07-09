@@ -34,7 +34,7 @@ export default function SPPageCore(props: SPPageCoreProps) {
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-  useEventManager("ginkgoo-message", async (message) => {
+  useEventManager("ginkgoo-extensions", async (message) => {
     const { type: typeMsg } = message;
 
     switch (typeMsg) {
@@ -98,14 +98,11 @@ export default function SPPageCore(props: SPPageCoreProps) {
     const { origin, path, searchParams } = UtilsManager.getUrlInfo(activeTabInfo.url);
 
     pilotInfoCalcTrackRef.current = null;
-    try {
-      GlobalManager.g_backgroundPort?.postMessage({
-        type: "ginkgoo-sidepanel-background-pilot-query",
-        tabId: activeTabInfo.id,
-      });
-    } catch (error) {
-      console.log("[Ginkgoo] Sidepanel ginkgoo-sidepanel-background-pilot-query error", error);
-    }
+
+    GlobalManager.postMessage({
+      type: "ginkgoo-sidepanel-background-pilot-query",
+      tabId: activeTabInfo.id,
+    });
 
     if (GlobalManager.g_whiteListForRegister.includes(origin) && path.endsWith("/case-detail")) {
       const caseId = (searchParams as URLSearchParams)?.get("caseId") || "";

@@ -1,6 +1,7 @@
 /**
  * @description 全局变量管理器
  */
+import { v4 as uuidv4 } from "uuid";
 import packageJson from "../../../package.json";
 
 class GlobalManager {
@@ -26,7 +27,7 @@ class GlobalManager {
   g_isDev!: boolean;
   g_isMac!: boolean;
   g_backgroundPort: chrome.runtime.Port | null = null;
-  g_backgroundPortUuid: string = "";
+  g_handleBackgroundMessage!: (message: any, port: chrome.runtime.Port) => Promise<void>;
 
   static getInstance(): GlobalManager {
     if (!this.instance) {
@@ -49,7 +50,6 @@ class GlobalManager {
       this.instance.g_isDev = import.meta.env.MODE === "development";
       this.instance.g_isMac = navigator?.platform?.toUpperCase()?.indexOf("MAC") >= 0;
       this.instance.g_backgroundPort = null;
-      this.instance.g_backgroundPortUuid = "";
 
       this.instance.g_whiteListForRegister = [
         "https://legal-dashboard.ginkgoo.dev", // Saas 页面
@@ -59,6 +59,26 @@ class GlobalManager {
     }
     return this.instance;
   }
+
+  connectBackground = () => {
+    this.g_backgroundPort = chrome?.runtime?.connect?.({ name: `ginkgoo-sidepanel-${uuidv4()}` });
+    this.g_backgroundPort?.onMessage?.addListener(this.g_handleBackgroundMessage);
+  };
+
+  postMessage = (params: any) => {
+    try {
+      this.g_backgroundPort?.postMessage(params);
+    } catch (error) {
+      console.log("[Ginkgoo] GlobalManager postMessage error", params?.type, error);
+      this.connectBackground();
+      try {
+        this.g_backgroundPort?.postMessage(params);
+      } catch (error) {
+        console.log("[Ginkgoo] GlobalManager postMessage double error", params?.type, error);
+        this.connectBackground();
+      }
+    }
+  };
 }
 
 export default GlobalManager.getInstance();

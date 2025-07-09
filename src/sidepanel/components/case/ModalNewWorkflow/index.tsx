@@ -17,7 +17,7 @@ function PureModalNewWorkflow(props: ModalNewWorkflowProps) {
 
   const [loadingContinue, setLoadingContinue] = useState<boolean>(false);
 
-  useEventManager("ginkgoo-message", (message) => {
+  useEventManager("ginkgoo-extensions", (message) => {
     const { type: typeMsg } = message;
 
     switch (typeMsg) {
