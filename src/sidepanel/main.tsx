@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import ChromeManager from "@/common/kits/ChromeManager";
 import EventManager from "@/common/kits/EventManager";
 import GlobalManager from "@/common/kits/GlobalManager";
+import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import "@/common/styles/frame.less";
 import SidePanel from "@/sidepanel";
@@ -78,6 +79,12 @@ const main = async () => {
             payload: message?.tabInfo,
           });
           EventManager.emit("ginkgoo-extensions", message);
+          break;
+        }
+        case "ginkgoo-background-all-logout": {
+          UserManager.logout();
+          UtilsManager.redirectTo("/entry");
+
           break;
         }
         default: {

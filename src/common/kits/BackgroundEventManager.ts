@@ -462,6 +462,10 @@ class BackgroundEventManager {
       }
       case "ginkgoo-page-background-logout": {
         UserManager.logout();
+
+        this.postConnectMessage({
+          type: `ginkgoo-background-all-logout`,
+        });
         break;
       }
       default: {
