@@ -59,7 +59,7 @@ jobs:
     uses: Xshuliner/workflows/.github/workflows/auto-increment-tag.yml@master
     with:
       version_type: ${{ needs.set-version-type.outputs.version_type }}
-      updatePackageJson: true
+      update_package_json_path: "./package.json"
     secrets: inherit
 
   build:
