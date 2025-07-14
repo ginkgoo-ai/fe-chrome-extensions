@@ -66,8 +66,8 @@ jobs:
     needs: [increment-tag]
     runs-on: ubuntu-latest
     outputs:
-      build_name: ${{ env.BUILD_NAME }}
-      download_dist_name: ${{ steps.repo.outputs.download_dist_name }}
+      project_name: ${{ env.BUILD_NAME }}
+      download_artifact_name: ${{ steps.repo.outputs.download_artifact_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -97,14 +97,14 @@ jobs:
         run: |
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           REPO_NAME=$(echo "${{ github.repository }}" | tr '/' '_')
-          DOWNLOAD_DIST_NAME="${REPO_NAME}-${TIMESTAMP}"
+          DOWNLOAD_ARTIFACT_NAME="${REPO_NAME}-${TIMESTAMP}"
 
-          echo "download_dist_name=$DOWNLOAD_DIST_NAME" >> $GITHUB_OUTPUT
+          echo "download_artifact_name=$DOWNLOAD_ARTIFACT_NAME" >> $GITHUB_OUTPUT
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.repo.outputs.download_dist_name }}
+          name: ${{ steps.repo.outputs.download_artifact_name }}
           path: ${{ env.BUILD_OUTPUT_PATH }}
 
   deploy:
@@ -112,5 +112,5 @@ jobs:
     uses: Xshuliner/workflows/.github/workflows/deploy-release.yml@master
     with:
       version: ${{ needs.increment-tag.outputs.new_version }}
-      repository_name: ${{ needs.build.outputs.build_name }}
-      download_dist_name: ${{ needs.build.outputs.download_dist_name }}
+      download_artifact_name: ${{ needs.build.outputs.download_artifact_name }}
+      project_name: ${{ needs.build.outputs.project_name }}
