@@ -40,7 +40,8 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
   }, [pilotInfo?.pilotWorkflowInfo?.workflow_instance_id, pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id]);
 
   const isShowBtnContinue = useMemo(() => {
-    return indexPilot === 0 && !!pilotInfo?.pilotTabInfo?.id && pilotInfo?.pilotStatus === PilotStatusEnum.HOLD;
+    // return indexPilot === 0 && !!pilotInfo?.pilotTabInfo?.id && pilotInfo?.pilotStatus === PilotStatusEnum.HOLD;
+    return indexPilot === 0 && pilotInfo?.pilotStatus === PilotStatusEnum.HOLD;
   }, [pilotInfo, indexPilot]);
 
   const workflowUpdateTime = useMemo(() => {
