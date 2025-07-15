@@ -7,6 +7,10 @@ env:
   BUILD_NAME: ""
 
 on:
+  push:
+    branches:
+      - 'release/**'
+
   workflow_dispatch:
     inputs:
       version_type:
@@ -27,19 +31,43 @@ permissions:
   deployments: write
 
 jobs:
+  set-version-type:
+    runs-on: ubuntu-latest
+    outputs:
+      version_type: ${{ steps.setver.outputs.version_type }}
+    steps:
+      - name: Set version_type
+        id: setver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version_type=${{ github.event.inputs.version_type }}" >> $GITHUB_OUTPUT
+            echo "version_type=${{ github.event.inputs.version_type }}" >> $GITHUB_ENV
+          else
+            # 解析分支名 release/feat/xxx，提取 feat
+            ref="${GITHUB_REF##*/}"
+            if [[ "$GITHUB_REF" =~ release/([^/]+) ]]; then
+              echo "version_type=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+              echo "version_type=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+            else
+              echo "version_type=fix" >> $GITHUB_OUTPUT
+              echo "version_type=fix" >> $GITHUB_ENV
+            fi
+          fi
+
   increment-tag:
+    needs: set-version-type
     uses: Xshuliner/workflows/.github/workflows/auto-increment-tag.yml@master
     with:
-      version_type: ${{ github.event.inputs.version_type }}
-      updatePackageJson: true
+      version_type: ${{ needs.set-version-type.outputs.version_type }}
+      update_package_json_path: "./package.json"
     secrets: inherit
 
   build:
     needs: [increment-tag]
     runs-on: ubuntu-latest
     outputs:
-      build_name: ${{ env.BUILD_NAME }}
-      download_dist_name: ${{ steps.repo.outputs.download_dist_name }}
+      project_name: ${{ env.BUILD_NAME }}
+      download_artifact_name: ${{ steps.repo.outputs.download_artifact_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -69,14 +97,14 @@ jobs:
         run: |
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           REPO_NAME=$(echo "${{ github.repository }}" | tr '/' '_')
-          DOWNLOAD_DIST_NAME="${REPO_NAME}-${TIMESTAMP}"
+          DOWNLOAD_ARTIFACT_NAME="${REPO_NAME}-${TIMESTAMP}"
 
-          echo "download_dist_name=$DOWNLOAD_DIST_NAME" >> $GITHUB_OUTPUT
+          echo "download_artifact_name=$DOWNLOAD_ARTIFACT_NAME" >> $GITHUB_OUTPUT
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.repo.outputs.download_dist_name }}
+          name: ${{ steps.repo.outputs.download_artifact_name }}
           path: ${{ env.BUILD_OUTPUT_PATH }}
 
   deploy:
@@ -84,5 +112,5 @@ jobs:
     uses: Xshuliner/workflows/.github/workflows/deploy-release.yml@master
     with:
       version: ${{ needs.increment-tag.outputs.new_version }}
-      repository_name: ${{ needs.build.outputs.build_name }}
-      download_dist_name: ${{ needs.build.outputs.download_dist_name }}
+      download_artifact_name: ${{ needs.build.outputs.download_artifact_name }}
+      project_name: ${{ needs.build.outputs.project_name }}
