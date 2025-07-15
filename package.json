@@ -1,7 +1,7 @@
 {
   "name": "fe-chrome-extensions",
   "private": true,
-  "version": "999.998.997",
+  "version": "0.1.14",
   "type": "module",
   "scripts": {
     "dev:popup": "vite --mode development -c ./script/vite.popup.config.js",
