@@ -688,6 +688,12 @@ class ChromeManager {
                     element.click();
                   } else if (action.type === "input") {
                     element.value = action.value;
+
+                    const events = ["input", "change", "blur", "keyup"];
+                    events.forEach((eventType) => {
+                      const event = new Event(eventType, { bubbles: true, cancelable: true });
+                      element.dispatchEvent(event);
+                    });
                   } else if (action.type === "manual") {
                     return {
                       type: "manual",
