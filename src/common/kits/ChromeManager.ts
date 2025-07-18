@@ -687,12 +687,35 @@ class ChromeManager {
                   if (action.type === "click") {
                     element.click();
                   } else if (action.type === "input") {
-                    element.value = action.value;
+                    element.dispatchEvent(new Event("focus", { bubbles: true, cancelable: true }));
 
-                    const events = ["input", "change", "blur", "keypress", "keydown", "keyup"];
-                    events.forEach((eventType) => {
-                      const event = new Event(eventType, { bubbles: true, cancelable: true });
-                      element.dispatchEvent(event);
+                    // 获取 React 跟踪的内部属性描述符，优先使用 React 的 setter 方法设置值，异常时兜底用 value 赋值
+                    try {
+                      const tag = (element.tagName && element.tagName.toLowerCase()) || "";
+                      const proto =
+                        // @ts-ignore
+                        {
+                          input: HTMLInputElement.prototype,
+                          textarea: HTMLTextAreaElement.prototype,
+                        }[tag] || null;
+
+                      let isSet = false;
+                      if (proto) {
+                        const descriptor = Object.getOwnPropertyDescriptor(proto, "value");
+                        if (descriptor && descriptor.set) {
+                          descriptor.set.call(element, action.value);
+                          isSet = true;
+                        }
+                      }
+                      if (!isSet) {
+                        element.value = action.value;
+                      }
+                    } catch (e) {
+                      element.value = action.value;
+                    }
+
+                    ["input", "change", "keypress", "keydown", "keyup", "blur", "pageshow"].forEach((eventType) => {
+                      element.dispatchEvent(new Event(eventType, { bubbles: true, cancelable: true }));
                     });
                   } else if (action.type === "manual") {
                     return {
