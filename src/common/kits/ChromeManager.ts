@@ -689,7 +689,7 @@ class ChromeManager {
                   } else if (action.type === "input") {
                     element.value = action.value;
 
-                    const events = ["input", "change", "blur", "keyup"];
+                    const events = ["input", "change", "blur", "keypress", "keydown", "keyup"];
                     events.forEach((eventType) => {
                       const event = new Event(eventType, { bubbles: true, cancelable: true });
                       element.dispatchEvent(event);
