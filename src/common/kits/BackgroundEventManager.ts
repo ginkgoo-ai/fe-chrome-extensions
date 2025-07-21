@@ -271,6 +271,7 @@ class BackgroundEventManager {
       case "ginkgoo-page-page-register": {
         messageNew.scope = [port.name];
         messageNew.version = chrome.runtime.getManifest().version;
+        // messageNew.activeTabInfo = await ChromeManager.getActiveTabInfo();
         this.postConnectMessage(messageNew);
         break;
       }
@@ -295,10 +296,17 @@ class BackgroundEventManager {
         const {
           isNewWorkflow,
           caseId: caseIdMsg = {},
+          tabIdForPage: tabIdForPageMsg = "",
           workflowDefinitionId: workflowDefinitionIdMsg = "",
           workflowId: workflowIdMsg = "",
           actionlistPre: actionlistPreMsg,
         } = otherInfo || {};
+
+        if (tabIdForPageMsg) {
+          await ChromeManager.openSidePanel({
+            tabId: tabIdForPageMsg,
+          });
+        }
 
         // if (!actionlistPreMsg) {
         //   PilotManager.clear();

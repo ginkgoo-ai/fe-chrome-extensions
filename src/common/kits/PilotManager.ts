@@ -141,10 +141,11 @@ class PilotManager {
     }
   };
 
-  updatePilotMap = async (params: { workflowId: string; update: Partial<IPilotType> }) => {
-    const { workflowId, update } = params || {};
+  updatePilotMap = async (params: { workflowId: string; update: Partial<IPilotType>; isForcePostMessage?: boolean }) => {
+    const { workflowId, update, isForcePostMessage } = params || {};
     const lockId = `workflowId-${workflowId}`;
     const pilotInfo = this.pilotMap.get(workflowId);
+    const pilotStatusOld = pilotInfo?.pilotStatus;
 
     try {
       // 获取锁
@@ -156,10 +157,12 @@ class PilotManager {
         });
       }
     } finally {
-      BackgroundEventManager.postConnectMessage({
-        type: `ginkgoo-background-all-pilot-update`,
-        pilotInfo,
-      });
+      if (pilotStatusOld !== PilotStatusEnum.HOLD || isForcePostMessage) {
+        BackgroundEventManager.postConnectMessage({
+          type: `ginkgoo-background-all-pilot-update`,
+          pilotInfo,
+        });
+      }
 
       // 确保在finally中释放锁
       LockManager.releaseLock(lockId);
@@ -736,6 +739,7 @@ class PilotManager {
         pilotLastMessage: "",
         pilotCaseInfo: resCaseDetail || pilotCaseInfo,
       },
+      isForcePostMessage: true,
     });
 
     if (timerSource === pilotInfo?.pilotTimer) {
