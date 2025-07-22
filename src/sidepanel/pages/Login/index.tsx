@@ -6,7 +6,7 @@ import { usePageParams } from "@/common/hooks/usePageParams";
 import GlobalManager from "@/common/kits/GlobalManager";
 import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
-import imgApp from "@/resource/oss/assets/app.png";
+import imgLogo from "@/resource/oss/assets/imgLogo.png";
 import "./index.less";
 
 export default function Login() {
@@ -48,9 +48,9 @@ export default function Login() {
   return (
     <div className="P-login box-border flex flex-col items-center justify-center px-10">
       <div className="flex flex-row items-center gap-2">
-        <img src={imgApp} className="h-10 w-10" alt="logo" />
-        <div className="text-3xl">Ginkgoo</div>
-        <div className="text-3xl text-[#B3B3B3]">Legal</div>
+        <img src={imgLogo} className="w-28" alt="logo" />
+        {/* <div className="text-3xl">Ginkgoo</div> */}
+        {/* <div className="text-3xl text-[#B3B3B3]">Legal</div> */}
       </div>
       <div className="mt-[320px] box-border flex w-full flex-col items-center justify-center px-10">
         {/* <div className="ipt-con">

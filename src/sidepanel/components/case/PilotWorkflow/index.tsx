@@ -84,7 +84,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
         }
       });
     }
-  }, [isCurrentPilot, workflowInfo, pilotInfoCurrent]);
+  }, [isCurrentPilot, caseInfo, workflowInfo, pilotInfoCurrent]);
 
   useEffect(() => {
     const getIsInterrupt = () => {
