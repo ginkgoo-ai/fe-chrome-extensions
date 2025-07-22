@@ -173,5 +173,6 @@ export interface IWorkflowType {
   progress_file_id?: string;
   progress_percentage?: number;
   workflow_definition_id?: string;
+  unique_application_number?: string | null;
   steps?: IWorkflowStepType[];
 }

@@ -3,54 +3,88 @@
 import { Button, Card, Progress, message as messageAntd } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { produce } from "immer";
 import { ChevronRight, Download, Play } from "lucide-react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { IconCompleted, IconIncompleted, IconLoading } from "@/common/components/ui/icon";
 import { MESSAGE } from "@/common/config/message";
 import { cn } from "@/common/kits";
+import GlobalManager from "@/common/kits/GlobalManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { ICaseItemType } from "@/common/types/case";
-import { IPilotType, PilotStatusEnum } from "@/common/types/casePilot";
+import { IPilotType, IWorkflowType, PilotStatusEnum } from "@/common/types/casePilot";
 import { PilotStepBody } from "@/sidepanel/components/case/PilotStepBody";
 import "./index.css";
 
 interface PilotWorkflowProps {
   caseInfo: ICaseItemType | null;
-  pilotInfo: IPilotType;
-  indexPilot: number;
+  workflowInfo: IWorkflowType;
+  indexKey: string;
   pilotInfoCurrent: IPilotType | null;
-  onQueryWorkflowDetail: (params: { workflowId: string }) => void;
-  onBtnContinueClick: (params: { workflowId: string }) => void;
 }
 
 dayjs.extend(utc);
 
 function PurePilotWorkflow(props: PilotWorkflowProps) {
-  const { caseInfo, pilotInfo, indexPilot, pilotInfoCurrent, onQueryWorkflowDetail, onBtnContinueClick } = props;
+  const { caseInfo, workflowInfo, indexKey, pilotInfoCurrent } = props;
 
   const isFoldInit = useRef<boolean>(true);
 
   const [isFold, setFold] = useState<boolean>(true);
-  const [isDisableBtnDownload, setDisableBtnDownload] = useState<boolean>(true);
   const [isLoadingDownload, setLoadingDownload] = useState<boolean>(false);
+  const [pilotInfo, setPilotInfo] = useState<IPilotType | null>(null);
 
   const isCurrentPilot = useMemo(() => {
-    return pilotInfo?.pilotWorkflowInfo?.workflow_instance_id === pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id;
-  }, [pilotInfo?.pilotWorkflowInfo?.workflow_instance_id, pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id]);
+    return workflowInfo?.workflow_instance_id === pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id;
+  }, [workflowInfo?.workflow_instance_id, pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id]);
 
   const isShowBtnContinue = useMemo(() => {
-    // return indexPilot === 0 && !!pilotInfo?.pilotTabInfo?.id && pilotInfo?.pilotStatus === PilotStatusEnum.HOLD;
-    return indexPilot === 0 && pilotInfo?.pilotStatus === PilotStatusEnum.HOLD;
-  }, [pilotInfo, indexPilot]);
+    return !!pilotInfo?.pilotTabInfo?.id && pilotInfo?.pilotStatus === PilotStatusEnum.HOLD;
+  }, [pilotInfo]);
+
+  const isDisableBtnDownload = useMemo(() => {
+    return !pilotInfo?.pilotWorkflowInfo?.progress_file_id;
+  }, [pilotInfo?.pilotWorkflowInfo?.progress_file_id]);
 
   const workflowUpdateTime = useMemo(() => {
-    return dayjs.utc(pilotInfo.pilotWorkflowInfo?.updated_at).local().format("MMM DD, YYYY HH: mm");
-  }, [pilotInfo.pilotWorkflowInfo?.updated_at]);
+    return pilotInfo?.pilotWorkflowInfo?.updated_at
+      ? dayjs.utc(pilotInfo?.pilotWorkflowInfo?.updated_at).local().format("MMM DD, YYYY HH: mm")
+      : "";
+  }, [pilotInfo?.pilotWorkflowInfo?.updated_at]);
 
   useEffect(() => {
-    setDisableBtnDownload(!pilotInfo.pilotWorkflowInfo?.progress_file_id);
-  }, [pilotInfo.pilotWorkflowInfo?.progress_file_id]);
+    if (isCurrentPilot) {
+      setPilotInfo(pilotInfoCurrent);
+    } else {
+      setPilotInfo((prev) => {
+        if (prev) {
+          return produce(prev, (draft) => {
+            draft.pilotWorkflowInfo = {
+              ...(workflowInfo || {}),
+              ...(draft.pilotWorkflowInfo || {}),
+            };
+          });
+        } else {
+          return {
+            pilotId: workflowInfo.workflow_instance_id,
+            pilotTimer: null,
+            pilotTabInfo: null,
+            pilotStatus: PilotStatusEnum.HOLD,
+            pilotLastMessage: "",
+            pilotRepeatHash: "",
+            pilotRepeatCurrent: 0,
+            pilotThirdPartUrl: "",
+            pilotThirdPartMethod: "",
+            pilotCookie: "",
+            pilotCsrfToken: "",
+            pilotCaseInfo: caseInfo,
+            pilotWorkflowInfo: workflowInfo,
+          };
+        }
+      });
+    }
+  }, [isCurrentPilot, workflowInfo, pilotInfoCurrent]);
 
   useEffect(() => {
     const getIsInterrupt = () => {
@@ -75,18 +109,54 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
       if (isFoldInit.current) {
         isFoldInit.current = false;
         setFold(false);
-        window.document.getElementById(`workflow-item-${indexPilot}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        window.document.getElementById(`workflow-item-${indexKey}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     } else {
       isFoldInit.current = true;
     }
-  }, [pilotInfo, isCurrentPilot, indexPilot]);
+  }, [pilotInfo, isCurrentPilot, indexKey]);
+
+  const handleQueryWorkflowDetail = async () => {
+    const resWorkflowDetail = await Api.Ginkgoo.getWorkflowDetail({
+      workflowId: workflowInfo.workflow_instance_id,
+    });
+
+    if (!resWorkflowDetail?.workflow_instance_id) {
+      messageAntd.open({
+        type: "error",
+        content: MESSAGE.TOAST_REFRESH_WORKFLOW_DETAIL_FAILED,
+      });
+      return;
+    }
+
+    setPilotInfo((prev) => {
+      if (prev) {
+        return produce(prev, (draft) => {
+          draft.pilotWorkflowInfo = resWorkflowDetail;
+        });
+      } else {
+        return {
+          pilotId: resWorkflowDetail.workflow_instance_id,
+          pilotTimer: null,
+          pilotTabInfo: null,
+          pilotStatus: PilotStatusEnum.HOLD,
+          pilotLastMessage: "",
+          pilotRepeatHash: "",
+          pilotRepeatCurrent: 0,
+          pilotThirdPartUrl: "",
+          pilotThirdPartMethod: "",
+          pilotCookie: "",
+          pilotCsrfToken: "",
+          pilotCaseInfo: caseInfo,
+          pilotWorkflowInfo: resWorkflowDetail,
+        };
+      }
+    });
+  };
 
   const handleHeaderClick = () => {
     if (isFold) {
-      onQueryWorkflowDetail?.({
-        workflowId: pilotInfo.pilotWorkflowInfo?.workflow_instance_id || "",
-      });
+      handleQueryWorkflowDetail();
     }
     setFold((prev) => {
       return !prev;
@@ -100,15 +170,15 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
 
     // Step2: Get PDF blob
     const resFilesPDFHighlight = await Api.Ginkgoo.postFilesPDFHighlight({
-      fileId: pilotInfo.pilotWorkflowInfo?.progress_file_id || "",
-      highlightData: pilotInfo.pilotWorkflowInfo?.dummy_data_usage || [],
+      fileId: pilotInfo?.pilotWorkflowInfo?.progress_file_id || "",
+      highlightData: pilotInfo?.pilotWorkflowInfo?.dummy_data_usage || [],
     });
     // Step3: Download PDF file
     console.log("handleBtnDownloadPdfClick", resFilesPDFHighlight);
     if (resFilesPDFHighlight) {
       UtilsManager.downloadBlob({
         blobPart: resFilesPDFHighlight,
-        fileName: `${caseInfo?.clientName || ""}-${caseInfo?.visaType || ""}-${dayjs.utc(pilotInfo.pilotWorkflowInfo?.updated_at).local().format("YYYYMMDDHHmmss")}.pdf`,
+        fileName: `${caseInfo?.clientName || ""}-${caseInfo?.visaType || ""}-${dayjs.utc(pilotInfo?.pilotWorkflowInfo?.updated_at).local().format("YYYYMMDDHHmmss")}.pdf`,
       });
     } else {
       messageAntd.open({
@@ -123,14 +193,16 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
   };
 
   const handleBtnContinueClick = () => {
-    onBtnContinueClick?.({
-      workflowId: pilotInfo.pilotWorkflowInfo?.workflow_instance_id || "",
+    GlobalManager.postMessage({
+      type: "ginkgoo-sidepanel-all-pilot-start",
+      workflowId: pilotInfo?.pilotWorkflowInfo?.workflow_instance_id || "",
+      caseId: caseInfo?.id || "",
     });
   };
 
   return (
     <div
-      id={`workflow-item-${indexPilot}`}
+      id={`workflow-item-${indexKey}`}
       className="workflow-wrap relative flex w-full flex-[0_0_auto] items-center justify-center overflow-hidden rounded-lg"
     >
       <div
@@ -147,7 +219,11 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
           <div className="box-border flex h-full w-full flex-col gap-3 overflow-hidden">
             <div className="flex cursor-pointer flex-row items-start justify-between gap-3" onClick={handleHeaderClick}>
               <div className="flex flex-[0_0_auto]">
-                {pilotInfo.pilotWorkflowInfo?.status === "COMPLETED_SUCCESS" ? <IconCompleted size={40} /> : <IconIncompleted size={40} />}
+                {isCurrentPilot && pilotInfo?.pilotWorkflowInfo?.status === "COMPLETED_SUCCESS" ? (
+                  <IconCompleted size={40} />
+                ) : (
+                  <IconIncompleted size={40} />
+                )}
               </div>
               <div className="flex w-0 flex-1 flex-col">
                 <div className="flex flex-row items-center gap-2">
@@ -173,15 +249,15 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
               </div>
             </div>
 
-            {Number(pilotInfo.pilotWorkflowInfo?.progress_percentage) >= 0 ? (
-              <Progress percent={pilotInfo.pilotWorkflowInfo?.progress_percentage} showInfo={false} />
+            {Number(pilotInfo?.pilotWorkflowInfo?.progress_percentage) >= 0 ? (
+              <Progress percent={pilotInfo?.pilotWorkflowInfo?.progress_percentage} showInfo={false} />
             ) : null}
 
             {!isFold ? <PilotStepBody caseId={caseInfo?.id || ""} pilotInfo={pilotInfo} /> : null}
 
             <div className="flex w-full flex-row items-center justify-between gap-2">
               <Button
-                id={`pilot-item-btn-download-${indexPilot}`}
+                id={`pilot-item-btn-download-${indexKey}`}
                 type="default"
                 className="flex-1"
                 disabled={isDisableBtnDownload}
@@ -195,7 +271,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
                 </div>
               </Button>
               {isShowBtnContinue ? (
-                <Button id={`pilot-item-btn-continue-${indexPilot}`} type="default" className="flex-1" onClick={handleBtnContinueClick}>
+                <Button id={`pilot-item-btn-continue-${indexKey}`} type="default" className="flex-1" onClick={handleBtnContinueClick}>
                   <Play size={20} />
                   <div className="truncate">
                     <span className="font-bold">Continue</span>
