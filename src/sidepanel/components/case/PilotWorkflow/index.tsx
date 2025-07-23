@@ -258,7 +258,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
               <Progress percent={pilotInfo?.pilotWorkflowInfo?.progress_percentage} showInfo={false} />
             ) : null}
 
-            {!isFold ? <PilotStepBody caseId={caseInfo?.id || ""} pilotInfo={pilotInfo} /> : null}
+            {!isFold ? <PilotStepBody pilotInfo={pilotInfo} /> : null}
 
             <div className="flex w-full flex-row items-center justify-between gap-2">
               <Button

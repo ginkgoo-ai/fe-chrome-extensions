@@ -1,42 +1,24 @@
 import type { CollapseProps } from "antd";
 import { Alert, Button, Collapse, Spin } from "antd";
 import { Check } from "lucide-react";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { IconInfo, IconLoading, IconStepDeclaration, IconStepDot } from "@/common/components/ui/icon";
 import { cn } from "@/common/kits";
 import GlobalManager from "@/common/kits/GlobalManager";
-import { IActionItemType } from "@/common/types/case";
 import { IPilotType, IWorkflowStepType, PilotStatusEnum } from "@/common/types/casePilot";
 import { PilotStepBodyNormal } from "@/sidepanel/components/case/PilotStepBodyNormal";
 import "./index.css";
 
 interface PilotStepBodyProps {
-  caseId: string;
   pilotInfo: IPilotType | null;
 }
 
 function PurePilotStepBody(props: PilotStepBodyProps) {
-  const { caseId, pilotInfo } = props;
+  const { pilotInfo } = props;
 
   const [stepListActiveKeyBody, setStepListActiveKeyBody] = useState<string>("");
   const [stepListItemsBody, setStepListItemsBody] = useState<CollapseProps["items"]>([]);
   // const [percent, setPercent] = useState(0);
-
-  // const workflowInfo = useMemo(() => {
-  //   let result: IWorkflowType | null | undefined = null;
-
-  //   result = pilotInfo?.pilotWorkflowInfo;
-
-  //   return result;
-  // }, [pilotInfo]);
-
-  const workflowSteps = useMemo(() => {
-    let result: IWorkflowStepType[] | undefined = void 0;
-
-    result = pilotInfo?.pilotWorkflowInfo?.steps;
-
-    return result;
-  }, [pilotInfo]);
 
   // const handleContinueFilling = (params: { actionlistPre: IActionItemType[] }) => {
   //   const { actionlistPre } = params || {};
@@ -49,7 +31,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
   //   });
   // };
 
-  const handleBtnProceedToFormClick = () => {
+  const handleBtnProceedToFormClick = useCallback(() => {
     if (!!pilotInfo?.pilotTabInfo?.id) {
       GlobalManager.postMessage({
         type: "ginkgoo-sidepanel-background-tab-update",
@@ -57,12 +39,12 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
         updateProperties: { active: true },
       });
     }
-  };
+  }, [pilotInfo?.pilotTabInfo?.id]);
 
   // update collapse
   useEffect(() => {
-    // console.log("PurePilotStepBody", stepListItems);
-    if (!workflowSteps) {
+    // console.log('PilotStepBodyProps', pilotInfo?.pilotWorkflowInfo?.steps);
+    if (!pilotInfo?.pilotWorkflowInfo?.steps) {
       return;
     }
 
@@ -72,7 +54,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
         <div
           id={`step-item-${indexStep}`}
           className={cn("flex w-full flex-row items-center justify-between gap-3", {
-            "border-bottom": indexStep < Number(workflowSteps?.length) - 1,
+            "border-bottom": indexStep < Number(pilotInfo?.pilotWorkflowInfo?.steps?.length) - 1,
           })}
         >
           <div className="flex w-0 flex-1 flex-row gap-3.5">
@@ -114,7 +96,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
       );
     };
 
-    const renderStepChildren = (itemStep: IWorkflowStepType, indexStep: number) => {
+    const renderStepChildren = (itemStep: IWorkflowStepType) => {
       return (
         <div className="border-bottom">
           <PilotStepBodyNormal itemStep={itemStep} onBtnProceedToFormClick={handleBtnProceedToFormClick} />
@@ -123,21 +105,21 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
     };
 
     setStepListItemsBody(
-      workflowSteps.map((item, index) => {
+      pilotInfo?.pilotWorkflowInfo?.steps?.map((itemStep, indexStep) => {
         return {
-          key: item.step_key,
-          label: renderStepLabel(item, index),
+          key: itemStep.step_key,
+          label: renderStepLabel(itemStep, indexStep),
           showArrow: false,
-          children: renderStepChildren(item, index),
+          children: renderStepChildren(itemStep),
         };
       })
     );
-  }, [workflowSteps]);
+  }, [pilotInfo, handleBtnProceedToFormClick]);
 
   useEffect(() => {
-    if (Number(workflowSteps?.length) > 0) {
+    if (Number(pilotInfo?.pilotWorkflowInfo?.steps?.length) > 0) {
       const indexCurrentStep: number = Number(
-        workflowSteps?.findIndex((itemStep) => {
+        pilotInfo?.pilotWorkflowInfo?.steps?.findIndex((itemStep) => {
           return itemStep.step_key === pilotInfo?.pilotWorkflowInfo?.current_step_key;
         })
       );
@@ -146,7 +128,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
         return;
       }
 
-      const currentStep = workflowSteps?.[indexCurrentStep];
+      const currentStep = pilotInfo?.pilotWorkflowInfo?.steps?.[indexCurrentStep];
       // const percentTmp = ((indexCurrentStep + 1) / Number(workflowSteps?.length)) * 100;
       // setPercent(percentTmp);
 
@@ -167,7 +149,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
     }
 
     setStepListActiveKeyBody("");
-  }, [pilotInfo, workflowSteps]);
+  }, [pilotInfo]);
 
   return stepListItemsBody && stepListItemsBody.length > 0 ? (
     <div className="relative box-border flex w-full flex-col items-center justify-start rounded-lg border border-[#D8DFF5] p-2">
