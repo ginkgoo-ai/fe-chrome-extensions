@@ -47,6 +47,7 @@ export interface IPilotType {
   pilotThirdPartUrl: string;
   pilotCookie: string;
   pilotCsrfToken: string;
+  pilotUniqueApplicationNumber: string;
   pilotCaseInfo: ICaseItemType | null;
   pilotWorkflowInfo: IWorkflowType | null;
   pilotRefreshTS?: number;
@@ -91,6 +92,11 @@ export interface IWorkflowsProcessFormParamsType {
   form_html: string;
   fill_data: Record<string, unknown>;
   profile_dummy_data: Record<string, unknown>;
+}
+
+export interface IWorkflowsUpdateDetailParamsType {
+  workflowId: string;
+  unique_application_number: string;
 }
 
 export interface IWorkflowsUploadProgressFileParamsType {

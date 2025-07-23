@@ -22,6 +22,7 @@ import {
   IWorkflowStepDataType,
   IWorkflowType,
   IWorkflowsProcessFormParamsType,
+  IWorkflowsUpdateDetailParamsType,
   IWorkflowsUploadProgressFileParamsType,
 } from "@/common/types/casePilot";
 import { IRequestConfigType } from "@/common/types/fetch";
@@ -297,6 +298,31 @@ const postWorkflowsProcessForm = async (params: IWorkflowsProcessFormParamsType)
   return res;
 };
 
+const putWorkflowsUpdateDetail = async (params: IWorkflowsUpdateDetailParamsType) => {
+  const { workflowId = "", unique_application_number = "" } = params;
+  const url = `${GlobalManager.g_API_CONFIG.apiAiServerUrl}${WorkflowApi.workflowsDetail}`.replace(":workflowId", workflowId);
+  const headers = {
+    ...(await genGinkgooHeaders()),
+  };
+
+  // if (IS_MOCK) {
+  //   return new Promise((resolve) => {
+  //     resolve(mockPostWorkflowsProcessForm);
+  //   });
+  // }
+
+  const res = await FetchManager.fetchAPI({
+    method: "PUT",
+    url,
+    headers,
+    body: {
+      unique_application_number,
+    },
+  });
+
+  return res;
+};
+
 const postWorkflowsUploadProgressFile = async (params: IWorkflowsUploadProgressFileParamsType) => {
   const { workflowId = "", fileId = "" } = params;
   const url = `${GlobalManager.g_API_CONFIG.apiAiServerUrl}${WorkflowApi.workflowsUploadProgressFile}`.replace(":workflowId", workflowId);
@@ -380,6 +406,7 @@ export default {
   getWorkflowStepData,
   createWorkflow,
   postWorkflowsProcessForm,
+  putWorkflowsUpdateDetail,
   postWorkflowsUploadProgressFile,
   postFilesThirdPart,
   postFilesPDFHighlight,

@@ -28,6 +28,9 @@ export const MESSAGE = {
   TOAST_BIND_PDF_FILE_FAILED: "Failed to attach the PDF to the workflow.", // 将 PDF 附加到 Workflow 失败。
   TOAST_DOWNLOAD_PDF_FILE_FAILED: "The PDF file could not be downloaded. Please try again later.", // PDF 文件无法下载，请稍后重试。
 
+  // unique_application_number
+  TOAST_UPLOAD_UNIQUE_APPLICATION_NUMBER_FAILED: "Failed to upload the unique application number.", //
+
   // 警告及用户操作提示
   ALERT_MANUAL_TIP: "This step requires manual operation to continue.", // 此步骤需要手动操作才能继续。
   ALERT_QUERY_HTML_FAILED: "Failed to load page content. Please try again later.", // 加载页面内容失败，请稍后重试。

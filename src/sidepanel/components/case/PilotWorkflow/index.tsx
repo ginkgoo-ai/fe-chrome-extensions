@@ -40,18 +40,21 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
   }, [workflowInfo?.workflow_instance_id, pilotInfoCurrent?.pilotWorkflowInfo?.workflow_instance_id]);
 
   const isShowBtnContinue = useMemo(() => {
-    return !!pilotInfo?.pilotTabInfo?.id && pilotInfo?.pilotStatus === PilotStatusEnum.HOLD;
+    return (
+      pilotInfo?.pilotStatus === PilotStatusEnum.HOLD &&
+      (!!pilotInfo?.pilotWorkflowInfo?.unique_application_number || !!pilotInfo?.pilotTabInfo?.id)
+    );
   }, [pilotInfo]);
 
   const isDisableBtnDownload = useMemo(() => {
     return !pilotInfo?.pilotWorkflowInfo?.progress_file_id;
   }, [pilotInfo?.pilotWorkflowInfo?.progress_file_id]);
 
-  const workflowUpdateTime = useMemo(() => {
-    return pilotInfo?.pilotWorkflowInfo?.updated_at
-      ? dayjs.utc(pilotInfo?.pilotWorkflowInfo?.updated_at).local().format("MMM DD, YYYY HH: mm")
+  const workflowCreateTime = useMemo(() => {
+    return pilotInfo?.pilotWorkflowInfo?.created_at
+      ? dayjs.utc(pilotInfo?.pilotWorkflowInfo?.created_at).local().format("MMM DD, YYYY HH: mm")
       : "";
-  }, [pilotInfo?.pilotWorkflowInfo?.updated_at]);
+  }, [pilotInfo?.pilotWorkflowInfo?.created_at]);
 
   useEffect(() => {
     if (isCurrentPilot) {
@@ -78,6 +81,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
             pilotThirdPartMethod: "",
             pilotCookie: "",
             pilotCsrfToken: "",
+            pilotUniqueApplicationNumber: "",
             pilotCaseInfo: caseInfo,
             pilotWorkflowInfo: workflowInfo,
           };
@@ -147,6 +151,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
           pilotThirdPartMethod: "",
           pilotCookie: "",
           pilotCsrfToken: "",
+          pilotUniqueApplicationNumber: "",
           pilotCaseInfo: caseInfo,
           pilotWorkflowInfo: resWorkflowDetail,
         };
@@ -237,7 +242,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
                     {pilotInfo?.pilotStatus || "--"}
                   </span>
                 </div>
-                <div className="w-full truncate text-sm font-bold text-[#2665FF]">{workflowUpdateTime}</div>
+                <div className="w-full truncate text-sm font-bold text-[#2665FF]">{workflowCreateTime}</div>
               </div>
               <div className="flex-[0_0_auto]">
                 <ChevronRight

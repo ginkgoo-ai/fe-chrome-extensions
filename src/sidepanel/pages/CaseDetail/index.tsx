@@ -204,7 +204,6 @@ export default function CaseDetail() {
 
     GlobalManager.postMessage({
       type: "ginkgoo-sidepanel-all-pilot-start",
-      isNewWorkflow: true,
       caseId: caseInfo?.id || "",
       workflowDefinitionId,
     });
@@ -268,7 +267,7 @@ export default function CaseDetail() {
                     {!pilotInfoCurrent || pilotInfoCurrent?.pilotStatus === PilotStatusEnum.HOLD ? (
                       <Button type="primary" className="h-9 flex-1" onClick={handleBtnExtensionStartClick}>
                         <div className="flex flex-row items-center gap-2">
-                          <IconExtensionStart />
+                          <IconExtensionStart size={20} />
                           <span className="font-bold">Start auto-fill</span>
                         </div>
                       </Button>

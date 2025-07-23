@@ -35,10 +35,11 @@ class PilotManager {
 
   createPilot = async (params: {
     caseId: string;
+    workflowId: string;
     workflowDefinitionId: string;
     pilot: Partial<IPilotType>;
   }): Promise<IPilotType | undefined> => {
-    const { caseId, workflowDefinitionId, pilot } = params || {};
+    const { caseId, workflowId, workflowDefinitionId, pilot } = params || {};
 
     // const resWorkflowInfo = await this.createWorkflow({
     //   caseId: caseInfo?.id || "",
@@ -46,10 +47,14 @@ class PilotManager {
     // });
 
     const [resWorkflowInfo, resCaseDetail] = await Promise.all([
-      this.createWorkflow({
-        caseId,
-        workflowDefinitionId,
-      }),
+      workflowId
+        ? Api.Ginkgoo.getWorkflowDetail({
+            workflowId,
+          })
+        : this.createWorkflow({
+            caseId,
+            workflowDefinitionId,
+          }),
       this.queryCaseDetail({ caseId }),
     ]);
 
@@ -83,6 +88,7 @@ class PilotManager {
       pilotThirdPartUrl: "",
       pilotCookie: "",
       pilotCsrfToken: "",
+      pilotUniqueApplicationNumber: "",
       pilotCaseInfo: resCaseDetail,
       pilotWorkflowInfo: resWorkflowInfo,
       ...pilot,
@@ -316,8 +322,9 @@ class PilotManager {
   queryTabInfo = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }): Promise<IStepResultType> => {
     const { workflowId } = params || {};
     const pilotInfo = this.getPilot({ workflowId });
+    const { pilotTabInfo, pilotCaseInfo, pilotUniqueApplicationNumber: pilotUniqueApplicationNumberPilotInfo } = pilotInfo || {};
 
-    if (!pilotInfo?.pilotTabInfo?.id) {
+    if (!pilotTabInfo?.id) {
       return { result: false };
     }
 
@@ -328,13 +335,31 @@ class PilotManager {
       },
     });
 
-    const resTabInfo = await ChromeManager.getTabInfo(pilotInfo.pilotTabInfo.id);
+    const resTabInfo = await ChromeManager.getTabInfo(pilotTabInfo?.id);
 
     if (resTabInfo) {
+      let pilotUniqueApplicationNumber = pilotUniqueApplicationNumberPilotInfo;
+
+      switch (pilotCaseInfo?.visaType) {
+        default: {
+          const extractIdFromUrl = (url: string) => {
+            const regex = /\/SKILLED_WORK\/(\d{4}-\d{4}-\d{4}-\d{4})\//;
+            const match = url.match(regex);
+            if (match && match[1]) {
+              return match[1];
+            }
+            return pilotUniqueApplicationNumberPilotInfo; // Return null if no match is found
+          };
+
+          pilotUniqueApplicationNumber = extractIdFromUrl(resTabInfo.url || "");
+        }
+      }
+
       await this.updatePilotMap({
         workflowId,
         update: {
           pilotTabInfo: resTabInfo,
+          pilotUniqueApplicationNumber,
         },
       });
     }
@@ -455,25 +480,25 @@ class PilotManager {
     return { result: true };
   };
 
-  queryDomForEU = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }) => {
+  queryDomForEU = async (params: { uniqueApplicationNumber: string }) => {
     let thirdPartUrl = "";
     let thirdPartMethod = "";
 
-    const { tabInfo } = params || {};
-    const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
-      cbName: "querySelectors",
-      cbParams: {
-        selectors: [
-          {
-            selector: `#task-list-subtitle h2 span[class="govuk-body-m"]`,
-            attr: [{ key: "innerText" }],
-          },
-        ],
-      },
-    });
-    const id = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.innerText as string;
-    if (id) {
-      thirdPartUrl = `https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/form/api/applications/download-partial-pdf/${id}`;
+    const { uniqueApplicationNumber } = params || {};
+    // const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
+    //   cbName: "querySelectors",
+    //   cbParams: {
+    //     selectors: [
+    //       {
+    //         selector: `#task-list-subtitle h2 span[class="govuk-body-m"]`,
+    //         attr: [{ key: "innerText" }],
+    //       },
+    //     ],
+    //   },
+    // });
+    // const id = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.innerText as string;
+    if (uniqueApplicationNumber) {
+      thirdPartUrl = `https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/form/api/applications/download-partial-pdf/${uniqueApplicationNumber}`;
       thirdPartMethod = "POST";
     }
 
@@ -483,7 +508,7 @@ class PilotManager {
     };
   };
 
-  queryDomForNotEU = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }) => {
+  queryDomForNotEU = async (params: { tabInfo: chrome.tabs.Tab }) => {
     let thirdPartUrl = "";
     let thirdPartMethod = "";
 
@@ -530,12 +555,16 @@ class PilotManager {
     let thirdPartMethod = "";
 
     if (!thirdPartUrl) {
-      const { thirdPartUrl: thirdPartUrlForEU, thirdPartMethod: thirdPartMethodForEU } = await this.queryDomForEU(params);
+      const { thirdPartUrl: thirdPartUrlForEU, thirdPartMethod: thirdPartMethodForEU } = await this.queryDomForEU({
+        uniqueApplicationNumber: pilotInfo.pilotUniqueApplicationNumber,
+      });
       thirdPartUrl = thirdPartUrlForEU;
       thirdPartMethod = thirdPartMethodForEU;
     }
     if (!thirdPartUrl) {
-      const { thirdPartUrl: thirdPartUrlForNotEU, thirdPartMethod: thirdPartMethodForNotEU } = await this.queryDomForNotEU(params);
+      const { thirdPartUrl: thirdPartUrlForNotEU, thirdPartMethod: thirdPartMethodForNotEU } = await this.queryDomForNotEU({
+        tabInfo,
+      });
       thirdPartUrl = thirdPartUrlForNotEU;
       thirdPartMethod = thirdPartMethodForNotEU;
     }
@@ -713,8 +742,24 @@ class PilotManager {
       });
       return;
     }
+  };
 
-    console.log("resWorkflowsUploadProgressFile", resWorkflowsUploadProgressFile);
+  uploadWorkflowsDetail = async (params: { workflowId: string; unique_application_number: string }) => {
+    const { workflowId, unique_application_number } = params || {};
+
+    const resWorkflowsUpdateDetail = await Api.Ginkgoo.putWorkflowsUpdateDetail({
+      workflowId,
+      unique_application_number,
+    });
+
+    if (!resWorkflowsUpdateDetail?.workflow_instance_id) {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgoo-background-all-toast`,
+        typeToast: "error",
+        contentToast: MESSAGE.TOAST_UPLOAD_UNIQUE_APPLICATION_NUMBER_FAILED,
+      });
+      return;
+    }
   };
 
   main = async (pilotInfo: IPilotType, actionlistPre?: IActionItemType[]) => {
@@ -749,10 +794,6 @@ class PilotManager {
           workflowId,
           tabInfo: tabInfo!,
           actionlist: actionlistPre.concat([
-            // {
-            //   selector: "input[id='submit']",
-            //   type: "click",
-            // },
             {
               selector: "input[type='submit']",
               type: "click",
@@ -915,16 +956,30 @@ class PilotManager {
 
     FetchManager.cancelAll();
 
+    const taskList = [];
     // 上传 pdf 文件 Cookie ，以及将文件 fileId 同 workflow 绑定
     if (pilotInfo?.pilotThirdPartUrl && pilotInfo?.pilotCookie) {
-      await this.uploadAndBindPDF({
-        workflowId,
-        method: pilotInfo?.pilotThirdPartMethod,
-        thirdPartUrl: pilotInfo?.pilotThirdPartUrl,
-        cookie: pilotInfo.pilotCookie,
-        csrfToken: pilotInfo.pilotCsrfToken,
-      });
+      taskList.push(
+        this.uploadAndBindPDF({
+          workflowId,
+          method: pilotInfo?.pilotThirdPartMethod,
+          thirdPartUrl: pilotInfo?.pilotThirdPartUrl,
+          cookie: pilotInfo.pilotCookie,
+          csrfToken: pilotInfo.pilotCsrfToken,
+        })
+      );
     }
+
+    if (pilotInfo?.pilotUniqueApplicationNumber) {
+      taskList.push(
+        this.uploadWorkflowsDetail({
+          workflowId,
+          unique_application_number: pilotInfo?.pilotUniqueApplicationNumber,
+        })
+      );
+    }
+
+    await Promise.all(taskList);
 
     BackgroundEventManager.postConnectMessage({
       type: `ginkgoo-background-all-pilot-done`,

@@ -38,16 +38,16 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
     return result;
   }, [pilotInfo]);
 
-  const handleContinueFilling = (params: { actionlistPre: IActionItemType[] }) => {
-    const { actionlistPre } = params || {};
+  // const handleContinueFilling = (params: { actionlistPre: IActionItemType[] }) => {
+  //   const { actionlistPre } = params || {};
 
-    GlobalManager.postMessage({
-      type: "ginkgoo-sidepanel-all-pilot-start",
-      workflowId: pilotInfo?.pilotWorkflowInfo?.workflow_instance_id,
-      caseId,
-      actionlistPre,
-    });
-  };
+  //   GlobalManager.postMessage({
+  //     type: "ginkgoo-sidepanel-all-pilot-start",
+  //     workflowId: pilotInfo?.pilotWorkflowInfo?.workflow_instance_id,
+  //     caseId,
+  //     actionlistPre,
+  //   });
+  // };
 
   const handleBtnProceedToFormClick = () => {
     if (!!pilotInfo?.pilotTabInfo?.id) {
@@ -117,7 +117,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
     const renderStepChildren = (itemStep: IWorkflowStepType, indexStep: number) => {
       return (
         <div className="border-bottom">
-          <PilotStepBodyNormal itemStep={itemStep} indexStep={indexStep} onContinueFilling={handleContinueFilling} />
+          <PilotStepBodyNormal itemStep={itemStep} onBtnProceedToFormClick={handleBtnProceedToFormClick} />
         </div>
       );
     };
