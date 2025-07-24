@@ -56,15 +56,8 @@ export default function CaseDetail() {
           break;
         }
 
-        if (pilotStatusMsg === PilotStatusEnum.START) {
-          refreshWorkflowList({
-            // cb: () => {
-            //   window.postMessage({
-            //     type: 'ginkgoo-page-background-pilot-query',
-            //     workflowId: workflowIdMsg,
-            //   });
-            // },
-          });
+        if (pilotStatusMsg === PilotStatusEnum.OPEN) {
+          refreshWorkflowList();
           break;
         }
 
@@ -143,13 +136,7 @@ export default function CaseDetail() {
   const init = async () => {
     await refreshCaseDetail();
     refreshWorkflowDefinitions();
-    refreshWorkflowList({
-      cb: () => {
-        GlobalManager.postMessage({
-          type: "ginkgoo-sidepanel-background-pilot-query",
-        });
-      },
-    });
+    refreshWorkflowList();
   };
 
   useEffect(() => {
@@ -305,10 +292,10 @@ export default function CaseDetail() {
               {workflowList.map((itemWorkflow, indexWorkflow) => {
                 return (
                   <PilotWorkflow
-                    key={`workflow-item-${indexWorkflow}`}
+                    key={`workflow-item-${indexWorkflow}-${itemWorkflow?.workflow_instance_id}`}
                     caseInfo={caseInfo}
                     workflowInfo={itemWorkflow}
-                    indexKey={`panel-pilot-workflow-${indexWorkflow}`}
+                    indexKey={`panel-pilot-workflow-${indexWorkflow}-${itemWorkflow?.workflow_instance_id}`}
                     pilotInfoCurrent={pilotInfoCurrent}
                   />
                 );

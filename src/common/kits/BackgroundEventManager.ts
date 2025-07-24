@@ -375,6 +375,13 @@ class BackgroundEventManager {
           ChromeManager.updateTab(pilotInfo.pilotTabInfo?.id, { active: true });
         }
 
+        await PilotManager.updatePilotMap({
+          workflowId: pilotInfo.pilotWorkflowInfo?.workflow_instance_id || "",
+          update: {
+            pilotStatus: PilotStatusEnum.OPEN,
+          },
+        });
+
         await PilotManager.start({
           pilotInfo,
           actionlistPre: actionlistPreMsg,
@@ -402,7 +409,7 @@ class BackgroundEventManager {
             : PilotManager.getPilotActived();
 
         this.postConnectMessage({
-          type: `ginkgoo-background-all-pilot-update`,
+          type: `ginkgoo-background-all-pilot-query`,
           pilotInfo,
           sourceMessage: message,
         });

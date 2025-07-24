@@ -8,6 +8,7 @@ import { ChevronRight, Download, Play } from "lucide-react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { IconCompleted, IconIncompleted, IconLoading } from "@/common/components/ui/icon";
 import { MESSAGE } from "@/common/config/message";
+import { useEventManager } from "@/common/hooks/useEventManager";
 import { cn } from "@/common/kits";
 import GlobalManager from "@/common/kits/GlobalManager";
 import UtilsManager from "@/common/kits/UtilsManager";
@@ -55,6 +56,24 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
       ? dayjs.utc(pilotInfo?.pilotWorkflowInfo?.created_at).local().format("MMM DD, YYYY HH: mm")
       : "";
   }, [pilotInfo?.pilotWorkflowInfo?.created_at]);
+
+  useEventManager("ginkgoo-extensions", (message) => {
+    const { type: typeMsg } = message;
+
+    switch (typeMsg) {
+      case "ginkgoo-background-all-pilot-query": {
+        const { pilotInfo: pilotInfoMsg } = message;
+
+        if (pilotInfoMsg?.pilotWorkflowInfo?.workflow_instance_id === workflowInfo?.workflow_instance_id) {
+          setPilotInfo(pilotInfoMsg);
+        }
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+  });
 
   useEffect(() => {
     if (isCurrentPilot) {
@@ -121,6 +140,15 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
     }
   }, [pilotInfo, isCurrentPilot, indexKey]);
 
+  useEffect(() => {
+    if (workflowInfo?.workflow_instance_id) {
+      GlobalManager.postMessage({
+        type: "ginkgoo-sidepanel-background-pilot-query",
+        workflowId: workflowInfo?.workflow_instance_id,
+      });
+    }
+  }, [workflowInfo?.workflow_instance_id]);
+
   const handleQueryWorkflowDetail = async () => {
     const resWorkflowDetail = await Api.Ginkgoo.getWorkflowDetail({
       workflowId: workflowInfo.workflow_instance_id,
@@ -148,9 +176,9 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
           pilotLastMessage: "",
           pilotRepeatHash: "",
           pilotRepeatCurrent: 0,
-          pilotThirdPartUrl: "",
           pilotThirdPartType: PilotThirdPartTypeEnum.NONE,
           pilotThirdPartMethod: "",
+          pilotThirdPartUrl: "",
           pilotCookie: "",
           pilotCsrfToken: "",
           pilotUniqueApplicationNumber: "",
