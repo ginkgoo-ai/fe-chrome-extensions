@@ -13,7 +13,7 @@ import GlobalManager from "@/common/kits/GlobalManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { ICaseItemType } from "@/common/types/case";
-import { IPilotType, IWorkflowType, PilotStatusEnum } from "@/common/types/casePilot";
+import { IPilotType, IWorkflowType, PilotStatusEnum, PilotThirdPartTypeEnum } from "@/common/types/casePilot";
 import { PilotStepBody } from "@/sidepanel/components/case/PilotStepBody";
 import "./index.css";
 
@@ -77,8 +77,9 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
             pilotLastMessage: "",
             pilotRepeatHash: "",
             pilotRepeatCurrent: 0,
-            pilotThirdPartUrl: "",
+            pilotThirdPartType: PilotThirdPartTypeEnum.NONE,
             pilotThirdPartMethod: "",
+            pilotThirdPartUrl: "",
             pilotCookie: "",
             pilotCsrfToken: "",
             pilotUniqueApplicationNumber: "",
@@ -148,6 +149,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
           pilotRepeatHash: "",
           pilotRepeatCurrent: 0,
           pilotThirdPartUrl: "",
+          pilotThirdPartType: PilotThirdPartTypeEnum.NONE,
           pilotThirdPartMethod: "",
           pilotCookie: "",
           pilotCsrfToken: "",

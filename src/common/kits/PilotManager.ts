@@ -10,7 +10,14 @@ import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { IActionItemType, ICaseItemType } from "@/common/types/case";
-import { IPilotType, ISelectorResult, IStepResultType, IWorkflowType, PilotStatusEnum } from "@/common/types/casePilot";
+import {
+  IPilotType,
+  ISelectorResult,
+  IStepResultType,
+  IWorkflowType,
+  PilotStatusEnum,
+  PilotThirdPartTypeEnum,
+} from "@/common/types/casePilot";
 
 /**
  * @description 处理HTML管理器
@@ -84,6 +91,7 @@ class PilotManager {
       pilotLastMessage: "",
       pilotRepeatHash: "",
       pilotRepeatCurrent: 0,
+      pilotThirdPartType: PilotThirdPartTypeEnum.NONE,
       pilotThirdPartMethod: "",
       pilotThirdPartUrl: "",
       pilotCookie: "",
@@ -446,6 +454,7 @@ class PilotManager {
   queryCookies = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }): Promise<IStepResultType> => {
     const { workflowId, tabInfo } = params || {};
     const pilotInfo = this.getPilot({ workflowId });
+    const { pilotThirdPartType } = pilotInfo || {};
 
     if (!pilotInfo) {
       return { result: false };
@@ -460,19 +469,25 @@ class PilotManager {
 
     const resCookies = await ChromeManager.getSyncCookiesCore(tabInfo);
     const { cookies, cookiesStr } = resCookies || {};
+    const objCsrfToken = cookies.find((item) => {
+      return item.name.toLocaleUpperCase() === "CSRF-TOKEN";
+    });
 
-    console.log("queryCookies", cookies, cookiesStr);
+    console.log("queryCookies", pilotThirdPartType, cookies, cookiesStr, objCsrfToken);
 
-    if (cookiesStr) {
-      const objCsrfToken = cookies.find((item) => {
-        return item.name.toLocaleUpperCase() === "CSRF-TOKEN";
-      });
-
+    if (pilotThirdPartType === PilotThirdPartTypeEnum.NotEU && cookiesStr) {
       await this.updatePilotMap({
         workflowId,
         update: {
           pilotCookie: cookiesStr,
-          pilotCsrfToken: objCsrfToken?.value || "",
+        },
+      });
+    } else if (pilotThirdPartType === PilotThirdPartTypeEnum.EU && cookiesStr && objCsrfToken?.value) {
+      await this.updatePilotMap({
+        workflowId,
+        update: {
+          pilotCookie: cookiesStr,
+          pilotCsrfToken: objCsrfToken?.value,
         },
       });
     }
@@ -481,8 +496,8 @@ class PilotManager {
   };
 
   queryDomForEU = async (params: { uniqueApplicationNumber: string }) => {
-    let thirdPartUrl = "";
     let thirdPartMethod = "";
+    let thirdPartUrl = "";
 
     const { uniqueApplicationNumber } = params || {};
     // const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
@@ -498,19 +513,19 @@ class PilotManager {
     // });
     // const id = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.innerText as string;
     if (uniqueApplicationNumber) {
-      thirdPartUrl = `https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/form/api/applications/download-partial-pdf/${uniqueApplicationNumber}`;
       thirdPartMethod = "POST";
+      thirdPartUrl = `https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/form/api/applications/download-partial-pdf/${uniqueApplicationNumber}`;
     }
 
     return {
-      thirdPartUrl,
       thirdPartMethod,
+      thirdPartUrl,
     };
   };
 
   queryDomForNotEU = async (params: { tabInfo: chrome.tabs.Tab }) => {
-    let thirdPartUrl = "";
     let thirdPartMethod = "";
+    let thirdPartUrl = "";
 
     const { tabInfo } = params || {};
     const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
@@ -526,13 +541,13 @@ class PilotManager {
     });
     const href = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.href as string;
     if (href) {
-      thirdPartUrl = href;
       thirdPartMethod = "GET";
+      thirdPartUrl = href;
     }
 
     return {
-      thirdPartUrl,
       thirdPartMethod,
+      thirdPartUrl,
     };
   };
 
@@ -551,30 +566,34 @@ class PilotManager {
       },
     });
 
-    let thirdPartUrl = "";
+    let thirdPartType = PilotThirdPartTypeEnum.NONE;
     let thirdPartMethod = "";
+    let thirdPartUrl = "";
 
     if (!thirdPartUrl) {
-      const { thirdPartUrl: thirdPartUrlForEU, thirdPartMethod: thirdPartMethodForEU } = await this.queryDomForEU({
+      const { thirdPartMethod: thirdPartMethodForEU, thirdPartUrl: thirdPartUrlForEU } = await this.queryDomForEU({
         uniqueApplicationNumber: pilotInfo.pilotUniqueApplicationNumber,
       });
-      thirdPartUrl = thirdPartUrlForEU;
+      thirdPartType = PilotThirdPartTypeEnum.EU;
       thirdPartMethod = thirdPartMethodForEU;
+      thirdPartUrl = thirdPartUrlForEU;
     }
     if (!thirdPartUrl) {
-      const { thirdPartUrl: thirdPartUrlForNotEU, thirdPartMethod: thirdPartMethodForNotEU } = await this.queryDomForNotEU({
+      const { thirdPartMethod: thirdPartMethodForNotEU, thirdPartUrl: thirdPartUrlForNotEU } = await this.queryDomForNotEU({
         tabInfo,
       });
-      thirdPartUrl = thirdPartUrlForNotEU;
+      thirdPartType = PilotThirdPartTypeEnum.NotEU;
       thirdPartMethod = thirdPartMethodForNotEU;
+      thirdPartUrl = thirdPartUrlForNotEU;
     }
 
     if (thirdPartUrl) {
       await this.updatePilotMap({
         workflowId,
         update: {
-          pilotThirdPartUrl: thirdPartUrl,
+          pilotThirdPartType: thirdPartType,
           pilotThirdPartMethod: thirdPartMethod,
+          pilotThirdPartUrl: thirdPartUrl,
         },
       });
     }
@@ -843,18 +862,18 @@ class PilotManager {
       }
 
       console.log("main 3");
-      // 查询cookies
-      const resQueryCookies = await this.queryCookies({ workflowId, tabInfo: tabInfo! });
-      if (timerSource !== pilotInfo?.pilotTimer || !resQueryCookies.result) {
-        console.log("main 3", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
-        break;
-      }
-
-      console.log("main 4");
       // 查询pdf Url
       const resQueryDom = await this.queryDom({ workflowId, tabInfo: tabInfo! });
       if (timerSource !== pilotInfo?.pilotTimer || !resQueryDom.result) {
         console.log("main 4", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
+        break;
+      }
+
+      console.log("main 4");
+      // 查询cookies
+      const resQueryCookies = await this.queryCookies({ workflowId, tabInfo: tabInfo! });
+      if (timerSource !== pilotInfo?.pilotTimer || !resQueryCookies.result) {
+        console.log("main 3", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
         break;
       }
 

@@ -19,6 +19,12 @@ export enum PilotStatusEnum {
   COMPLETED = "COMPLETED",
 }
 
+export enum PilotThirdPartTypeEnum {
+  NONE = "NONE",
+  EU = "EU",
+  NotEU = "NotEU",
+}
+
 export enum PilotModeEnum {
   NOT_INSTALL = "NOT_INSTALL",
   PREPARING = "PREPARING",
@@ -43,6 +49,7 @@ export interface IPilotType {
   pilotLastMessage: string;
   pilotRepeatHash: string;
   pilotRepeatCurrent: number;
+  pilotThirdPartType: PilotThirdPartTypeEnum;
   pilotThirdPartMethod: string;
   pilotThirdPartUrl: string;
   pilotCookie: string;
