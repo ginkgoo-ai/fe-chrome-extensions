@@ -41,7 +41,7 @@ function PurePilotStepBodyNormal(props: PilotStepBodyNormalProps) {
         //   indexStep={indexStep}
         //   onContinueFilling={onContinueFilling}
         // />
-        <Button variant="ghost" className="-mt-4 h-9 w-full border border-solid border-primary" onClick={onBtnProceedToFormClick}>
+        <Button variant="ghost" className="h-9 w-full border border-solid border-primary" onClick={onBtnProceedToFormClick}>
           <span className="truncate text-primary">Proceed to Form</span>
         </Button>
       ) : null}

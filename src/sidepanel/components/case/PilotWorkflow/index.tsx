@@ -33,6 +33,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
   const isFoldInit = useRef<boolean>(true);
 
   const [isFold, setFold] = useState<boolean>(true);
+  const [isLoadingContinue, setLoadingContinue] = useState<boolean>(false);
   const [isLoadingDownload, setLoadingDownload] = useState<boolean>(false);
   const [pilotInfo, setPilotInfo] = useState<IPilotType | null>(null);
 
@@ -76,6 +77,10 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
   });
 
   useEffect(() => {
+    if (pilotInfoCurrent?.pilotStatus !== PilotStatusEnum.HOLD) {
+      setLoadingContinue(false);
+    }
+
     if (isCurrentPilot) {
       setPilotInfo(pilotInfoCurrent);
     } else {
@@ -228,6 +233,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
   };
 
   const handleBtnContinueClick = () => {
+    setLoadingContinue(true);
     GlobalManager.postMessage({
       type: "ginkgoo-sidepanel-all-pilot-start",
       workflowId: pilotInfo?.pilotWorkflowInfo?.workflow_instance_id || "",
@@ -294,7 +300,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
               <Button
                 id={`pilot-item-btn-download-${indexKey}`}
                 type="default"
-                className="flex-1"
+                className="w-0 flex-1"
                 disabled={isDisableBtnDownload}
                 loading={isLoadingDownload}
                 onClick={handleBtnPDFDownloadClick}
@@ -306,7 +312,13 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
                 </div>
               </Button>
               {isShowBtnContinue ? (
-                <Button id={`pilot-item-btn-continue-${indexKey}`} type="default" className="flex-1" onClick={handleBtnContinueClick}>
+                <Button
+                  id={`pilot-item-btn-continue-${indexKey}`}
+                  type="default"
+                  className="w-0 flex-1"
+                  loading={isLoadingContinue}
+                  onClick={handleBtnContinueClick}
+                >
                   <Play size={20} />
                   <div className="truncate">
                     <span className="font-bold">Continue</span>
