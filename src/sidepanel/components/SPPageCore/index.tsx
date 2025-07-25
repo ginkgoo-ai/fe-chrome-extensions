@@ -61,6 +61,7 @@ export default function SPPageCore(props: SPPageCoreProps) {
         redirectToPage({ tabInfo }, "tab-activated");
         break;
       }
+      case "ginkgoo-background-all-pilot-query":
       case "ginkgoo-background-all-pilot-update": {
         const { pilotInfo: pilotInfoMsg, sourceMessage: sourceMessageMsg } = message || {};
         const { tabId: tabIdMsg } = sourceMessageMsg || {};

@@ -1,5 +1,5 @@
 {
-  "name": "Ginkgoo Pilot",
+  "name": "Xeni Pilot",
   "version": "${script replace version}",
   "description": "AI Agent for intelligent web automation and task processing",
   "manifest_version": 3,

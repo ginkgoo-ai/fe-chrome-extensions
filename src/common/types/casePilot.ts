@@ -19,6 +19,12 @@ export enum PilotStatusEnum {
   COMPLETED = "COMPLETED",
 }
 
+export enum PilotThirdPartTypeEnum {
+  NONE = "NONE",
+  EU = "EU",
+  NotEU = "NotEU",
+}
+
 export enum PilotModeEnum {
   NOT_INSTALL = "NOT_INSTALL",
   PREPARING = "PREPARING",
@@ -43,10 +49,12 @@ export interface IPilotType {
   pilotLastMessage: string;
   pilotRepeatHash: string;
   pilotRepeatCurrent: number;
+  pilotThirdPartType: PilotThirdPartTypeEnum;
   pilotThirdPartMethod: string;
   pilotThirdPartUrl: string;
   pilotCookie: string;
   pilotCsrfToken: string;
+  pilotUniqueApplicationNumber: string;
   pilotCaseInfo: ICaseItemType | null;
   pilotWorkflowInfo: IWorkflowType | null;
   pilotRefreshTS?: number;
@@ -91,6 +99,11 @@ export interface IWorkflowsProcessFormParamsType {
   form_html: string;
   fill_data: Record<string, unknown>;
   profile_dummy_data: Record<string, unknown>;
+}
+
+export interface IWorkflowsUpdateDetailParamsType {
+  workflowId: string;
+  unique_application_number: string;
 }
 
 export interface IWorkflowsUploadProgressFileParamsType {
@@ -173,5 +186,6 @@ export interface IWorkflowType {
   progress_file_id?: string;
   progress_percentage?: number;
   workflow_definition_id?: string;
+  unique_application_number?: string | null;
   steps?: IWorkflowStepType[];
 }

@@ -10,7 +10,14 @@ import UserManager from "@/common/kits/UserManager";
 import UtilsManager from "@/common/kits/UtilsManager";
 import Api from "@/common/kits/api";
 import { IActionItemType, ICaseItemType } from "@/common/types/case";
-import { IPilotType, ISelectorResult, IStepResultType, IWorkflowType, PilotStatusEnum } from "@/common/types/casePilot";
+import {
+  IPilotType,
+  ISelectorResult,
+  IStepResultType,
+  IWorkflowType,
+  PilotStatusEnum,
+  PilotThirdPartTypeEnum,
+} from "@/common/types/casePilot";
 
 /**
  * @description 处理HTML管理器
@@ -35,10 +42,11 @@ class PilotManager {
 
   createPilot = async (params: {
     caseId: string;
+    workflowId: string;
     workflowDefinitionId: string;
     pilot: Partial<IPilotType>;
   }): Promise<IPilotType | undefined> => {
-    const { caseId, workflowDefinitionId, pilot } = params || {};
+    const { caseId, workflowId, workflowDefinitionId, pilot } = params || {};
 
     // const resWorkflowInfo = await this.createWorkflow({
     //   caseId: caseInfo?.id || "",
@@ -46,10 +54,14 @@ class PilotManager {
     // });
 
     const [resWorkflowInfo, resCaseDetail] = await Promise.all([
-      this.createWorkflow({
-        caseId,
-        workflowDefinitionId,
-      }),
+      workflowId
+        ? Api.Ginkgoo.getWorkflowDetail({
+            workflowId,
+          })
+        : this.createWorkflow({
+            caseId,
+            workflowDefinitionId,
+          }),
       this.queryCaseDetail({ caseId }),
     ]);
 
@@ -79,10 +91,12 @@ class PilotManager {
       pilotLastMessage: "",
       pilotRepeatHash: "",
       pilotRepeatCurrent: 0,
+      pilotThirdPartType: PilotThirdPartTypeEnum.NONE,
       pilotThirdPartMethod: "",
       pilotThirdPartUrl: "",
       pilotCookie: "",
       pilotCsrfToken: "",
+      pilotUniqueApplicationNumber: "",
       pilotCaseInfo: resCaseDetail,
       pilotWorkflowInfo: resWorkflowInfo,
       ...pilot,
@@ -141,10 +155,11 @@ class PilotManager {
     }
   };
 
-  updatePilotMap = async (params: { workflowId: string; update: Partial<IPilotType> }) => {
-    const { workflowId, update } = params || {};
+  updatePilotMap = async (params: { workflowId: string; update: Partial<IPilotType>; isForcePostMessage?: boolean }) => {
+    const { workflowId, update, isForcePostMessage } = params || {};
     const lockId = `workflowId-${workflowId}`;
     const pilotInfo = this.pilotMap.get(workflowId);
+    const pilotStatusOld = pilotInfo?.pilotStatus;
 
     try {
       // 获取锁
@@ -156,10 +171,12 @@ class PilotManager {
         });
       }
     } finally {
-      BackgroundEventManager.postConnectMessage({
-        type: `ginkgoo-background-all-pilot-update`,
-        pilotInfo,
-      });
+      if (pilotStatusOld !== PilotStatusEnum.HOLD || isForcePostMessage) {
+        BackgroundEventManager.postConnectMessage({
+          type: `ginkgoo-background-all-pilot-update`,
+          pilotInfo,
+        });
+      }
 
       // 确保在finally中释放锁
       LockManager.releaseLock(lockId);
@@ -313,8 +330,9 @@ class PilotManager {
   queryTabInfo = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }): Promise<IStepResultType> => {
     const { workflowId } = params || {};
     const pilotInfo = this.getPilot({ workflowId });
+    const { pilotTabInfo, pilotCaseInfo, pilotUniqueApplicationNumber: pilotUniqueApplicationNumberPilotInfo } = pilotInfo || {};
 
-    if (!pilotInfo?.pilotTabInfo?.id) {
+    if (!pilotTabInfo?.id) {
       return { result: false };
     }
 
@@ -325,13 +343,31 @@ class PilotManager {
       },
     });
 
-    const resTabInfo = await ChromeManager.getTabInfo(pilotInfo.pilotTabInfo.id);
+    const resTabInfo = await ChromeManager.getTabInfo(pilotTabInfo?.id);
 
     if (resTabInfo) {
+      let pilotUniqueApplicationNumber = pilotUniqueApplicationNumberPilotInfo;
+
+      switch (pilotCaseInfo?.visaType) {
+        default: {
+          const extractIdFromUrl = (url: string) => {
+            const regex = /\/SKILLED_WORK\/(\d{4}-\d{4}-\d{4}-\d{4})\//;
+            const match = url.match(regex);
+            if (match && match[1]) {
+              return match[1];
+            }
+            return pilotUniqueApplicationNumberPilotInfo; // Return null if no match is found
+          };
+
+          pilotUniqueApplicationNumber = extractIdFromUrl(resTabInfo.url || "");
+        }
+      }
+
       await this.updatePilotMap({
         workflowId,
         update: {
           pilotTabInfo: resTabInfo,
+          pilotUniqueApplicationNumber,
         },
       });
     }
@@ -418,6 +454,7 @@ class PilotManager {
   queryCookies = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }): Promise<IStepResultType> => {
     const { workflowId, tabInfo } = params || {};
     const pilotInfo = this.getPilot({ workflowId });
+    const { pilotThirdPartType } = pilotInfo || {};
 
     if (!pilotInfo) {
       return { result: false };
@@ -432,19 +469,25 @@ class PilotManager {
 
     const resCookies = await ChromeManager.getSyncCookiesCore(tabInfo);
     const { cookies, cookiesStr } = resCookies || {};
+    const objCsrfToken = cookies.find((item) => {
+      return item.name.toLocaleUpperCase() === "CSRF-TOKEN";
+    });
 
-    console.log("queryCookies", cookies, cookiesStr);
+    console.log("queryCookies", pilotThirdPartType, cookies, cookiesStr, objCsrfToken);
 
-    if (cookiesStr) {
-      const objCsrfToken = cookies.find((item) => {
-        return item.name.toLocaleUpperCase() === "CSRF-TOKEN";
-      });
-
+    if (pilotThirdPartType === PilotThirdPartTypeEnum.NotEU && cookiesStr) {
       await this.updatePilotMap({
         workflowId,
         update: {
           pilotCookie: cookiesStr,
-          pilotCsrfToken: objCsrfToken?.value || "",
+        },
+      });
+    } else if (pilotThirdPartType === PilotThirdPartTypeEnum.EU && cookiesStr && objCsrfToken?.value) {
+      await this.updatePilotMap({
+        workflowId,
+        update: {
+          pilotCookie: cookiesStr,
+          pilotCsrfToken: objCsrfToken?.value,
         },
       });
     }
@@ -452,37 +495,37 @@ class PilotManager {
     return { result: true };
   };
 
-  queryDomForEU = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }) => {
-    let thirdPartUrl = "";
+  queryDomForEU = async (params: { uniqueApplicationNumber: string }) => {
     let thirdPartMethod = "";
+    let thirdPartUrl = "";
 
-    const { tabInfo } = params || {};
-    const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
-      cbName: "querySelectors",
-      cbParams: {
-        selectors: [
-          {
-            selector: `#task-list-subtitle h2 span[class="govuk-body-m"]`,
-            attr: [{ key: "innerText" }],
-          },
-        ],
-      },
-    });
-    const id = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.innerText as string;
-    if (id) {
-      thirdPartUrl = `https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/form/api/applications/download-partial-pdf/${id}`;
+    const { uniqueApplicationNumber } = params || {};
+    // const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
+    //   cbName: "querySelectors",
+    //   cbParams: {
+    //     selectors: [
+    //       {
+    //         selector: `#task-list-subtitle h2 span[class="govuk-body-m"]`,
+    //         attr: [{ key: "innerText" }],
+    //       },
+    //     ],
+    //   },
+    // });
+    // const id = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.innerText as string;
+    if (uniqueApplicationNumber) {
       thirdPartMethod = "POST";
+      thirdPartUrl = `https://apply-to-visit-or-stay-in-the-uk.homeoffice.gov.uk/form/api/applications/download-partial-pdf/${uniqueApplicationNumber}`;
     }
 
     return {
-      thirdPartUrl,
       thirdPartMethod,
+      thirdPartUrl,
     };
   };
 
-  queryDomForNotEU = async (params: { workflowId: string; tabInfo: chrome.tabs.Tab }) => {
-    let thirdPartUrl = "";
+  queryDomForNotEU = async (params: { tabInfo: chrome.tabs.Tab }) => {
     let thirdPartMethod = "";
+    let thirdPartUrl = "";
 
     const { tabInfo } = params || {};
     const resHtmlInfo = await ChromeManager.executeScript(tabInfo, {
@@ -498,13 +541,13 @@ class PilotManager {
     });
     const href = (resHtmlInfo?.[0]?.result as ISelectorResult[])?.[0]?.href as string;
     if (href) {
-      thirdPartUrl = href;
       thirdPartMethod = "GET";
+      thirdPartUrl = href;
     }
 
     return {
-      thirdPartUrl,
       thirdPartMethod,
+      thirdPartUrl,
     };
   };
 
@@ -523,26 +566,34 @@ class PilotManager {
       },
     });
 
-    let thirdPartUrl = "";
+    let thirdPartType = PilotThirdPartTypeEnum.NONE;
     let thirdPartMethod = "";
+    let thirdPartUrl = "";
 
     if (!thirdPartUrl) {
-      const { thirdPartUrl: thirdPartUrlForEU, thirdPartMethod: thirdPartMethodForEU } = await this.queryDomForEU(params);
-      thirdPartUrl = thirdPartUrlForEU;
+      const { thirdPartMethod: thirdPartMethodForEU, thirdPartUrl: thirdPartUrlForEU } = await this.queryDomForEU({
+        uniqueApplicationNumber: pilotInfo.pilotUniqueApplicationNumber,
+      });
+      thirdPartType = PilotThirdPartTypeEnum.EU;
       thirdPartMethod = thirdPartMethodForEU;
+      thirdPartUrl = thirdPartUrlForEU;
     }
     if (!thirdPartUrl) {
-      const { thirdPartUrl: thirdPartUrlForNotEU, thirdPartMethod: thirdPartMethodForNotEU } = await this.queryDomForNotEU(params);
-      thirdPartUrl = thirdPartUrlForNotEU;
+      const { thirdPartMethod: thirdPartMethodForNotEU, thirdPartUrl: thirdPartUrlForNotEU } = await this.queryDomForNotEU({
+        tabInfo,
+      });
+      thirdPartType = PilotThirdPartTypeEnum.NotEU;
       thirdPartMethod = thirdPartMethodForNotEU;
+      thirdPartUrl = thirdPartUrlForNotEU;
     }
 
     if (thirdPartUrl) {
       await this.updatePilotMap({
         workflowId,
         update: {
-          pilotThirdPartUrl: thirdPartUrl,
+          pilotThirdPartType: thirdPartType,
           pilotThirdPartMethod: thirdPartMethod,
+          pilotThirdPartUrl: thirdPartUrl,
         },
       });
     }
@@ -710,8 +761,24 @@ class PilotManager {
       });
       return;
     }
+  };
 
-    console.log("resWorkflowsUploadProgressFile", resWorkflowsUploadProgressFile);
+  uploadWorkflowsDetail = async (params: { workflowId: string; unique_application_number: string }) => {
+    const { workflowId, unique_application_number } = params || {};
+
+    const resWorkflowsUpdateDetail = await Api.Ginkgoo.putWorkflowsUpdateDetail({
+      workflowId,
+      unique_application_number,
+    });
+
+    if (!resWorkflowsUpdateDetail?.workflow_instance_id) {
+      BackgroundEventManager.postConnectMessage({
+        type: `ginkgoo-background-all-toast`,
+        typeToast: "error",
+        contentToast: MESSAGE.TOAST_UPLOAD_UNIQUE_APPLICATION_NUMBER_FAILED,
+      });
+      return;
+    }
   };
 
   main = async (pilotInfo: IPilotType, actionlistPre?: IActionItemType[]) => {
@@ -736,6 +803,7 @@ class PilotManager {
         pilotLastMessage: "",
         pilotCaseInfo: resCaseDetail || pilotCaseInfo,
       },
+      isForcePostMessage: true,
     });
 
     if (timerSource === pilotInfo?.pilotTimer) {
@@ -745,10 +813,6 @@ class PilotManager {
           workflowId,
           tabInfo: tabInfo!,
           actionlist: actionlistPre.concat([
-            // {
-            //   selector: "input[id='submit']",
-            //   type: "click",
-            // },
             {
               selector: "input[type='submit']",
               type: "click",
@@ -798,18 +862,18 @@ class PilotManager {
       }
 
       console.log("main 3");
-      // 查询cookies
-      const resQueryCookies = await this.queryCookies({ workflowId, tabInfo: tabInfo! });
-      if (timerSource !== pilotInfo?.pilotTimer || !resQueryCookies.result) {
-        console.log("main 3", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
-        break;
-      }
-
-      console.log("main 4");
       // 查询pdf Url
       const resQueryDom = await this.queryDom({ workflowId, tabInfo: tabInfo! });
       if (timerSource !== pilotInfo?.pilotTimer || !resQueryDom.result) {
         console.log("main 4", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
+        break;
+      }
+
+      console.log("main 4");
+      // 查询cookies
+      const resQueryCookies = await this.queryCookies({ workflowId, tabInfo: tabInfo! });
+      if (timerSource !== pilotInfo?.pilotTimer || !resQueryCookies.result) {
+        console.log("main 3", timerSource, pilotInfo?.pilotTimer, resUpdateTabInfo.result);
         break;
       }
 
@@ -911,16 +975,30 @@ class PilotManager {
 
     FetchManager.cancelAll();
 
+    const taskList = [];
     // 上传 pdf 文件 Cookie ，以及将文件 fileId 同 workflow 绑定
     if (pilotInfo?.pilotThirdPartUrl && pilotInfo?.pilotCookie) {
-      await this.uploadAndBindPDF({
-        workflowId,
-        method: pilotInfo?.pilotThirdPartMethod,
-        thirdPartUrl: pilotInfo?.pilotThirdPartUrl,
-        cookie: pilotInfo.pilotCookie,
-        csrfToken: pilotInfo.pilotCsrfToken,
-      });
+      taskList.push(
+        this.uploadAndBindPDF({
+          workflowId,
+          method: pilotInfo?.pilotThirdPartMethod,
+          thirdPartUrl: pilotInfo?.pilotThirdPartUrl,
+          cookie: pilotInfo.pilotCookie,
+          csrfToken: pilotInfo.pilotCsrfToken,
+        })
+      );
     }
+
+    if (pilotInfo?.pilotUniqueApplicationNumber) {
+      taskList.push(
+        this.uploadWorkflowsDetail({
+          workflowId,
+          unique_application_number: pilotInfo?.pilotUniqueApplicationNumber,
+        })
+      );
+    }
+
+    await Promise.all(taskList);
 
     BackgroundEventManager.postConnectMessage({
       type: `ginkgoo-background-all-pilot-done`,
