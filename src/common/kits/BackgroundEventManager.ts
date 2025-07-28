@@ -449,13 +449,13 @@ class BackgroundEventManager {
       }
       case "ginkgoo-page-background-sidepanel-open":
       case "ginkgoo-sidepanel-background-sidepanel-open": {
-        const { options } = otherInfo || {};
+        const { options, isReload } = otherInfo || {};
         console.log("background-sidepanel-open", options);
         await ChromeManager.openSidePanel(options as chrome.sidePanel.OpenOptions);
 
         setTimeout(async () => {
           const isCheckAuth = await UserManager.checkAuth();
-          if (!isCheckAuth) {
+          if (!isCheckAuth || isReload) {
             this.postConnectMessage({
               type: `ginkgoo-background-sidepanel-page-reload`,
             });
