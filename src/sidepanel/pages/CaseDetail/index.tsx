@@ -28,6 +28,8 @@ export default function CaseDetail() {
   const paramsRouterRef = useRef(paramsRouter);
   const caseId = paramsRouter.caseId;
 
+  const pilotInfoCurrentWorkflowId = useRef<string | null>(null);
+
   const [caseInfo, setCaseInfo] = useState<ICaseItemType | null>(null);
   const [workflowDefinitionId, setWorkflowDefinitionId] = useState<string>("");
   const [pilotInfoCurrent, setPilotInfoCurrent] = useState<IPilotType | null>(null);
@@ -61,9 +63,9 @@ export default function CaseDetail() {
           break;
         }
 
-        if (pilotStatusMsg === PilotStatusEnum.OPEN) {
+        if (pilotStatusMsg === PilotStatusEnum.OPEN && pilotInfoCurrentWorkflowId.current !== workflowIdMsg) {
+          pilotInfoCurrentWorkflowId.current = workflowIdMsg;
           refreshWorkflowList();
-          break;
         }
 
         break;
