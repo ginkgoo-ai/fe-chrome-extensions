@@ -4,25 +4,25 @@ run-name: Manual Deploy by ${{ github.actor }} prod ${{ github.event.inputs.bran
 
 env:
   BUILD_OUTPUT_PATH: "build/"
-  BUILD_NAME: ""
+  BUILD_NAME: "xeni-pilot"
 
 on:
   push:
     branches:
       - 'release/**'
 
-  workflow_dispatch:
-    inputs:
-      version_type:
-        description: "Version increment type (major, feat, fix, repeat)"
-        required: true
-        type: choice
-        options:
-          - major
-          - feat
-          - fix
-          - repeat
-        default: "fix"
+  # workflow_dispatch:
+  #   inputs:
+  #     version_type:
+  #       description: "Version increment type (major, feat, fix, repeat)"
+  #       required: true
+  #       type: choice
+  #       options:
+  #         - major
+  #         - feat
+  #         - fix
+  #         - repeat
+  #       default: "fix"
 
 permissions:
   contents: write

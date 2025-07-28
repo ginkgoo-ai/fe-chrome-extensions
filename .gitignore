@@ -9,4 +9,5 @@ build
 key.pem
 _build_*
 fe-chrome-extensions-v*
+xeni-pilot-v*
 *.crx
