@@ -297,6 +297,7 @@ export default function CaseDetail() {
                     workflowInfo={itemWorkflow}
                     indexKey={`panel-pilot-workflow-${indexWorkflow}-${itemWorkflow?.workflow_instance_id}`}
                     pilotInfoCurrent={pilotInfoCurrent}
+                    isScrollIntoView
                   />
                 );
               })}
