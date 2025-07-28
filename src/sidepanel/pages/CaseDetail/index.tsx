@@ -52,6 +52,11 @@ export default function CaseDetail() {
         const { id: caseIdMsg } = pilotCaseInfoMsg || {};
         const { workflow_instance_id: workflowIdMsg } = pilotWorkflowInfoMsg || {};
 
+        if (!!workflowIdMsg) {
+          setModalNewWorkflowOpen(false);
+          setPilotInfoCurrent(pilotInfoMsg);
+        }
+
         if (caseIdMsg !== caseId || !pilotCaseInfoMsg) {
           break;
         }
@@ -61,8 +66,14 @@ export default function CaseDetail() {
           break;
         }
 
+        break;
+      }
+      case "ginkgoo-background-all-pilot-query": {
+        const { pilotInfo: pilotInfoMsg } = message;
+        const { pilotWorkflowInfo: pilotWorkflowInfoMsg } = pilotInfoMsg || {};
+        const { workflow_instance_id: workflowIdMsg } = pilotWorkflowInfoMsg || {};
+
         if (!!workflowIdMsg) {
-          setModalNewWorkflowOpen(false);
           setPilotInfoCurrent(pilotInfoMsg);
         }
         break;
@@ -136,7 +147,13 @@ export default function CaseDetail() {
   const init = async () => {
     await refreshCaseDetail();
     refreshWorkflowDefinitions();
-    refreshWorkflowList();
+    refreshWorkflowList({
+      cb: () => {
+        window.postMessage({
+          type: "ginkgoo-page-background-pilot-query",
+        });
+      },
+    });
   };
 
   useEffect(() => {
