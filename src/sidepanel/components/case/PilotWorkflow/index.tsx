@@ -23,12 +23,13 @@ interface PilotWorkflowProps {
   workflowInfo: IWorkflowType;
   indexKey: string;
   pilotInfoCurrent: IPilotType | null;
+  isScrollIntoView?: boolean;
 }
 
 dayjs.extend(utc);
 
 function PurePilotWorkflow(props: PilotWorkflowProps) {
-  const { caseInfo, workflowInfo, indexKey, pilotInfoCurrent } = props;
+  const { caseInfo, workflowInfo, indexKey, pilotInfoCurrent, isScrollIntoView } = props;
 
   const isFoldInit = useRef<boolean>(true);
 
@@ -83,6 +84,9 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
 
     if (isCurrentPilot) {
       setPilotInfo(pilotInfoCurrent);
+      if (isScrollIntoView && pilotInfoCurrent?.pilotStatus === PilotStatusEnum.OPEN) {
+        window.document.getElementById(`workflow-item-${indexKey}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     } else {
       setPilotInfo((prev) => {
         if (prev) {
@@ -113,7 +117,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
         }
       });
     }
-  }, [isCurrentPilot, caseInfo, workflowInfo, pilotInfoCurrent]);
+  }, [isCurrentPilot, isScrollIntoView, caseInfo, workflowInfo, pilotInfoCurrent]);
 
   useEffect(() => {
     const getIsInterrupt = () => {
@@ -316,6 +320,7 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
                   id={`pilot-item-btn-continue-${indexKey}`}
                   type="default"
                   className="w-0 flex-1"
+                  disabled={!(!pilotInfoCurrent || pilotInfoCurrent?.pilotStatus === PilotStatusEnum.HOLD)}
                   loading={isLoadingContinue}
                   onClick={handleBtnContinueClick}
                 >
