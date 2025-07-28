@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 // 获取时间戳
 const timestamp = dayjs().format("YYYYMMDD_HHmmss");
 const buildDir = path.join(__dirname, "../build");
-const newDirName = `fe-chrome-extensions-v${timestamp}`;
+const newDirName = `xeni-pilot-v${timestamp}`;
 const newDirPath = path.join(__dirname, `../${newDirName}`);
 
 // 确保build目录存在

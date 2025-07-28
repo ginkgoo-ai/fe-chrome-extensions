@@ -834,10 +834,10 @@ class PilotManager {
         }
       } else {
         // 查询 Workflow Detail
-        const resQueryWorkflowDetail = await this.queryWorkflowDetail({ workflowId });
-        if (timerSource !== pilotInfo?.pilotTimer || !resQueryWorkflowDetail.result) {
-          return;
-        }
+        // const resQueryWorkflowDetail = await this.queryWorkflowDetail({ workflowId });
+        // if (timerSource !== pilotInfo?.pilotTimer || !resQueryWorkflowDetail.result) {
+        //   return;
+        // }
       }
     }
 
