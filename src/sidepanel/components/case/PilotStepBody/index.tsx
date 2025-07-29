@@ -1,5 +1,5 @@
 import type { CollapseProps } from "antd";
-import { Alert, Button, Collapse, Spin } from "antd";
+import { Alert, Button, Collapse, Spin, Tooltip } from "antd";
 import { Check } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { IconInfo, IconLoading, IconStepDeclaration, IconStepDot } from "@/common/components/ui/icon";
@@ -75,12 +75,42 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
                 </>
               )}
             </div>
-            <div className="flex w-0 flex-1 items-center justify-start gap-3">
+            <div className="flex flex-1 flex-row items-center justify-between gap-3">
               <div className="truncate">{itemStep.name}</div>
-              {itemStep.step_key === "Declaration" ? (
-                <div className="mt-0.5 flex h-full flex-[0_0_auto] items-center justify-center text-xs text-[#FF55CB]">
-                  Confirm Declaration
-                </div>
+              {Number(itemStep.data?.current_interrupt_questions?.length) > 0 &&
+              pilotInfo?.pilotStatus === PilotStatusEnum.HOLD &&
+              itemStep.step_key === pilotInfo.pilotWorkflowInfo?.current_step_key ? (
+                <Tooltip
+                  mouseEnterDelay={1}
+                  title={() => {
+                    return (
+                      <div className="flex flex-col gap-1">
+                        {itemStep.data?.current_interrupt_questions?.map((itemInterruptQuestions) => {
+                          return (
+                            <>
+                              <div className="break-all text-xs">
+                                <span className="mr-1 font-bold">question:</span>
+                                <span className="">{itemInterruptQuestions.question_text}</span>
+                              </div>
+                              <div className="break-all text-xs">
+                                <span className="mr-1 font-bold">confidence:</span>
+                                <span className="">{itemInterruptQuestions.confidence}</span>
+                              </div>
+                              <div className="break-all text-xs">
+                                <span className="mr-1 font-bold">reasoning:</span>
+                                <span className="">{itemInterruptQuestions.reasoning}</span>
+                              </div>
+                            </>
+                          );
+                        })}
+                      </div>
+                    );
+                  }}
+                >
+                  <div>
+                    <IconInfo size={18} />
+                  </div>
+                </Tooltip>
               ) : null}
             </div>
           </div>

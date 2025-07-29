@@ -5,7 +5,7 @@ import PilotManager from "@/common/kits/PilotManager";
 import UserManager from "@/common/kits/UserManager";
 import Api from "@/common/kits/api";
 import { MESSAGE } from "../config/message";
-import { PilotStatusEnum } from "../types/casePilot";
+import { PilotStatusEnum, PilotThirdPartTypeEnum } from "../types/casePilot";
 
 interface IMessageType {
   type: string;
@@ -328,6 +328,18 @@ class BackgroundEventManager {
         // Step3: 该pilot绑定的tabId目前是否存在。 如果不存在则创建一个workflow，
         const pilotInfo = PilotManager.getPilot({ caseId: caseIdMsg, workflowId: workflowIdMsg });
         const tabInfoForPilot = pilotInfo?.pilotTabInfo?.id && (await ChromeManager.getTabInfo(pilotInfo?.pilotTabInfo?.id));
+        const pilotInfoForStartUpdate = {
+          pilotLastMessage: "",
+          pilotRepeatHash: "",
+          pilotRepeatCurrent: 0,
+          pilotThirdPartType: PilotThirdPartTypeEnum.NONE,
+          pilotThirdPartMethod: "",
+          pilotThirdPartUrl: "",
+          pilotCookie: "",
+          pilotCsrfToken: "",
+          pilotUniqueApplicationNumber: "",
+          pilotStatus: workflowIdMsg ? PilotStatusEnum.OPEN_OLD : PilotStatusEnum.OPEN_NEW,
+        };
 
         console.log("pilot-start 2", pilotInfo, tabInfoForPilot);
         if (!workflowIdMsg || !pilotInfo || !tabInfoForPilot) {
@@ -335,9 +347,7 @@ class BackgroundEventManager {
             caseId: caseIdMsg,
             workflowId: workflowIdMsg,
             workflowDefinitionId: workflowDefinitionIdMsg,
-            pilot: {
-              pilotStatus: workflowIdMsg ? PilotStatusEnum.OPEN_OLD : PilotStatusEnum.OPEN_NEW,
-            },
+            update: pilotInfoForStartUpdate,
           });
 
           console.log("pilot-start 3", pilotInfoNew);
@@ -377,9 +387,7 @@ class BackgroundEventManager {
 
         await PilotManager.updatePilotMap({
           workflowId: pilotInfo.pilotWorkflowInfo?.workflow_instance_id || "",
-          update: {
-            pilotStatus: workflowIdMsg ? PilotStatusEnum.OPEN_OLD : PilotStatusEnum.OPEN_NEW,
-          },
+          update: pilotInfoForStartUpdate,
         });
 
         await PilotManager.start({

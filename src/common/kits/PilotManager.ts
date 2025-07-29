@@ -44,9 +44,9 @@ class PilotManager {
     caseId: string;
     workflowId: string;
     workflowDefinitionId: string;
-    pilot: Partial<IPilotType>;
+    update: Partial<IPilotType>;
   }): Promise<IPilotType | undefined> => {
-    const { caseId, workflowId, workflowDefinitionId, pilot } = params || {};
+    const { caseId, workflowId, workflowDefinitionId, update } = params || {};
 
     // const resWorkflowInfo = await this.createWorkflow({
     //   caseId: caseInfo?.id || "",
@@ -99,7 +99,7 @@ class PilotManager {
       pilotUniqueApplicationNumber: "",
       pilotCaseInfo: resCaseDetail,
       pilotWorkflowInfo: resWorkflowInfo,
-      ...pilot,
+      ...update,
     };
     this.pilotMap.set(resWorkflowInfo.workflow_instance_id, newPilot);
 
