@@ -85,9 +85,9 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
                   title={() => {
                     return (
                       <div className="flex flex-col gap-1">
-                        {itemStep.data?.current_interrupt_questions?.map((itemInterruptQuestions) => {
+                        {itemStep.data?.current_interrupt_questions?.map((itemInterruptQuestions, indexInterruptQuestions) => {
                           return (
-                            <>
+                            <div key={`current-interrupt-questions-${itemStep.step_key}-${indexInterruptQuestions}`}>
                               <div className="break-all text-xs">
                                 <span className="mr-1 font-bold">question:</span>
                                 <span className="">{itemInterruptQuestions.question_text}</span>
@@ -100,7 +100,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
                                 <span className="mr-1 font-bold">reasoning:</span>
                                 <span className="">{itemInterruptQuestions.reasoning}</span>
                               </div>
-                            </>
+                            </div>
                           );
                         })}
                       </div>
