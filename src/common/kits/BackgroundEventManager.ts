@@ -172,7 +172,7 @@ class BackgroundEventManager {
       });
       // 判断是否存在 pilot
       const pilotInfo = PilotManager.getPilot({ tabId: tab.id });
-      if (pilotInfo?.pilotStatus === PilotStatusEnum.OPEN) {
+      if (pilotInfo?.pilotStatus === PilotStatusEnum.OPEN_NEW || pilotInfo?.pilotStatus === PilotStatusEnum.OPEN_OLD) {
         await PilotManager.updatePilotMap({
           workflowId: pilotInfo.pilotWorkflowInfo?.workflow_instance_id || "",
           update: {
@@ -336,7 +336,7 @@ class BackgroundEventManager {
             workflowId: workflowIdMsg,
             workflowDefinitionId: workflowDefinitionIdMsg,
             pilot: {
-              pilotStatus: PilotStatusEnum.OPEN,
+              pilotStatus: workflowIdMsg ? PilotStatusEnum.OPEN_OLD : PilotStatusEnum.OPEN_NEW,
             },
           });
 
@@ -378,7 +378,7 @@ class BackgroundEventManager {
         await PilotManager.updatePilotMap({
           workflowId: pilotInfo.pilotWorkflowInfo?.workflow_instance_id || "",
           update: {
-            pilotStatus: PilotStatusEnum.OPEN,
+            pilotStatus: workflowIdMsg ? PilotStatusEnum.OPEN_OLD : PilotStatusEnum.OPEN_NEW,
           },
         });
 

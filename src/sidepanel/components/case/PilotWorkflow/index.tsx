@@ -86,7 +86,10 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
 
     if (isCurrentPilot) {
       setPilotInfo(pilotInfoCurrent);
-      if (isScrollIntoView && pilotInfoCurrent?.pilotStatus === PilotStatusEnum.OPEN) {
+      if (
+        isScrollIntoView &&
+        (pilotInfoCurrent?.pilotStatus === PilotStatusEnum.OPEN_NEW || pilotInfoCurrent?.pilotStatus === PilotStatusEnum.OPEN_OLD)
+      ) {
         workflowRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     } else {

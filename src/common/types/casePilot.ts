@@ -2,7 +2,8 @@ import { ICaseItemType } from "./case";
 
 export enum PilotStatusEnum {
   INIT = "INIT",
-  OPEN = "OPEN",
+  OPEN_NEW = "OPEN_NEW",
+  OPEN_OLD = "OPEN_OLD",
   START = "START",
   QUERY_TAB = "QUERY_TAB",
   QUERY_WORKFLOW = "QUERY_WORKFLOW",
