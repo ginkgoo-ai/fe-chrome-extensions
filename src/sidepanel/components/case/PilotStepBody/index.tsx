@@ -157,6 +157,7 @@ function PurePilotStepBody(props: PilotStepBodyProps) {
       <Collapse className="w-full" activeKey={stepListActiveKeyBody} ghost items={stepListItemsBody} />
       {pilotInfo?.pilotTabInfo?.id ? (
         <Alert
+          style={{ width: "100%" }}
           message={<div className="text-base text-[#075985]">Manual Input Required</div>}
           icon={<IconInfo size={16} className="mr-2 mt-1" />}
           description={

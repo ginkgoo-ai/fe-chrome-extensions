@@ -63,7 +63,10 @@ export default function CaseDetail() {
           break;
         }
 
-        if (pilotStatusMsg === PilotStatusEnum.OPEN && pilotInfoCurrentWorkflowId.current !== workflowIdMsg) {
+        if (
+          (pilotStatusMsg === PilotStatusEnum.OPEN_NEW || pilotStatusMsg === PilotStatusEnum.OPEN_OLD) &&
+          pilotInfoCurrentWorkflowId.current !== workflowIdMsg
+        ) {
           pilotInfoCurrentWorkflowId.current = workflowIdMsg;
           refreshWorkflowList();
         }

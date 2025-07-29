@@ -689,7 +689,7 @@ class ChromeManager {
                   } else if (action.type === "input") {
                     element.dispatchEvent(new Event("focus", { bubbles: true, cancelable: true }));
 
-                    // 获取 React 跟踪的内部属性描述符，优先使用 React 的 setter 方法设置值，异常时兜底用 value 赋值
+                    // 优先使用 setter 方法设置值，异常时兜底再用普通 value 赋值
                     try {
                       const tag = (element.tagName && element.tagName.toLowerCase()) || "";
                       const proto =
@@ -717,6 +717,18 @@ class ChromeManager {
                     ["input", "change", "keypress", "keydown", "keyup", "blur", "pageshow"].forEach((eventType) => {
                       element.dispatchEvent(new Event(eventType, { bubbles: true, cancelable: true }));
                     });
+
+                    // 如果input的下一个元素是ul，那么获取ul下面的第一个li元素，并点击
+                    const nextElement = element.nextElementSibling;
+                    if (nextElement && nextElement.tagName.toLowerCase() === "ul") {
+                      const firstLi = nextElement.querySelector("li");
+                      if (firstLi) {
+                        // 等待一小段时间确保 ul 已经渲染完成
+                        setTimeout(() => {
+                          firstLi.click();
+                        }, 200);
+                      }
+                    }
                   } else if (action.type === "manual") {
                     return {
                       type: "manual",

@@ -24,12 +24,13 @@ interface PilotWorkflowProps {
   indexKey: string;
   pilotInfoCurrent: IPilotType | null;
   isScrollIntoView?: boolean;
+  onPilotInfoChange?: (params: { isInterrupt: boolean; pilotInfo: IPilotType }) => void;
 }
 
 dayjs.extend(utc);
 
 function PurePilotWorkflow(props: PilotWorkflowProps) {
-  const { caseInfo, workflowInfo, indexKey, pilotInfoCurrent, isScrollIntoView } = props;
+  const { caseInfo, workflowInfo, indexKey, pilotInfoCurrent, isScrollIntoView, onPilotInfoChange } = props;
 
   const isFoldInit = useRef<boolean>(true);
   const workflowRef = useRef<HTMLDivElement>(null);
@@ -85,7 +86,10 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
 
     if (isCurrentPilot) {
       setPilotInfo(pilotInfoCurrent);
-      if (isScrollIntoView && pilotInfoCurrent?.pilotStatus === PilotStatusEnum.OPEN) {
+      if (
+        isScrollIntoView &&
+        (pilotInfoCurrent?.pilotStatus === PilotStatusEnum.OPEN_NEW || pilotInfoCurrent?.pilotStatus === PilotStatusEnum.OPEN_OLD)
+      ) {
         workflowRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     } else {
@@ -121,7 +125,11 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
   }, [isCurrentPilot, isScrollIntoView, caseInfo, workflowInfo, pilotInfoCurrent]);
 
   useEffect(() => {
-    const getIsInterrupt = () => {
+    if (!pilotInfo) {
+      return;
+    }
+
+    const getIsInterrupt = (): boolean => {
       const indexCurrentStep: number = Number(
         pilotInfo?.pilotWorkflowInfo?.steps?.findIndex((itemStep) => {
           return itemStep.step_key === pilotInfo.pilotWorkflowInfo?.current_step_key;
@@ -129,17 +137,18 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
       );
 
       if (!(indexCurrentStep >= 0)) {
-        return;
+        return false;
       }
 
       const currentStep = pilotInfo?.pilotWorkflowInfo?.steps?.[indexCurrentStep];
-      const isInterrupt = currentStep?.data?.form_data?.some((itemFormData) => {
+      const isInterrupt = !!currentStep?.data?.form_data?.some((itemFormData) => {
         return itemFormData.question.type === "interrupt";
       });
       return isInterrupt;
     };
+    const isInterrupt = getIsInterrupt();
 
-    if (isCurrentPilot && pilotInfo?.pilotStatus === PilotStatusEnum.HOLD && getIsInterrupt()) {
+    if (isCurrentPilot && isInterrupt && pilotInfo?.pilotStatus === PilotStatusEnum.HOLD) {
       if (isFoldInit.current) {
         isFoldInit.current = false;
         setFold(false);
@@ -148,6 +157,11 @@ function PurePilotWorkflow(props: PilotWorkflowProps) {
     } else {
       isFoldInit.current = true;
     }
+
+    onPilotInfoChange?.({
+      isInterrupt,
+      pilotInfo,
+    });
   }, [pilotInfo, isCurrentPilot]);
 
   useEffect(() => {

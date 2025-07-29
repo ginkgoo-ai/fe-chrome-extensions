@@ -1009,12 +1009,19 @@ class PilotManager {
     // this.pilotMap.delete(caseId);
   };
 
-  delete = (params: { workflowId?: string; tabId?: number }) => {
+  delete = async (params: { workflowId?: string; tabId?: number }) => {
     const pilotInfo = this.getPilot(params);
     if (pilotInfo?.pilotTimer) {
       clearTimeout(pilotInfo?.pilotTimer);
     }
     if (pilotInfo?.pilotWorkflowInfo?.workflow_instance_id) {
+      await this.updatePilotMap({
+        workflowId: pilotInfo?.pilotWorkflowInfo?.workflow_instance_id,
+        update: {
+          pilotTabInfo: null,
+        },
+        isForcePostMessage: true,
+      });
       this.pilotMap.delete(pilotInfo?.pilotWorkflowInfo?.workflow_instance_id);
     }
   };
