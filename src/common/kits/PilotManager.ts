@@ -730,6 +730,8 @@ class PilotManager {
 
   uploadAndBindPDF = async (params: { workflowId: string; method: string; thirdPartUrl: string; cookie: string; csrfToken: string }) => {
     const { workflowId, method, thirdPartUrl, cookie, csrfToken } = params || {};
+    const pilotInfo = this.getPilot({ workflowId });
+    const pilotWorkflowInfoClone = cloneDeep(pilotInfo?.pilotWorkflowInfo);
 
     const resFilesThirdPart = await Api.Ginkgoo.postFilesThirdPart({
       thirdPartUrl,
@@ -760,6 +762,17 @@ class PilotManager {
         contentToast: MESSAGE.TOAST_BIND_PDF_FILE_FAILED,
       });
       return;
+    }
+
+    // 更新 progress_file_id
+    if (pilotWorkflowInfoClone && resWorkflowsUploadProgressFile?.progress_file_id) {
+      pilotWorkflowInfoClone.progress_file_id = resWorkflowsUploadProgressFile?.progress_file_id;
+      await this.updatePilotMap({
+        workflowId,
+        update: {
+          pilotWorkflowInfo: pilotWorkflowInfoClone,
+        },
+      });
     }
   };
 

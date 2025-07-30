@@ -107,7 +107,7 @@ class ChromeManager {
         // timeoutMsForNonInteractive: 10000
       });
 
-      // console.log("launchWebAuthFlow", responseUrl);
+      console.log("launchWebAuthFlow", authorizationUrl, responseUrl);
 
       const responseParams = UtilsManager.router2Params(responseUrl || "", {
         decode: false,
