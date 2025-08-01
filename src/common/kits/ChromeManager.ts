@@ -719,16 +719,16 @@ class ChromeManager {
                     });
 
                     // 如果input的下一个元素是ul，那么获取ul下面的第一个li元素，并点击
-                    const nextElement = element.nextElementSibling;
-                    if (nextElement && nextElement.tagName.toLowerCase() === "ul") {
-                      const firstLi = nextElement.querySelector("li");
-                      if (firstLi) {
-                        // 等待一小段时间确保 ul 已经渲染完成
-                        setTimeout(() => {
-                          firstLi.click();
-                        }, 200);
-                      }
-                    }
+                    // const nextElement = element.nextElementSibling;
+                    // if (nextElement && nextElement.tagName.toLowerCase() === "ul") {
+                    //   const firstLi = nextElement.querySelector("li");
+                    //   if (firstLi) {
+                    //     // 等待一小段时间确保 ul 已经渲染完成
+                    //     setTimeout(() => {
+                    //       firstLi.click();
+                    //     }, 200);
+                    //   }
+                    // }
                   } else if (action.type === "manual") {
                     return {
                       type: "manual",
